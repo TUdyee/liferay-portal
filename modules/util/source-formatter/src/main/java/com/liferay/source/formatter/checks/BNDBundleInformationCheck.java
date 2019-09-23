@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
 
@@ -24,7 +24,7 @@ import com.liferay.source.formatter.checks.util.BNDSourceUtil;
 public class BNDBundleInformationCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isModulesCheck() {
+	public boolean isModuleSourceCheck() {
 		return true;
 	}
 
@@ -32,20 +32,30 @@ public class BNDBundleInformationCheck extends BaseFileCheck {
 	protected String doProcess(
 		String fileName, String absolutePath, String content) {
 
-		if (fileName.endsWith("/bnd.bnd") &&
-			!absolutePath.contains("/testIntegration/") &&
-			!absolutePath.contains("/third-party/")) {
+		if (!fileName.endsWith("/bnd.bnd") ||
+			absolutePath.contains("/testIntegration/") ||
+			absolutePath.contains("/third-party/")) {
 
-			_checkBundleName(fileName, absolutePath, content);
+			return content;
+		}
 
-			String bundleVersion = BNDSourceUtil.getDefinitionValue(
-				content, "Bundle-Version");
+		_checkBundleName(fileName, absolutePath, content);
 
-			if (bundleVersion == null) {
-				addMessage(
-					fileName, "Missing Bundle-Version",
-					"bnd_bundle_information.markdown");
-			}
+		String bundleVersion = BNDSourceUtil.getDefinitionValue(
+			content, "Bundle-Version");
+
+		if (bundleVersion == null) {
+			addMessage(
+				fileName, "Missing Bundle-Version",
+				"bnd_bundle_information.markdown");
+		}
+		else if (absolutePath.endsWith("-test/bnd.bnd") &&
+				 !bundleVersion.equals("1.0.0")) {
+
+			addMessage(
+				fileName,
+				"'Bundle-Version' for *-test modules should always be " +
+					"'1.0.0', since we do not publish these");
 		}
 
 		return content;
@@ -63,13 +73,15 @@ public class BNDBundleInformationCheck extends BaseFileCheck {
 			String strippedBundleName = StringUtil.removeChars(
 				bundleName, CharPool.DASH, CharPool.SPACE);
 
-			strippedBundleName = strippedBundleName.replaceAll(
-				"Implementation$", "Impl");
-			strippedBundleName = strippedBundleName.replaceAll(
-				"Utilities$", "Util");
+			String expectedBundleName = "liferay-" + moduleName;
 
-			String expectedBundleName =
-				"liferay" + StringUtil.removeChars(moduleName, CharPool.DASH);
+			expectedBundleName = expectedBundleName.replaceAll(
+				"(?<!portal)-impl($|-)", "implementation");
+			expectedBundleName = expectedBundleName.replaceAll(
+				"(?<!portal)-util($|-)", "utilities");
+
+			expectedBundleName = StringUtil.removeChars(
+				expectedBundleName, CharPool.DASH);
 
 			if (!StringUtil.equalsIgnoreCase(
 					strippedBundleName, expectedBundleName)) {
@@ -85,7 +97,7 @@ public class BNDBundleInformationCheck extends BaseFileCheck {
 				"bnd_bundle_information.markdown");
 		}
 
-		if (moduleName.contains("-import-") ||
+		if (moduleName.endsWith("-import") || moduleName.contains("-import-") ||
 			moduleName.contains("-private-")) {
 
 			return;
@@ -95,10 +107,10 @@ public class BNDBundleInformationCheck extends BaseFileCheck {
 			content, "Bundle-SymbolicName");
 
 		if (bundleSymbolicName != null) {
-			String expectedBundleSymbolicName =
-				"com.liferay." +
-					StringUtil.replace(
-						moduleName, CharPool.DASH, CharPool.PERIOD);
+			moduleName = StringUtil.replace(
+				moduleName, CharPool.DASH, CharPool.PERIOD);
+
+			String expectedBundleSymbolicName = "com.liferay." + moduleName;
 
 			if (!bundleSymbolicName.equals(expectedBundleSymbolicName)) {
 				addMessage(

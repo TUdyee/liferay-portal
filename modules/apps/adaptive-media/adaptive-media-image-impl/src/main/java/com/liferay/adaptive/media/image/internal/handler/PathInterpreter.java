@@ -39,15 +39,15 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = PathInterpreter.class)
 public class PathInterpreter {
 
-	public Optional<Tuple<FileVersion, Map<String, String>>>
-		interpretPath(String pathInfo) {
+	public Optional<Tuple<FileVersion, Map<String, String>>> interpretPath(
+		String pathInfo) {
 
 		try {
 			if (pathInfo == null) {
-				throw new IllegalArgumentException("pathInfo cannot be null");
+				throw new IllegalArgumentException("Path information is null");
 			}
 
-			Matcher matcher = _URL_PATTERN.matcher(pathInfo);
+			Matcher matcher = _pattern.matcher(pathInfo);
 
 			if (!matcher.matches()) {
 				return Optional.empty();
@@ -94,18 +94,6 @@ public class PathInterpreter {
 		}
 	}
 
-	@Reference(unbind = "-")
-	public void setAMImageConfigurationHelper(
-		AMImageConfigurationHelper amImageConfigurationHelper) {
-
-		_amImageConfigurationHelper = amImageConfigurationHelper;
-	}
-
-	@Reference(unbind = "-")
-	public void setDLAppService(DLAppService dlAppService) {
-		_dlAppService = dlAppService;
-	}
-
 	private String _getConfigurationEntryUUID(Matcher matcher) {
 		return matcher.group(3);
 	}
@@ -128,10 +116,13 @@ public class PathInterpreter {
 		return Long.valueOf(matcher.group(2));
 	}
 
-	private static final Pattern _URL_PATTERN = Pattern.compile(
+	private static final Pattern _pattern = Pattern.compile(
 		"/image/(\\d+)(?:/(\\d+))?/([^/]+)/(?:[^/]+)");
 
+	@Reference
 	private AMImageConfigurationHelper _amImageConfigurationHelper;
+
+	@Reference
 	private DLAppService _dlAppService;
 
 }

@@ -14,15 +14,12 @@
 
 package com.liferay.knowledge.base.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class KBArticleImportException extends PortalException {
 
 	public KBArticleImportException() {

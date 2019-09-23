@@ -30,21 +30,16 @@ public class CurrencyConverterWebUpgrade implements UpgradeStepRegistrator {
 
 	@Override
 	public void register(Registry registry) {
-		registry.register(
-			"com.liferay.currency.converter.web", "0.0.0", "1.0.0",
-			new DummyUpgradeStep());
+		registry.register("0.0.0", "1.0.0", new DummyUpgradeStep());
 
 		registry.register(
-			"com.liferay.currency.converter.web", "0.0.1", "1.0.0",
+			"0.0.1", "1.0.0",
 			new BaseUpgradePortletId() {
 
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {
-							"67",
-							CurrencyConverterPortletKeys.CURRENCY_CONVERTER
-						}
+						{"16", CurrencyConverterPortletKeys.CURRENCY_CONVERTER}
 					};
 				}
 

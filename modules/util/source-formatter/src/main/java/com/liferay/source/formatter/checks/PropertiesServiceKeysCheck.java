@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 
 /**
  * @author Peter Shin
@@ -22,9 +22,13 @@ import com.liferay.portal.kernel.util.StringPool;
 public class PropertiesServiceKeysCheck extends BaseFileCheck {
 
 	@Override
+	public boolean isLiferaySourceCheck() {
+		return true;
+	}
+
+	@Override
 	protected String doProcess(
-			String fileName, String absolutePath, String content)
-		throws Exception {
+		String fileName, String absolutePath, String content) {
 
 		if (!fileName.endsWith("/service.properties")) {
 			return content;

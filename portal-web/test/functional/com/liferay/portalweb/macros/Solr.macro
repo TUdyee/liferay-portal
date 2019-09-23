@@ -1,79 +1,29 @@
-<definition>
-	<command name="viewAdminDashboard">
-		<description message="The Solr Admin Dashboard is accessible only if the Solr server is successfully running." />
+definition {
 
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="http://localhost:8983/solr" />
-		</execute>
+	macro viewLiferayCloudDashboard {
+		Navigator.openSpecificURL(url = "http://localhost:8983/solr/#/~cloud");
 
-		<execute function="AssertElementPresent#assertVisible" locator1="SolrAdminDashboard#LOGO" />
-		<execute function="AssertTextEquals" locator1="SolrAdminDashboard#VERSIONS_SOLR_SPEC" value1="${solrVersion}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SolrAdminDashboard#VERSIONS_SOLR_IMPL" value1="${solrVersion}" />
-	</command>
+		AssertVisible(locator1 = "SolrAdminDashboard#MENU_CLOUD");
 
-	<command name="viewLiferayCloudDashboard">
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="http://localhost:8983/solr/#/~cloud" />
-		</execute>
+		var key_cloudCollectionName = "${cloudCollectionName}";
 
-		<execute function="AssertVisible" locator1="SolrAdminDashboard#MENU_CLOUD" />
+		AssertVisible(locator1 = "SolrAdminDashboard#CLOUD_COLLECTION");
+	}
 
-		<var name="key_cloudCollectionName" value="${cloudCollectionName}" />
+	macro viewSolrwithSolrCloudEnabledInConsole {
+		AssertConsoleTextPresent(value1 = "Using default ZkCredentialsProvider");
 
-		<execute function="AssertVisible" locator1="SolrAdminDashboard#CLOUD_COLLECTION" />
-	</command>
+		AssertConsoleTextPresent(value1 = "Using default ZkACLProvider");
 
-	<command name="viewLiferayCoreAdminDashboard">
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="http://localhost:8983/solr/#/~cores/liferay" />
-		</execute>
+		AssertConsoleTextPresent(value1 = "Waiting for client to connect to ZooKeeper");
 
-		<var name="key_coreName" value="${coreName}" />
+		AssertConsoleTextPresent(value1 = "Watcher org.apache.solr.common.cloud.ConnectionManager");
 
-		<execute function="AssertTextEquals" locator1="SolrAdminDashboard#CORE_ADMIN_CORE_NAVIGATION" value1="liferay" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SolrAdminDashboard#CORE_ADMIN_CONTENT_INSTANCE_DIR" value1="solr-${solrVersion}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SolrAdminDashboard#CORE_ADMIN_CONTENT_INSTANCE_DIR" value1="liferay" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SolrAdminDashboard#CORE_ADMIN_CONTENT_DATA_DIR" value1="solr-${solrVersion}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SolrAdminDashboard#CORE_ADMIN_CONTENT_DATA_DIR" value1="liferay" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SolrAdminDashboard#CORE_ADMIN_CONTENT_DATA_DIR" value1="data" />
-	</command>
+		AssertConsoleTextPresent(value1 = "ZooKeeperConnection Watcher:localhost:9983");
 
-	<command name="viewLoggerNameInSolrAdminLogging">
-		<for list="LogUpdateProcessor,SolrCore,UpdateHandler" param="loggerName">
-			<var name="key_loggerName" value="${loggerName}" />
+		AssertConsoleTextPresent(value1 = "Client is connected to ZooKeeper");
 
-			<execute function="AssertTextEquals" locator1="SolrAdminDashboard#LOGGING_TABLE_LOGGER_NAME" value1="${loggerName}" />
-		</for>
-	</command>
+		AssertConsoleTextPresent(value1 = "Updating cluster state from ZooKeeper");
+	}
 
-	<command name="viewSolrLogsInConsole">
-		<execute function="Pause" locator1="1000" />
-
-		<var method="StringUtil#lowerCase('${searchTerm}')" name="searchTerm" />
-
-		<execute function="AssertConsoleTextPresent" value1="SolrIndexSearcher" />
-		<execute function="AssertConsoleTextPresent" value1="entryClassName:com.liferay.portlet.messageboards.model.MBMessage" />
-		<execute function="AssertConsoleTextPresent" value1="entryClassName:com.liferay.portlet.documentlibrary.model.DLFileEntry" />
-		<execute function="AssertConsoleTextPresent" value1="content:${searchTerm}" />
-		<execute function="AssertConsoleTextPresent" value1="content_en_US:${searchTerm}" />
-		<execute function="AssertConsoleTextPresent" value1="description:${searchTerm}" />
-		<execute function="AssertConsoleTextPresent" value1="description_en_US:${searchTerm}" />
-		<execute function="AssertConsoleTextPresent" value1="title:${searchTerm}" />
-		<execute function="AssertConsoleTextPresent" value1="title_en_US:${searchTerm}" />
-	</command>
-
-	<command name="viewSolrwithSolrCloudEnabledInConsole">
-		<execute function="AssertConsoleTextPresent" value1="Using default ZkCredentialsProvider" />
-		<execute function="AssertConsoleTextPresent" value1="Using default ZkACLProvider" />
-		<execute function="AssertConsoleTextPresent" value1="Waiting for client to connect to ZooKeeper" />
-		<execute function="AssertConsoleTextPresent" value1="Watcher org.apache.solr.common.cloud.ConnectionManager" />
-		<execute function="AssertConsoleTextPresent" value1="ZooKeeperConnection Watcher:localhost:9983" />
-		<execute function="AssertConsoleTextPresent" value1="Client is connected to ZooKeeper" />
-		<execute function="AssertConsoleTextPresent" value1="Updating cluster state from ZooKeeper" />
-	</command>
-
-	<command name="viewSolrwithSSLAuthenticationEnabledInConsole">
-		<execute function="AssertConsoleTextPresent" value1="Attempting to load from the file system because" />
-		<execute function="AssertConsoleTextPresent" value1="solr-ssl.keystore.jks is not in the class path" />
-	</command>
-</definition>
+}

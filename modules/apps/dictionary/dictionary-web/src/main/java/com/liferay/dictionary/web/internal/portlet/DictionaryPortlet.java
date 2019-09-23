@@ -35,11 +35,10 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.icon=/icons/dictionary.png",
 		"com.liferay.portlet.private-request-attributes=false",
 		"com.liferay.portlet.private-session-attributes=false",
-		"com.liferay.portlet.remoteable=true",
 		"com.liferay.portlet.render-weight=50",
 		"javax.portlet.display-name=Dictionary",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + DictionaryPortletKeys.DICTIONARY,
 		"javax.portlet.resource-bundle=content.Language",
@@ -50,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 public class DictionaryPortlet extends MVCPortlet {
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.dictionary.web)(release.schema.version=1.0.0))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.dictionary.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

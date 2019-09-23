@@ -14,7 +14,14 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.dom4j.Node;
 
 /**
  * @author Kenji Heigel
@@ -32,10 +39,11 @@ public class ConditionPoshiElement extends ExecutePoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String readableSyntax) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
-		if (_isElementType(parentPoshiElement, readableSyntax)) {
-			return new ConditionPoshiElement(readableSyntax);
+		if (_isElementType(parentPoshiElement, poshiScript)) {
+			return new ConditionPoshiElement(parentPoshiElement, poshiScript);
 		}
 
 		return null;
@@ -48,42 +56,47 @@ public class ConditionPoshiElement extends ExecutePoshiElement {
 		super(_ELEMENT_NAME, element);
 	}
 
-	protected ConditionPoshiElement(String readableSyntax) {
-		super(_ELEMENT_NAME, readableSyntax);
+	protected ConditionPoshiElement(
+		List<Attribute> attributes, List<Node> nodes) {
+
+		super(_ELEMENT_NAME, attributes, nodes);
+	}
+
+	protected ConditionPoshiElement(
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
+
+		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
 
 	@Override
-	protected String createReadableBlock(String content) {
-		String readableBlock = super.createReadableBlock(content);
+	protected String createPoshiScriptSnippet(List<String> assignments) {
+		String poshiScriptSnippet = super.createPoshiScriptSnippet(assignments);
 
-		readableBlock = readableBlock.trim();
+		poshiScriptSnippet = poshiScriptSnippet.trim();
 
-		if (readableBlock.endsWith(";")) {
-			readableBlock = readableBlock.substring(
-				0, readableBlock.length() - 1);
+		if (poshiScriptSnippet.endsWith(";")) {
+			poshiScriptSnippet = poshiScriptSnippet.substring(
+				0, poshiScriptSnippet.length() - 1);
 		}
 
-		return readableBlock;
+		return poshiScriptSnippet;
 	}
 
 	@Override
-	protected String getBlockName() {
-		return attributeValue("function");
+	protected Pattern getConditionPattern() {
+		return _conditionPattern;
 	}
 
 	private boolean _isElementType(
-		PoshiElement parentPoshiElement, String readableSyntax) {
+		PoshiElement parentPoshiElement, String poshiScript) {
 
-		if ((parentPoshiElement instanceof IfPoshiElement) &&
-			readableSyntax.endsWith(")") &&
-			!readableSyntax.startsWith("isSet(")) {
-
-			return true;
-		}
-
-		return false;
+		return isConditionElementType(parentPoshiElement, poshiScript);
 	}
 
 	private static final String _ELEMENT_NAME = "condition";
+
+	private static final Pattern _conditionPattern = Pattern.compile(
+		"^(?!isSet|contains)[\\w\\.]+\\([\\s\\S]*\\)$");
 
 }

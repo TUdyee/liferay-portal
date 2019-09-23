@@ -14,8 +14,8 @@
 
 package com.liferay.portal.kernel.workflow;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.InputStream;
 import java.io.Serializable;
@@ -41,9 +41,8 @@ public class DefaultWorkflowDefinition
 		if (_description == null) {
 			return StringPool.BLANK;
 		}
-		else {
-			return _description;
-		}
+
+		return _description;
 	}
 
 	@Override
@@ -51,6 +50,7 @@ public class DefaultWorkflowDefinition
 		return _inputStream;
 	}
 
+	@Override
 	public Date getModifiedDate() {
 		return _modifiedDate;
 	}
@@ -70,9 +70,8 @@ public class DefaultWorkflowDefinition
 		if (_title == null) {
 			return StringPool.BLANK;
 		}
-		else {
-			return _title;
-		}
+
+		return _title;
 	}
 
 	@Override

@@ -1,134 +1,163 @@
-<definition>
-	<command name="configureCategoryNavigationDisplayStyle">
-		<execute function="Click" locator1="Dropdown#TRIGGER" />
+definition {
 
-		<execute function="Type" locator1="Dropdown#SEARCH_FIELD" value1="${displayStyle}" />
+	macro configureDisplayStyle {
+		Click(locator1 = "Dropdown#TRIGGER");
 
-		<execute function="Pause" locator1="3000" />
+		AssertClick(
+			key_option = "${displayStyle}",
+			locator1 = "Dropdown#RESULT",
+			value1 = "${displayStyle}");
 
-		<execute function="AssertClick" locator1="Dropdown#RESULT" value1="${displayStyle}">
-			<var name="key_option" value="${displayStyle}" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "Dropdown#SELECTED_VALUE",
+			value1 = "${displayStyle}");
 
-		<execute function="AssertTextEquals" locator1="Dropdown#SELECTED_VALUE" value1="${displayStyle}" />
+		SystemSettings.saveConfiguration();
+	}
 
-		<execute macro="SystemSettings#saveConfiguration" />
-	</command>
+	macro configureDynamicExportLimit {
+		Type(
+			locator1 = "SystemSettings#ASSETS_DYNAMIC_EXPORT_LIMIT",
+			value1 = "${exportLimitNumber}");
 
-	<command name="editConfiguration">
-		<var name="key_rowEntry" value="${configurationName}" />
+		SystemSettings.saveConfiguration();
+	}
 
-		<while>
-			<condition function="IsElementNotPresent" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
-			<then>
-				<execute function="Click" locator1="Pagination#NEXT_LINK" />
-			</then>
-		</while>
+	macro configureSystemSetting {
+		var key_settingFieldName = "${settingFieldName}";
 
-		<if>
-			<equals arg1="${configurationName}" arg2="Dynamic Data Lists" />
-			<then>
-				<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS_2" />
-			</then>
-			<else>
-				<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
-			</else>
-		</if>
+		if ("${enableSetting}" == "true") {
+			Check.toggleSwitch(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
-	</command>
+			SystemSettings.saveConfiguration();
 
-	<command name="editTextAreaSetting">
-		<var name="key_fieldName" value="${settingName}" />
+			AssertChecked.assertCheckedNotVisible(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+		}
+		else if ("${enableSetting}" == "false") {
+			Uncheck.uncheckToggleSwitch(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
 
-		<execute function="Type" locator1="DDMField#TEXT_BOX" value1="${settingValue}" />
-	</command>
+			SystemSettings.saveConfiguration();
 
-	<command name="enableSetting">
-		<execute function="Check" locator1="SystemSettings#${checkboxSetting}" />
-	</command>
+			AssertNotChecked.assertNotCheckedNotVisible(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+		}
+	}
 
-	<command name="exitEditConfiguration">
-		<execute function="Click" locator1="Icon#ANGLE_LEFT_BACK" />
-	</command>
+	macro deleteConfiguration {
+		Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
-	<command name="gotoCategory">
-		<var name="key_category" value="${category}" />
+		MenuItem.click(menuItem = "Delete");
 
-		<execute function="AssertClick" locator1="SystemSettings#MENUBAR_CATEGORY" value1="${category}" />
-	</command>
+		Alert.viewSuccessMessage();
+	}
 
-	<command name="resetConfiguration">
-		<execute macro="SystemSettings#gotoCategory">
-			<var name="category" value="${category}" />
-		</execute>
+	macro editSecurityCredential {
+		Type(
+			locator1 = "SystemSettings#SECURITY_CREDENTIAL_FIELD",
+			value1 = "${securityCredential}");
 
-		<var name="key_rowEntry" value="${configurationName}" />
+		var key_fieldName = "securityPrincipal";
 
-		<if>
-			<equals arg1="${configurationName}" arg2="Dynamic Data Lists" />
-			<then>
-				<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS_2" />
-			</then>
-			<else>
-				<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
-			</else>
-		</if>
+		Type(
+			locator1 = "FormFields#TEXT_MULTILINE_FIELD",
+			value1 = "test");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Reset Default Values">
-			<var name="key_menuItem" value="Reset Default Values" />
-		</execute>
+		AssertElementPresent(locator1 = "SystemSettings#SECURITY_CREDENTIAL_FIELD");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		SikuliAssertElementPresent(locator1 = "SystemSettings#SECURITY_CREDENTIAL_HIDDEN_IMAGE");
+	}
 
-	<command name="saveConfiguration">
-		<if>
-			<condition function="IsElementPresent" locator1="Button#SAVE" />
-			<then>
-				<execute macro="Button#clickSave" />
+	macro editTextAreaSetting {
+		Type(
+			key_label = "${settingName}",
+			locator1 = "TextArea#ANY_LABELED",
+			value1 = "${settingValue}");
+	}
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</then>
-			<else>
-				<execute macro="Button#clickUpdate" />
+	macro editTextSetting {
+		Type(
+			key_fieldLabel = "${settingName}",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${settingValue}");
+	}
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</else>
-		</if>
-	</command>
+	macro exitEditConfiguration {
+		Click(locator1 = "Icon#ANGLE_LEFT_BACK");
+	}
 
-	<command name="viewConfiguration">
-		<var name="key_rowEntry" value="${configurationName}" />
+	macro gotoConfiguration {
+		Click(
+			key_itemName = "${configurationCategory}",
+			locator1 = "ListGroupItem#ITEM_TEXT");
 
-		<while>
-			<condition function="IsElementNotPresent" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
-			<then>
-				<execute function="Click" locator1="Pagination#NEXT_LINK" />
-			</then>
-		</while>
+		var browserType = PropsUtil.get("browser.type");
 
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
+		if ("${browserType}" == "chrome") {
+			Pause(locator1 = "5000");
+		}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
+		Click(
+			key_configurationName = "${configurationName}",
+			key_configurationScope = "${configurationScope}",
+			locator1 = "SystemSettings#SCOPED_CONFIGURATION_NAME");
 
-		<if>
-			<equals arg1="${configurationName}" arg2="LDAP Auth" />
-			<then>
-				<if>
-					<equals arg1="${enableLDAP}" arg2="true" />
-					<then>
-						<execute function="AssertChecked" locator1="SystemSettings#ENABLED_CHECKBOX" />
-					</then>
-					<else>
-						<execute function="AssertNotChecked" locator1="SystemSettings#ENABLED_CHECKBOX" />
-					</else>
-				</if>
-			</then>
-		</if>
-	</command>
-</definition>
+		AssertElementPresent(
+			key_title = "${configurationName}",
+			locator1 = "Header#H2_TITLE");
+	}
+
+	macro gotoConfigurationEntry {
+		Click(
+			key_configurationEntry = "${configurationEntry}",
+			locator1 = "SystemSettings#CONFIGURATION_ENTRY");
+	}
+
+	macro openSystemSettingsAdmin {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet");
+	}
+
+	macro resetConfiguration {
+		Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Reset Default Values");
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro saveConfiguration {
+		if (IsElementPresent(locator1 = "Button#SAVE")) {
+			PortletEntry.save();
+		}
+		else {
+			Button.clickUpdate();
+
+			Alert.viewSuccessMessage();
+		}
+	}
+
+	macro selectOptionSetting {
+		Click(
+			key_fieldLabel = "${fieldName}",
+			locator1 = "SystemSettings#DROPDOWN_MENU");
+
+		Click(
+			key_selectOption = "${selectOption}",
+			locator1 = "SystemSettings#DROPDOWN_MENU_OPTION");
+	}
+
+	macro viewTextareaValue {
+		if (isSet(repeatableFieldNumber)) {
+			AssertTextEquals.assertValue(
+				key_fieldName = "${fieldName}",
+				key_repeatableFieldNumber = "${repeatableFieldNumber}",
+				locator1 = "FormFields#REPEATABLE_TEXT_MULTILINE_FIELD",
+				value1 = "${fieldValue}");
+		}
+		else {
+			AssertTextEquals.assertValue(
+				key_fieldName = "${fieldName}",
+				locator1 = "FormFields#TEXT_MULTILINE_FIELD",
+				value1 = "${fieldValue}");
+		}
+	}
+
+}

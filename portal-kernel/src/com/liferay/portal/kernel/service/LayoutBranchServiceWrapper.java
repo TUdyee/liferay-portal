@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Provides a wrapper for {@link LayoutBranchService}.
@@ -23,34 +22,41 @@ import aQute.bnd.annotation.ProviderType;
  * @see LayoutBranchService
  * @generated
  */
-@ProviderType
-public class LayoutBranchServiceWrapper implements LayoutBranchService,
-	ServiceWrapper<LayoutBranchService> {
+public class LayoutBranchServiceWrapper
+	implements LayoutBranchService, ServiceWrapper<LayoutBranchService> {
+
 	public LayoutBranchServiceWrapper(LayoutBranchService layoutBranchService) {
 		_layoutBranchService = layoutBranchService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link LayoutBranchServiceUtil} to access the layout branch remote service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutBranchServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.LayoutBranch addLayoutBranch(
-		long layoutRevisionId, java.lang.String name,
-		java.lang.String description, boolean master,
-		ServiceContext serviceContext)
+			long layoutRevisionId, java.lang.String name,
+			java.lang.String description, boolean master,
+			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _layoutBranchService.addLayoutBranch(layoutRevisionId, name,
-			description, master, serviceContext);
+
+		return _layoutBranchService.addLayoutBranch(
+			layoutRevisionId, name, description, master, serviceContext);
 	}
 
 	@Override
 	public void deleteLayoutBranch(long layoutBranchId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_layoutBranchService.deleteLayoutBranch(layoutBranchId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public java.lang.String getOSGiServiceIdentifier() {
 		return _layoutBranchService.getOSGiServiceIdentifier();
@@ -58,11 +64,12 @@ public class LayoutBranchServiceWrapper implements LayoutBranchService,
 
 	@Override
 	public com.liferay.portal.kernel.model.LayoutBranch updateLayoutBranch(
-		long layoutBranchId, java.lang.String name,
-		java.lang.String description, ServiceContext serviceContext)
+			long layoutBranchId, java.lang.String name,
+			java.lang.String description, ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _layoutBranchService.updateLayoutBranch(layoutBranchId, name,
-			description, serviceContext);
+
+		return _layoutBranchService.updateLayoutBranch(
+			layoutBranchId, name, description, serviceContext);
 	}
 
 	@Override
@@ -76,4 +83,5 @@ public class LayoutBranchServiceWrapper implements LayoutBranchService,
 	}
 
 	private LayoutBranchService _layoutBranchService;
+
 }

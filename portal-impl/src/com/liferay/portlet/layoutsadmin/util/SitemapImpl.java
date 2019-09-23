@@ -14,22 +14,23 @@
 
 package com.liferay.portlet.layoutsadmin.util;
 
+import com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layouts.admin.kernel.util.Sitemap;
 import com.liferay.layouts.admin.kernel.util.SitemapURLProvider;
 import com.liferay.layouts.admin.kernel.util.SitemapURLProviderRegistryUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutTypeController;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -49,8 +50,9 @@ import java.util.Map;
 /**
  * @author Jorge Ferrer
  * @author Vilmos Papp
+ * @deprecated As of Mueller (7.2.x), replaced by {@link com.liferay.layout.internal.util.SitemapImpl}
  */
-@DoPrivileged
+@Deprecated
 public class SitemapImpl implements Sitemap {
 
 	@Override
@@ -64,6 +66,14 @@ public class SitemapImpl implements Sitemap {
 		Element locElement = urlElement.addElement("loc");
 
 		locElement.addText(encodeXML(url));
+
+		if (modifiedDate != null) {
+			Element modifiedDateElement = urlElement.addElement("lastmod");
+
+			DateFormat iso8601DateFormat = DateUtil.getISO8601Format();
+
+			modifiedDateElement.addText(iso8601DateFormat.format(modifiedDate));
+		}
 
 		if (typeSettingsProperties == null) {
 			if (Validator.isNotNull(
@@ -118,14 +128,6 @@ public class SitemapImpl implements Sitemap {
 				priorityElement.addText(
 					PropsValues.SITES_SITEMAP_DEFAULT_PRIORITY);
 			}
-		}
-
-		if (modifiedDate != null) {
-			Element modifiedDateElement = urlElement.addElement("lastmod");
-
-			DateFormat iso8601DateFormat = DateUtil.getISO8601Format();
-
-			modifiedDateElement.addText(iso8601DateFormat.format(modifiedDate));
 		}
 
 		if (alternateURLs != null) {
@@ -195,6 +197,13 @@ public class SitemapImpl implements Sitemap {
 		else {
 			rootElement = document.addElement(
 				"urlset", "http://www.sitemaps.org/schemas/sitemap/0.9");
+
+			rootElement.addAttribute(
+				"xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+			rootElement.addAttribute(
+				"xsi:schemaLocation",
+				"http://www.w3.org/1999/xhtml " +
+					"http://www.w3.org/2002/08/xhtml/xhtml1-strict.xsd");
 		}
 
 		rootElement.addAttribute("xmlns:xhtml", "http://www.w3.org/1999/xhtml");
@@ -224,11 +233,16 @@ public class SitemapImpl implements Sitemap {
 			}
 		}
 
+		if (!rootElement.hasContent()) {
+			return StringPool.BLANK;
+		}
+
 		return document.asXML();
 	}
 
 	protected void visitLayoutSet(
-		Element element, LayoutSet layoutSet, ThemeDisplay themeDisplay) {
+			Element element, LayoutSet layoutSet, ThemeDisplay themeDisplay)
+		throws PortalException {
 
 		if (layoutSet.isPrivateLayout()) {
 			return;
@@ -249,24 +263,38 @@ public class SitemapImpl implements Sitemap {
 			}
 
 			List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
-				layoutSet.getGroupId(), layoutSet.getPrivateLayout(),
+				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
 				entry.getKey());
 
 			for (Layout layout : layouts) {
+				UnicodeProperties typeSettingsProperties =
+					layout.getTypeSettingsProperties();
+
+				boolean sitemapInclude = GetterUtil.getBoolean(
+					typeSettingsProperties.getProperty(
+						LayoutTypePortletConstants.SITEMAP_INCLUDE),
+					true);
+
+				if (!sitemapInclude) {
+					continue;
+				}
+
 				Element sitemapElement = element.addElement("sitemap");
 
 				Element locationElement = sitemapElement.addElement("loc");
 
-				StringBundler sb = new StringBundler(8);
+				StringBundler sb = new StringBundler(10);
 
 				sb.append(portalURL);
 				sb.append(PortalUtil.getPathContext());
-				sb.append("/sitemap.xml?layoutUuid=");
+				sb.append("/sitemap.xml?p_l_id=");
+				sb.append(layout.getPlid());
+				sb.append("&layoutUuid=");
 				sb.append(layout.getUuid());
 				sb.append("&groupId=");
 				sb.append(layoutSet.getGroupId());
 				sb.append("&privateLayout=");
-				sb.append(layout.getPrivateLayout());
+				sb.append(layout.isPrivateLayout());
 
 				locationElement.addText(sb.toString());
 			}

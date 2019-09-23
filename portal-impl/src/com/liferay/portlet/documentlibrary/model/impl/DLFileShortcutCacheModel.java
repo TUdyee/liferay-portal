@@ -14,14 +14,11 @@
 
 package com.liferay.portlet.documentlibrary.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.kernel.model.DLFileShortcut;
-
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing DLFileShortcut in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DLFileShortcut
  * @generated
  */
-@ProviderType
-public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
-	Externalizable {
+public class DLFileShortcutCacheModel
+	implements CacheModel<DLFileShortcut>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 			return false;
 		}
 
-		DLFileShortcutCacheModel dlFileShortcutCacheModel = (DLFileShortcutCacheModel)obj;
+		DLFileShortcutCacheModel dlFileShortcutCacheModel =
+			(DLFileShortcutCacheModel)obj;
 
-		if (fileShortcutId == dlFileShortcutCacheModel.fileShortcutId) {
+		if ((fileShortcutId == dlFileShortcutCacheModel.fileShortcutId) &&
+			(mvccVersion == dlFileShortcutCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,28 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, fileShortcutId);
+		int hashCode = HashUtil.hash(0, fileShortcutId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(37);
+		StringBundler sb = new StringBundler(39);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", fileShortcutId=");
 		sb.append(fileShortcutId);
@@ -113,8 +126,10 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 	public DLFileShortcut toEntityModel() {
 		DLFileShortcutImpl dlFileShortcutImpl = new DLFileShortcutImpl();
 
+		dlFileShortcutImpl.setMvccVersion(mvccVersion);
+
 		if (uuid == null) {
-			dlFileShortcutImpl.setUuid(StringPool.BLANK);
+			dlFileShortcutImpl.setUuid("");
 		}
 		else {
 			dlFileShortcutImpl.setUuid(uuid);
@@ -126,7 +141,7 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 		dlFileShortcutImpl.setUserId(userId);
 
 		if (userName == null) {
-			dlFileShortcutImpl.setUserName(StringPool.BLANK);
+			dlFileShortcutImpl.setUserName("");
 		}
 		else {
 			dlFileShortcutImpl.setUserName(userName);
@@ -151,7 +166,7 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 		dlFileShortcutImpl.setToFileEntryId(toFileEntryId);
 
 		if (treePath == null) {
-			dlFileShortcutImpl.setTreePath(StringPool.BLANK);
+			dlFileShortcutImpl.setTreePath("");
 		}
 		else {
 			dlFileShortcutImpl.setTreePath(treePath);
@@ -170,7 +185,7 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 		dlFileShortcutImpl.setStatusByUserId(statusByUserId);
 
 		if (statusByUserName == null) {
-			dlFileShortcutImpl.setStatusByUserName(StringPool.BLANK);
+			dlFileShortcutImpl.setStatusByUserName("");
 		}
 		else {
 			dlFileShortcutImpl.setStatusByUserName(statusByUserName);
@@ -190,6 +205,7 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		fileShortcutId = objectInput.readLong();
@@ -221,10 +237,11 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(uuid);
@@ -239,7 +256,7 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 		objectOutput.writeLong(userId);
 
 		if (userName == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(userName);
@@ -255,7 +272,7 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 		objectOutput.writeLong(toFileEntryId);
 
 		if (treePath == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(treePath);
@@ -269,7 +286,7 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 		objectOutput.writeLong(statusByUserId);
 
 		if (statusByUserName == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(statusByUserName);
@@ -278,6 +295,7 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long fileShortcutId;
 	public long groupId;
@@ -296,4 +314,5 @@ public class DLFileShortcutCacheModel implements CacheModel<DLFileShortcut>,
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

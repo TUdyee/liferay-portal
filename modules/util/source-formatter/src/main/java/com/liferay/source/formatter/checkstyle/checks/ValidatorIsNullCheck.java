@@ -14,6 +14,8 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -40,47 +42,65 @@ public class ValidatorIsNullCheck extends BaseCheck {
 	private void _checkMethod(
 		DetailAST detailAST, String className, String methodName) {
 
-		List<DetailAST> methodCallASTList = DetailASTUtil.getMethodCalls(
+		List<DetailAST> methodCallDetailASTList = DetailASTUtil.getMethodCalls(
 			detailAST, className, methodName);
 
-		for (DetailAST methodCallAST : methodCallASTList) {
-			DetailAST elistAST = methodCallAST.findFirstToken(TokenTypes.ELIST);
+		for (DetailAST methodCallDetailAST : methodCallDetailASTList) {
+			DetailAST elistDetailAST = methodCallDetailAST.findFirstToken(
+				TokenTypes.ELIST);
 
-			DetailAST expressionAST = elistAST.findFirstToken(TokenTypes.EXPR);
+			DetailAST expressionDetailAST = elistDetailAST.findFirstToken(
+				TokenTypes.EXPR);
 
-			DetailAST child = expressionAST.getFirstChild();
+			DetailAST childDetailAST = expressionDetailAST.getFirstChild();
 
-			if (child.getType() == TokenTypes.NUM_INT) {
+			if (childDetailAST.getType() == TokenTypes.NUM_INT) {
 				log(
-					methodCallAST.getLineNo(), _MSG_METHOD_INVALID_NAME,
-					className + "." + methodName + "(long)");
+					methodCallDetailAST, _MSG_INVALID_METHOD_NAME,
+					StringBundler.concat(className, ".", methodName, "(long)"));
 
 				continue;
 			}
 
-			if (child.getType() != TokenTypes.IDENT) {
+			if (childDetailAST.getType() != TokenTypes.IDENT) {
 				continue;
 			}
 
-			DetailAST typeAST = DetailASTUtil.findTypeAST(
-				detailAST, child.getText());
+			DetailAST typeDetailAST = DetailASTUtil.getVariableTypeDetailAST(
+				methodCallDetailAST, childDetailAST.getText());
 
-			if (typeAST == null) {
+			if (typeDetailAST == null) {
 				continue;
 			}
 
-			child = typeAST.getFirstChild();
+			childDetailAST = typeDetailAST.getFirstChild();
 
-			if ((child.getType() == TokenTypes.LITERAL_INT) ||
-				(child.getType() == TokenTypes.LITERAL_LONG)) {
+			if ((childDetailAST.getType() == TokenTypes.LITERAL_INT) ||
+				(childDetailAST.getType() == TokenTypes.LITERAL_LONG)) {
 
 				log(
-					methodCallAST.getLineNo(), _MSG_METHOD_INVALID_NAME,
-					className + "." + methodName + "(long)");
+					methodCallDetailAST, _MSG_INVALID_METHOD_NAME,
+					StringBundler.concat(className, ".", methodName, "(long)"));
+
+				continue;
+			}
+
+			String typeName = DetailASTUtil.getTypeName(typeDetailAST, true);
+
+			if (Validator.isNotNull(typeName) && !typeName.equals("Long") &&
+				!typeName.equals("Object") &&
+				!typeName.equals("Serializable") &&
+				!typeName.equals("String")) {
+
+				log(
+					methodCallDetailAST, _MSG_RESERVED_METHOD,
+					StringBundler.concat(className, ".", methodName));
 			}
 		}
 	}
 
-	private static final String _MSG_METHOD_INVALID_NAME = "method.invalidName";
+	private static final String _MSG_INVALID_METHOD_NAME = "method.invalidName";
+
+	private static final String _MSG_RESERVED_METHOD = "method.reserved";
 
 }

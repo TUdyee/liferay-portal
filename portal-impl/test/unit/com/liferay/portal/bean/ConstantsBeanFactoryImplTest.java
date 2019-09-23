@@ -14,14 +14,13 @@
 
 package com.liferay.portal.bean;
 
-import com.liferay.petra.memory.FinalizeManager;
-import com.liferay.portal.kernel.process.ClassPathUtil;
+import com.liferay.petra.process.ClassPathUtil;
+import com.liferay.portal.kernel.test.FinalizeManagerUtil;
 import com.liferay.portal.kernel.test.GCUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.test.aspects.ReflectionUtilAdvice;
 import com.liferay.portal.test.rule.AdviseWith;
 import com.liferay.portal.test.rule.AspectJNewEnvTestRule;
@@ -53,7 +52,7 @@ public class ConstantsBeanFactoryImplTest {
 		new AggregateTestRule(
 			AspectJNewEnvTestRule.INSTANCE, CodeCoverageAssertor.INSTANCE);
 
-	@AdviseWith(adviceClasses = {ReflectionUtilAdvice.class})
+	@AdviseWith(adviceClasses = ReflectionUtilAdvice.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testClassInitializationFailure() throws Exception {
@@ -327,9 +326,6 @@ public class ConstantsBeanFactoryImplTest {
 
 	@Test
 	public void testToConstantsBean() throws Exception {
-		System.setProperty(
-			FinalizeManager.class.getName() + ".thread.enabled",
-			StringPool.FALSE);
 
 		// First create
 
@@ -406,8 +402,7 @@ public class ConstantsBeanFactoryImplTest {
 
 		GCUtil.gc(true);
 
-		ReflectionTestUtil.invoke(
-			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
+		FinalizeManagerUtil.drainPendingFinalizeActions();
 
 		Assert.assertSame(
 			constantsBean2,
@@ -421,10 +416,9 @@ public class ConstantsBeanFactoryImplTest {
 
 		GCUtil.gc(true);
 
-		ReflectionTestUtil.invoke(
-			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
+		FinalizeManagerUtil.drainPendingFinalizeActions();
 
-		Assert.assertTrue(constantsBeans.isEmpty());
+		Assert.assertTrue(constantsBeans.toString(), constantsBeans.isEmpty());
 	}
 
 	public static class Constants {

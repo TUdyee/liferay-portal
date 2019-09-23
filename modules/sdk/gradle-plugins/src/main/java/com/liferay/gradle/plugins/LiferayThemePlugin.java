@@ -21,6 +21,7 @@ import com.liferay.gradle.plugins.internal.util.FileUtil;
 import com.liferay.gradle.plugins.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.lang.builder.BuildLangTask;
 import com.liferay.gradle.plugins.lang.builder.LangBuilderPlugin;
+import com.liferay.gradle.plugins.node.NodePlugin;
 import com.liferay.gradle.plugins.source.formatter.SourceFormatterPlugin;
 import com.liferay.gradle.util.Validator;
 
@@ -157,6 +158,7 @@ public class LiferayThemePlugin implements Plugin<Project> {
 
 		String name = null;
 
+		@SuppressWarnings("unchecked")
 		Map<String, Object> liferayThemeMap =
 			(Map<String, Object>)packageJsonMap.get("liferayTheme");
 
@@ -178,6 +180,7 @@ public class LiferayThemePlugin implements Plugin<Project> {
 		basePluginConvention.setArchivesBaseName(name);
 	}
 
+	@SuppressWarnings("serial")
 	private void _configureArtifacts(final Project project) {
 		ArtifactHandler artifacts = project.getArtifacts();
 
@@ -193,6 +196,13 @@ public class LiferayThemePlugin implements Plugin<Project> {
 
 					Task gulpBuildTask = GradleUtil.getTask(
 						project, _GULP_BUILD_TASK_NAME);
+
+					if (GradleUtil.hasTask(
+							project, NodePlugin.PACKAGE_RUN_BUILD_TASK_NAME)) {
+
+						gulpBuildTask.finalizedBy(
+							NodePlugin.PACKAGE_RUN_BUILD_TASK_NAME);
+					}
 
 					configurablePublishArtifact.builtBy(gulpBuildTask);
 				}
@@ -268,6 +278,7 @@ public class LiferayThemePlugin implements Plugin<Project> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> _getPackageJsonMap(Project project) {
 		File file = project.file("package.json");
 

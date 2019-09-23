@@ -1,0 +1,54 @@
+.taglib-ratings {
+	&.stars {
+		.liferay-rating-score {
+			padding-left: 15px;
+		}
+
+		.liferay-rating-vote,
+		.liferay-rating-score {
+			display: inline-block;
+		}
+
+		.lexicon-icon {
+			pointer-events: none;
+		}
+	}
+
+	&.stacked-stars .liferay-rating-score {
+		> div {
+			display: flex;
+		}
+
+		.rating-element {
+			color: #ffb900;
+			padding-top: 3px;
+		}
+
+		.rating-label {
+			margin-left: 8px;
+		}
+	}
+
+	&.like,
+	&.thumbs {
+		.rating-element * {
+			pointer-events: none;
+		}
+	}
+
+	.rating-input-container {
+		display: none;
+
+		.rating-input {
+			margin-left: 1px;
+		}
+	}
+
+	.icon-star-off svg.lexicon-icon-star {
+		display: none;
+	}
+
+	.icon-star-on svg.lexicon-icon-star-o {
+		display: none;
+	}
+}

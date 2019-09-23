@@ -15,7 +15,10 @@
 package com.liferay.source.formatter;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Raymond Augé
@@ -33,6 +36,8 @@ public class SourceFormatterArgs {
 	public static final boolean FORMAT_LOCAL_CHANGES = false;
 
 	public static final String GIT_WORKING_BRANCH_NAME = "master";
+
+	public static final boolean INCLUDE_GENERATED_FILES = false;
 
 	public static final boolean INCLUDE_SUBREPOSITORIES = false;
 
@@ -53,8 +58,25 @@ public class SourceFormatterArgs {
 
 	public static final boolean THROW_EXCEPTION = false;
 
+	public void addRecentChangesFileNames(
+		Collection<String> fileNames, String baseDirName) {
+
+		for (String fileName : fileNames) {
+			if (baseDirName != null) {
+				_recentChangesFileNames.add(_baseDirName.concat(fileName));
+			}
+			else {
+				_recentChangesFileNames.add(fileName);
+			}
+		}
+	}
+
 	public String getBaseDirName() {
 		return _baseDirName;
+	}
+
+	public String getCheckName() {
+		return _checkName;
 	}
 
 	public List<String> getFileExtensions() {
@@ -77,8 +99,12 @@ public class SourceFormatterArgs {
 		return _processorThreadCount;
 	}
 
-	public List<String> getRecentChangesFileNames() {
+	public Set<String> getRecentChangesFileNames() {
 		return _recentChangesFileNames;
+	}
+
+	public List<String> getSkipCheckNames() {
+		return _skipCheckNames;
 	}
 
 	public boolean isAutoFix() {
@@ -95,6 +121,10 @@ public class SourceFormatterArgs {
 
 	public boolean isFormatLocalChanges() {
 		return _formatLocalChanges;
+	}
+
+	public boolean isIncludeGeneratedFiles() {
+		return _includeGeneratedFiles;
 	}
 
 	public boolean isIncludeSubrepositories() {
@@ -137,6 +167,10 @@ public class SourceFormatterArgs {
 		_baseDirName = baseDirName;
 	}
 
+	public void setCheckName(String checkName) {
+		_checkName = checkName;
+	}
+
 	public void setFileExtensions(List<String> fileExtensions) {
 		_fileExtensions = fileExtensions;
 	}
@@ -170,6 +204,10 @@ public class SourceFormatterArgs {
 		_gitWorkingBranchName = gitWorkingBranchName;
 	}
 
+	public void setIncludeGeneratedFiles(boolean includeGeneratedFiles) {
+		_includeGeneratedFiles = includeGeneratedFiles;
+	}
+
 	public void setIncludeSubrepositories(boolean includeSubrepositories) {
 		_includeSubrepositories = includeSubrepositories;
 	}
@@ -186,10 +224,6 @@ public class SourceFormatterArgs {
 		_processorThreadCount = processorThreadCount;
 	}
 
-	public void setRecentChangesFileNames(List<String> recentChangesFileNames) {
-		_recentChangesFileNames = recentChangesFileNames;
-	}
-
 	public void setShowDebugInformation(boolean showDebugInformation) {
 		_showDebugInformation = showDebugInformation;
 	}
@@ -202,26 +236,33 @@ public class SourceFormatterArgs {
 		_showStatusUpdates = showStatusUpdates;
 	}
 
+	public void setSkipCheckNames(List<String> skipCheckNames) {
+		_skipCheckNames = skipCheckNames;
+	}
+
 	public void setThrowException(boolean throwException) {
 		_throwException = throwException;
 	}
 
 	private boolean _autoFix = AUTO_FIX;
 	private String _baseDirName = BASE_DIR_NAME;
+	private String _checkName;
 	private List<String> _fileExtensions = new ArrayList<>();
 	private List<String> _fileNames;
 	private boolean _formatCurrentBranch = FORMAT_CURRENT_BRANCH;
 	private boolean _formatLatestAuthor = FORMAT_LATEST_AUTHOR;
 	private boolean _formatLocalChanges = FORMAT_LOCAL_CHANGES;
 	private String _gitWorkingBranchName = GIT_WORKING_BRANCH_NAME;
+	private boolean _includeGeneratedFiles = INCLUDE_GENERATED_FILES;
 	private boolean _includeSubrepositories = INCLUDE_SUBREPOSITORIES;
 	private int _maxLineLength = MAX_LINE_LENGTH;
 	private boolean _printErrors = PRINT_ERRORS;
 	private int _processorThreadCount = PROCESSOR_THREAD_COUNT;
-	private List<String> _recentChangesFileNames;
+	private final Set<String> _recentChangesFileNames = new HashSet<>();
 	private boolean _showDebugInformation = SHOW_DEBUG_INFORMATION;
 	private boolean _showDocumentation = SHOW_DOCUMENTATION;
 	private boolean _showStatusUpdates = SHOW_STATUS_UPDATES;
+	private List<String> _skipCheckNames = new ArrayList<>();
 	private boolean _throwException = THROW_EXCEPTION;
 
 }

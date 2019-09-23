@@ -14,14 +14,11 @@
 
 package com.liferay.opensocial.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.opensocial.model.OAuthConsumer;
 import com.liferay.opensocial.service.OAuthConsumerLocalService;
 import com.liferay.opensocial.service.persistence.GadgetPersistence;
 import com.liferay.opensocial.service.persistence.OAuthConsumerPersistence;
 import com.liferay.opensocial.service.persistence.OAuthTokenPersistence;
-
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -43,6 +40,7 @@ import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
@@ -61,17 +59,16 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.opensocial.service.impl.OAuthConsumerLocalServiceImpl
- * @see com.liferay.opensocial.service.OAuthConsumerLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class OAuthConsumerLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements OAuthConsumerLocalService,
-		IdentifiableOSGiService {
-	/*
+	extends BaseLocalServiceImpl
+	implements OAuthConsumerLocalService, IdentifiableOSGiService {
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.opensocial.service.OAuthConsumerLocalServiceUtil} to access the o auth consumer local service.
+	 * Never modify or reference this class directly. Use <code>OAuthConsumerLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.opensocial.service.OAuthConsumerLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -95,6 +92,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * @return the new o auth consumer
 	 */
 	@Override
+	@Transactional(enabled = false)
 	public OAuthConsumer createOAuthConsumer(long oAuthConsumerId) {
 		return oAuthConsumerPersistence.create(oAuthConsumerId);
 	}
@@ -110,6 +108,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	@Override
 	public OAuthConsumer deleteOAuthConsumer(long oAuthConsumerId)
 		throws PortalException {
+
 		return oAuthConsumerPersistence.remove(oAuthConsumerId);
 	}
 
@@ -129,8 +128,8 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(OAuthConsumer.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			OAuthConsumer.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -148,7 +147,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.opensocial.model.impl.OAuthConsumerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.opensocial.model.impl.OAuthConsumerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -157,17 +156,18 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return oAuthConsumerPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return oAuthConsumerPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.opensocial.model.impl.OAuthConsumerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.opensocial.model.impl.OAuthConsumerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -177,10 +177,12 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return oAuthConsumerPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return oAuthConsumerPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -202,10 +204,11 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return oAuthConsumerPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return oAuthConsumerPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -223,12 +226,14 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	@Override
 	public OAuthConsumer getOAuthConsumer(long oAuthConsumerId)
 		throws PortalException {
+
 		return oAuthConsumerPersistence.findByPrimaryKey(oAuthConsumerId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(oAuthConsumerLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -240,10 +245,14 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(oAuthConsumerLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			oAuthConsumerLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(OAuthConsumer.class);
 
@@ -255,6 +264,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(oAuthConsumerLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(OAuthConsumer.class);
@@ -268,12 +278,15 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return oAuthConsumerLocalService.deleteOAuthConsumer((OAuthConsumer)persistedModel);
+
+		return oAuthConsumerLocalService.deleteOAuthConsumer(
+			(OAuthConsumer)persistedModel);
 	}
 
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return oAuthConsumerPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -281,7 +294,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * Returns a range of all the o auth consumers.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.opensocial.model.impl.OAuthConsumerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.opensocial.model.impl.OAuthConsumerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of o auth consumers
@@ -320,7 +333,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 *
 	 * @return the gadget local service
 	 */
-	public com.liferay.opensocial.service.GadgetLocalService getGadgetLocalService() {
+	public com.liferay.opensocial.service.GadgetLocalService
+		getGadgetLocalService() {
+
 		return gadgetLocalService;
 	}
 
@@ -331,6 +346,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 */
 	public void setGadgetLocalService(
 		com.liferay.opensocial.service.GadgetLocalService gadgetLocalService) {
+
 		this.gadgetLocalService = gadgetLocalService;
 	}
 
@@ -368,6 +384,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 */
 	public void setOAuthConsumerLocalService(
 		OAuthConsumerLocalService oAuthConsumerLocalService) {
+
 		this.oAuthConsumerLocalService = oAuthConsumerLocalService;
 	}
 
@@ -387,6 +404,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 */
 	public void setOAuthConsumerPersistence(
 		OAuthConsumerPersistence oAuthConsumerPersistence) {
+
 		this.oAuthConsumerPersistence = oAuthConsumerPersistence;
 	}
 
@@ -395,7 +413,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 *
 	 * @return the o auth token local service
 	 */
-	public com.liferay.opensocial.service.OAuthTokenLocalService getOAuthTokenLocalService() {
+	public com.liferay.opensocial.service.OAuthTokenLocalService
+		getOAuthTokenLocalService() {
+
 		return oAuthTokenLocalService;
 	}
 
@@ -405,7 +425,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * @param oAuthTokenLocalService the o auth token local service
 	 */
 	public void setOAuthTokenLocalService(
-		com.liferay.opensocial.service.OAuthTokenLocalService oAuthTokenLocalService) {
+		com.liferay.opensocial.service.OAuthTokenLocalService
+			oAuthTokenLocalService) {
+
 		this.oAuthTokenLocalService = oAuthTokenLocalService;
 	}
 
@@ -425,6 +447,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 */
 	public void setOAuthTokenPersistence(
 		OAuthTokenPersistence oAuthTokenPersistence) {
+
 		this.oAuthTokenPersistence = oAuthTokenPersistence;
 	}
 
@@ -433,7 +456,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -443,7 +468,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
 	}
 
@@ -452,7 +479,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 *
 	 * @return the class name local service
 	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
+	public com.liferay.portal.kernel.service.ClassNameLocalService
+		getClassNameLocalService() {
+
 		return classNameLocalService;
 	}
 
@@ -462,7 +491,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * @param classNameLocalService the class name local service
 	 */
 	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
+		com.liferay.portal.kernel.service.ClassNameLocalService
+			classNameLocalService) {
+
 		this.classNameLocalService = classNameLocalService;
 	}
 
@@ -482,6 +513,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 */
 	public void setClassNamePersistence(
 		ClassNamePersistence classNamePersistence) {
+
 		this.classNamePersistence = classNamePersistence;
 	}
 
@@ -490,7 +522,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 *
 	 * @return the resource local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
+	public com.liferay.portal.kernel.service.ResourceLocalService
+		getResourceLocalService() {
+
 		return resourceLocalService;
 	}
 
@@ -500,7 +534,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 * @param resourceLocalService the resource local service
 	 */
 	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
+		com.liferay.portal.kernel.service.ResourceLocalService
+			resourceLocalService) {
+
 		this.resourceLocalService = resourceLocalService;
 	}
 
@@ -509,7 +545,9 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 *
 	 * @return the user local service
 	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
+	public com.liferay.portal.kernel.service.UserLocalService
+		getUserLocalService() {
+
 		return userLocalService;
 	}
 
@@ -520,6 +558,7 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	 */
 	public void setUserLocalService(
 		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
+
 		this.userLocalService = userLocalService;
 	}
 
@@ -542,11 +581,8 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	}
 
 	public void afterPropertiesSet() {
-		Class<?> clazz = getClass();
-
-		_classLoader = clazz.getClassLoader();
-
-		PersistedModelLocalServiceRegistryUtil.register("com.liferay.opensocial.model.OAuthConsumer",
+		PersistedModelLocalServiceRegistryUtil.register(
+			"com.liferay.opensocial.model.OAuthConsumer",
 			oAuthConsumerLocalService);
 	}
 
@@ -563,27 +599,6 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 	@Override
 	public String getOSGiServiceIdentifier() {
 		return OAuthConsumerLocalService.class.getName();
-	}
-
-	@Override
-	public Object invokeMethod(String name, String[] parameterTypes,
-		Object[] arguments) throws Throwable {
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		if (contextClassLoader != _classLoader) {
-			currentThread.setContextClassLoader(_classLoader);
-		}
-
-		try {
-			return _clpInvoker.invokeMethod(name, parameterTypes, arguments);
-		}
-		finally {
-			if (contextClassLoader != _classLoader) {
-				currentThread.setContextClassLoader(contextClassLoader);
-			}
-		}
 	}
 
 	protected Class<?> getModelClass() {
@@ -608,8 +623,8 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
@@ -618,30 +633,58 @@ public abstract class OAuthConsumerLocalServiceBaseImpl
 		}
 	}
 
-	@BeanReference(type = com.liferay.opensocial.service.GadgetLocalService.class)
-	protected com.liferay.opensocial.service.GadgetLocalService gadgetLocalService;
+	@BeanReference(
+		type = com.liferay.opensocial.service.GadgetLocalService.class
+	)
+	protected com.liferay.opensocial.service.GadgetLocalService
+		gadgetLocalService;
+
 	@BeanReference(type = GadgetPersistence.class)
 	protected GadgetPersistence gadgetPersistence;
+
 	@BeanReference(type = OAuthConsumerLocalService.class)
 	protected OAuthConsumerLocalService oAuthConsumerLocalService;
+
 	@BeanReference(type = OAuthConsumerPersistence.class)
 	protected OAuthConsumerPersistence oAuthConsumerPersistence;
-	@BeanReference(type = com.liferay.opensocial.service.OAuthTokenLocalService.class)
-	protected com.liferay.opensocial.service.OAuthTokenLocalService oAuthTokenLocalService;
+
+	@BeanReference(
+		type = com.liferay.opensocial.service.OAuthTokenLocalService.class
+	)
+	protected com.liferay.opensocial.service.OAuthTokenLocalService
+		oAuthTokenLocalService;
+
 	@BeanReference(type = OAuthTokenPersistence.class)
 	protected OAuthTokenPersistence oAuthTokenPersistence;
-	@BeanReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@BeanReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
+
+	@BeanReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
 	@BeanReference(type = ClassNamePersistence.class)
 	protected ClassNamePersistence classNamePersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@BeanReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourceLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.UserLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
 	@BeanReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
-	private ClassLoader _classLoader;
-	private OAuthConsumerLocalServiceClpInvoker _clpInvoker = new OAuthConsumerLocalServiceClpInvoker();
+
 }

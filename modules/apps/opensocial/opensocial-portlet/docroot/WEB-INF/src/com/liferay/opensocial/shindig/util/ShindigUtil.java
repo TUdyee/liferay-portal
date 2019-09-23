@@ -23,6 +23,9 @@ import com.liferay.opensocial.model.impl.GadgetImpl;
 import com.liferay.opensocial.service.GadgetLocalServiceUtil;
 import com.liferay.opensocial.service.OAuthConsumerLocalServiceUtil;
 import com.liferay.opensocial.util.PortletPropsValues;
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -31,14 +34,13 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.permission.ModelPermissions;
+import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.AutoResetThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
@@ -203,10 +205,7 @@ public class ShindigUtil {
 
 		uuid = PortalUUIDUtil.fromJsSafeUuid(uuid);
 
-		com.liferay.opensocial.model.Gadget gadget =
-			GadgetLocalServiceUtil.getGadget(uuid, companyId);
-
-		return gadget;
+		return GadgetLocalServiceUtil.getGadget(uuid, companyId);
 	}
 
 	public static Folder getGadgetEditorRootFolder(long repositoryId)
@@ -225,12 +224,15 @@ public class ShindigUtil {
 		if (folder == null) {
 			ServiceContext serviceContext = new ServiceContext();
 
-			serviceContext.setGroupPermissions(
+			ModelPermissions modelPermissions = ModelPermissionsFactory.create(
 				new String[] {
 					ActionKeys.ADD_DOCUMENT, ActionKeys.DELETE,
 					ActionKeys.UPDATE, ActionKeys.VIEW
-				});
-			serviceContext.setGuestPermissions(new String[] {ActionKeys.VIEW});
+				},
+				new String[] {ActionKeys.VIEW});
+
+			serviceContext.setModelPermissions(modelPermissions);
+
 			serviceContext.setScopeGroupId(repositoryId);
 
 			folder = DLAppServiceUtil.addFolder(
@@ -389,9 +391,8 @@ public class ShindigUtil {
 		if (user.isDefaultUser()) {
 			return false;
 		}
-		else {
-			return true;
-		}
+
+		return true;
 	}
 
 	public static void setHost(String host) {
@@ -472,17 +473,17 @@ public class ShindigUtil {
 	@Inject
 	private static ContainerConfig _containerConfig;
 
-	private static final AutoResetThreadLocal<String> _host =
-		new AutoResetThreadLocal<>(
-			ShindigUtil.class + "._host", StringPool.BLANK);
+	private static final ThreadLocal<String> _host =
+		new CentralizedThreadLocal<>(
+			ShindigUtil.class + "._host", () -> StringPool.BLANK);
 	private static final Set<String> _ignoreGadgetSpecCache =
 		Collections.newSetFromMap(new ConcurrentHashMap<>());
 
 	@Inject
 	private static Processor _processor;
 
-	private static final AutoResetThreadLocal<String> _scheme =
-		new AutoResetThreadLocal<>(
-			ShindigUtil.class + "._scheme", StringPool.BLANK);
+	private static final ThreadLocal<String> _scheme =
+		new CentralizedThreadLocal<>(
+			ShindigUtil.class + "._scheme", () -> StringPool.BLANK);
 
 }

@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Provides a wrapper for {@link ClassNameService}.
@@ -23,30 +22,37 @@ import aQute.bnd.annotation.ProviderType;
  * @see ClassNameService
  * @generated
  */
-@ProviderType
-public class ClassNameServiceWrapper implements ClassNameService,
-	ServiceWrapper<ClassNameService> {
+public class ClassNameServiceWrapper
+	implements ClassNameService, ServiceWrapper<ClassNameService> {
+
 	public ClassNameServiceWrapper(ClassNameService classNameService) {
 		_classNameService = classNameService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link ClassNameServiceUtil} to access the class name remote service. Add custom service methods to <code>com.liferay.portal.service.impl.ClassNameServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.ClassName fetchByClassNameId(
 		long classNameId) {
+
 		return _classNameService.fetchByClassNameId(classNameId);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.model.ClassName fetchClassName(
 		java.lang.String value) {
+
 		return _classNameService.fetchClassName(value);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public java.lang.String getOSGiServiceIdentifier() {
 		return _classNameService.getOSGiServiceIdentifier();
@@ -63,4 +69,5 @@ public class ClassNameServiceWrapper implements ClassNameService,
 	}
 
 	private ClassNameService _classNameService;
+
 }

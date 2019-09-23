@@ -14,8 +14,6 @@
 
 package com.liferay.screens.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,53 +23,66 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see ScreensAssetEntryService
  * @generated
  */
-@ProviderType
-public class ScreensAssetEntryServiceWrapper implements ScreensAssetEntryService,
-	ServiceWrapper<ScreensAssetEntryService> {
+public class ScreensAssetEntryServiceWrapper
+	implements ScreensAssetEntryService,
+			   ServiceWrapper<ScreensAssetEntryService> {
+
 	public ScreensAssetEntryServiceWrapper(
 		ScreensAssetEntryService screensAssetEntryService) {
+
 		_screensAssetEntryService = screensAssetEntryService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link ScreensAssetEntryServiceUtil} to access the screens asset entry remote service. Add custom service methods to <code>com.liferay.screens.service.impl.ScreensAssetEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
 	public com.liferay.portal.kernel.json.JSONArray getAssetEntries(
-		com.liferay.asset.kernel.service.persistence.AssetEntryQuery assetEntryQuery,
-		java.util.Locale locale)
+			com.liferay.asset.kernel.service.persistence.AssetEntryQuery
+				assetEntryQuery,
+			java.util.Locale locale)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _screensAssetEntryService.getAssetEntries(assetEntryQuery, locale);
+
+		return _screensAssetEntryService.getAssetEntries(
+			assetEntryQuery, locale);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.json.JSONArray getAssetEntries(
-		long companyId, long groupId, java.lang.String portletItemName,
-		java.util.Locale locale, int max)
+			long companyId, long groupId, String portletItemName,
+			java.util.Locale locale, int max)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _screensAssetEntryService.getAssetEntries(companyId, groupId,
-			portletItemName, locale, max);
+
+		return _screensAssetEntryService.getAssetEntries(
+			companyId, groupId, portletItemName, locale, max);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.json.JSONObject getAssetEntry(
-		long entryId, java.util.Locale locale)
+			long entryId, java.util.Locale locale)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _screensAssetEntryService.getAssetEntry(entryId, locale);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.json.JSONObject getAssetEntry(
-		java.lang.String className, long classPK, java.util.Locale locale)
+			String className, long classPK, java.util.Locale locale)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _screensAssetEntryService.getAssetEntry(className, classPK,
-			locale);
+
+		return _screensAssetEntryService.getAssetEntry(
+			className, classPK, locale);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _screensAssetEntryService.getOSGiServiceIdentifier();
 	}
 
@@ -83,8 +94,10 @@ public class ScreensAssetEntryServiceWrapper implements ScreensAssetEntryService
 	@Override
 	public void setWrappedService(
 		ScreensAssetEntryService screensAssetEntryService) {
+
 		_screensAssetEntryService = screensAssetEntryService;
 	}
 
 	private ScreensAssetEntryService _screensAssetEntryService;
+
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.knowledge.base.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,11 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.knowledge.base.service.http.KBCommentServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.knowledge.base.service.http.KBCommentServiceSoap
  * @generated
  */
-@ProviderType
 public class KBCommentSoap implements Serializable {
+
 	public static KBCommentSoap toSoapModel(KBComment model) {
 		KBCommentSoap soapModel = new KBCommentSoap();
 
@@ -80,7 +77,8 @@ public class KBCommentSoap implements Serializable {
 	}
 
 	public static KBCommentSoap[] toSoapModels(List<KBComment> models) {
-		List<KBCommentSoap> soapModels = new ArrayList<KBCommentSoap>(models.size());
+		List<KBCommentSoap> soapModels = new ArrayList<KBCommentSoap>(
+			models.size());
 
 		for (KBComment model : models) {
 			soapModels.add(toSoapModel(model));
@@ -226,4 +224,5 @@ public class KBCommentSoap implements Serializable {
 	private int _userRating;
 	private Date _lastPublishDate;
 	private int _status;
+
 }

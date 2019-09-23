@@ -14,7 +14,7 @@
 
 package com.liferay.adaptive.media.web.internal.portlet;
 
-import com.liferay.adaptive.media.web.constants.AMPortletKeys;
+import com.liferay.adaptive.media.web.internal.constants.AMPortletKeys;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
@@ -41,21 +41,18 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.always-send-redirect=true",
 		"javax.portlet.init-param.mvc-command-names-default-views=/adaptive_media/view",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.name=" + AMPortletKeys.ADAPTIVE_MEDIA,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = Portlet.class
 )
 public class AMPortlet extends MVCPortlet {
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.adaptive.media.web)(release.schema.version=1.0.0))",
-		unbind = "-"
+		target = "(&(release.bundle.symbolic.name=com.liferay.adaptive.media.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
 	)
-	protected void setRelease(Release release) {
-	}
+	private Release _release;
 
 }

@@ -26,7 +26,6 @@ import javax.mail.Store;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMessage.RecipientType;
 
 /**
  * @author Kwang Lee
@@ -89,9 +88,7 @@ public class EmailCommands {
 	public static String getEmailSubject(int index) throws Exception {
 		Message message = _imapFolder.getMessage(index);
 
-		String subject = message.getSubject();
-
-		return subject;
+		return message.getSubject();
 	}
 
 	public static void replyToEmail(String to, String body) throws Exception {
@@ -99,11 +96,13 @@ public class EmailCommands {
 
 		Message replyMessage = message.reply(false);
 
-		replyMessage.setRecipient(RecipientType.TO, new InternetAddress(to));
+		replyMessage.setRecipient(
+			MimeMessage.RecipientType.TO, new InternetAddress(to));
 		replyMessage.setText(body);
 
 		_transport.sendMessage(
-			replyMessage, replyMessage.getRecipients(RecipientType.TO));
+			replyMessage,
+			replyMessage.getRecipients(MimeMessage.RecipientType.TO));
 
 		_transport.close();
 	}
@@ -113,7 +112,8 @@ public class EmailCommands {
 
 		Message message = new MimeMessage(_smtpSession);
 
-		message.addRecipient(RecipientType.TO, new InternetAddress(to));
+		message.addRecipient(
+			MimeMessage.RecipientType.TO, new InternetAddress(to));
 		message.setSubject(subject);
 		message.setText(body);
 

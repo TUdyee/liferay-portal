@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,11 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.service.http.TeamServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portal.service.http.TeamServiceSoap
  * @generated
  */
-@ProviderType
 public class TeamSoap implements Serializable {
+
 	public static TeamSoap toSoapModel(Team model) {
 		TeamSoap soapModel = new TeamSoap();
 
@@ -206,4 +203,5 @@ public class TeamSoap implements Serializable {
 	private String _name;
 	private String _description;
 	private Date _lastPublishDate;
+
 }

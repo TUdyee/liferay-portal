@@ -31,13 +31,13 @@ public class JSPButtonTagCheck extends BaseFileCheck {
 		if (matcher.find()) {
 			addMessage(
 				fileName, "No need to set 'type=button' for aui:button",
-				getLineCount(content, matcher.start()));
+				getLineNumber(content, matcher.start()));
 		}
 
 		return content;
 	}
 
-	private final Pattern _buttonTypePattern = Pattern.compile(
+	private static final Pattern _buttonTypePattern = Pattern.compile(
 		"<aui:button .*?type=\"button\"");
 
 }

@@ -14,14 +14,14 @@
 
 package com.liferay.portal.template;
 
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.xml.XMLUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PortletConstants;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.portal.kernel.util.AutoResetThreadLocal;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portlet.PortletPreferencesImpl;
-import com.liferay.util.xml.XMLUtil;
 
 import java.util.Collections;
 import java.util.Map;
@@ -80,41 +80,6 @@ public class TemplatePortletPreferences {
 		return getPreferences(Collections.singletonMap(key, value));
 	}
 
-	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
-	 */
-	@Deprecated
-	public void reset() {
-		PortletPreferencesImpl portletPreferencesImpl =
-			_portletPreferencesImplThreadLocal.get();
-
-		portletPreferencesImpl.reset();
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
-	 */
-	@Deprecated
-	public void setValue(String key, String value) throws ReadOnlyException {
-		PortletPreferencesImpl portletPreferencesImpl =
-			_portletPreferencesImplThreadLocal.get();
-
-		portletPreferencesImpl.setValue(key, value);
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
-	 */
-	@Deprecated
-	public void setValues(String key, String[] values)
-		throws ReadOnlyException {
-
-		PortletPreferencesImpl portletPreferencesImpl =
-			_portletPreferencesImplThreadLocal.get();
-
-		portletPreferencesImpl.setValues(key, values);
-	}
-
 	@Override
 	public String toString() {
 		PortletPreferencesImpl portletPreferencesImpl =
@@ -134,7 +99,7 @@ public class TemplatePortletPreferences {
 		TemplatePortletPreferences.class);
 
 	private final ThreadLocal<PortletPreferencesImpl>
-		_portletPreferencesImplThreadLocal = new AutoResetThreadLocal<>(
+		_portletPreferencesImplThreadLocal = new CentralizedThreadLocal<>(
 			TemplatePortletPreferences.class.getName(),
 			PortletPreferencesImpl::new);
 

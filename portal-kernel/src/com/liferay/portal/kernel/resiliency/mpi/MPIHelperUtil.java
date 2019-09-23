@@ -14,6 +14,8 @@
 
 package com.liferay.portal.kernel.resiliency.mpi;
 
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.config.MessagingConfigurator;
@@ -26,7 +28,6 @@ import com.liferay.portal.kernel.resiliency.spi.SPI;
 import com.liferay.portal.kernel.resiliency.spi.SPIConfiguration;
 import com.liferay.portal.kernel.resiliency.spi.SPIRegistryUtil;
 import com.liferay.portal.kernel.resiliency.spi.provider.SPIProvider;
-import com.liferay.portal.kernel.util.CentralizedThreadLocal;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 
@@ -53,7 +54,7 @@ public class MPIHelperUtil {
 			alive = spi.isAlive();
 		}
 		catch (RemoteException re) {
-			_log.error(re);
+			_log.error(re, re);
 		}
 
 		if (alive) {
@@ -157,8 +158,9 @@ public class MPIHelperUtil {
 			if (mpi != _mpi) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Not registering SPI " + spi + " with foreign MPI " +
-							mpi + " versus " + _mpi);
+						StringBundler.concat(
+							"Not registering SPI ", spi, " with foreign MPI ",
+							mpi, " versus ", _mpi));
 				}
 
 				return false;
@@ -172,8 +174,9 @@ public class MPIHelperUtil {
 			if (spiProviderContainer == null) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Not registering SPI " + spi +
-							" with unknown SPI provider " + spiProviderName);
+						StringBundler.concat(
+							"Not registering SPI ", spi,
+							" with unknown SPI provider ", spiProviderName));
 				}
 
 				return false;
@@ -187,8 +190,9 @@ public class MPIHelperUtil {
 			if (previousSPI != null) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Not registering SPI " + spi +
-							" because it duplicates " + previousSPI);
+						StringBundler.concat(
+							"Not registering SPI ", spi,
+							" because it duplicates ", previousSPI));
 				}
 
 				return false;
@@ -233,9 +237,10 @@ public class MPIHelperUtil {
 		if (previousSPIProviderContainer != null) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"Not registering SPI provider " + spiProvider +
-						" because it duplicates " +
-							previousSPIProviderContainer.getSPIProvider());
+					StringBundler.concat(
+						"Not registering SPI provider ", spiProvider,
+						" because it duplicates ",
+						previousSPIProviderContainer.getSPIProvider()));
 			}
 
 			return false;
@@ -281,8 +286,9 @@ public class MPIHelperUtil {
 			if (mpi != _mpi) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Not unregistering SPI " + spi + " with foreign MPI " +
-							mpi + " versus " + _mpi);
+						StringBundler.concat(
+							"Not unregistering SPI ", spi, " with foreign MPI ",
+							mpi, " versus ", _mpi));
 				}
 
 				return false;
@@ -296,8 +302,9 @@ public class MPIHelperUtil {
 			if (spiProviderContainer == null) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Not unregistering SPI " + spi +
-							" with unknown SPI provider " + spiProviderName);
+						StringBundler.concat(
+							"Not unregistering SPI ", spi,
+							" with unknown SPI provider ", spiProviderName));
 				}
 
 				return false;
@@ -353,15 +360,17 @@ public class MPIHelperUtil {
 
 					if (_log.isInfoEnabled()) {
 						_log.info(
-							"Unregistered SPI " + spi +
-								" while unregistering SPI provider " +
-									spiProvider);
+							StringBundler.concat(
+								"Unregistered SPI ", spi,
+								" while unregistering SPI provider ",
+								spiProvider));
 					}
 				}
 				catch (RemoteException re) {
 					_log.error(
-						"Unable to unregister SPI " + spi +
-							" while unregistering SPI provider " + spiProvider,
+						StringBundler.concat(
+							"Unable to unregister SPI ", spi,
+							" while unregistering SPI provider ", spiProvider),
 						re);
 				}
 				finally {

@@ -20,6 +20,7 @@ import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -31,7 +32,6 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.sharepoint.BaseSharepointStorageImpl;
 import com.liferay.portal.sharepoint.SharepointRequest;
@@ -72,7 +72,10 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 
 		for (FileEntry fileEntry : fileEntries) {
 			String documentPath = parentFolderPath.concat(
-				StringPool.SLASH).concat(fileEntry.getTitle());
+				StringPool.SLASH
+			).concat(
+				fileEntry.getTitle()
+			);
 
 			addDocumentElement(
 				element, documentPath, fileEntry.getCreateDate(),
@@ -147,11 +150,8 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 
 		String documentPath = sharepointRequest.getRootPath();
 
-		String parentFolderPath = getParentFolderPath(documentPath);
-
-		FileEntry fileEntry = getFileEntry(sharepointRequest);
-
-		return getFileEntryTree(fileEntry, parentFolderPath);
+		return getFileEntryTree(
+			getFileEntry(sharepointRequest), getParentFolderPath(documentPath));
 	}
 
 	@Override
@@ -188,14 +188,12 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 
 		String parentFolderPath = getParentFolderPath(folderPath);
 
-		long groupId = SharepointUtil.getGroupId(folderPath);
-
 		long folderId = getLastFolderId(
-			groupId, folderPath, DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+			SharepointUtil.getGroupId(folderPath), folderPath,
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
-		Folder folder = DLAppServiceUtil.getFolder(folderId);
-
-		return getFolderTree(folder, parentFolderPath);
+		return getFolderTree(
+			DLAppServiceUtil.getFolder(folderId), parentFolderPath);
 	}
 
 	@Override
@@ -334,7 +332,8 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 	public void putDocument(SharepointRequest sharepointRequest)
 		throws Exception {
 
-		HttpServletRequest request = sharepointRequest.getHttpServletRequest();
+		HttpServletRequest httpServletRequest =
+			sharepointRequest.getHttpServletRequest();
 
 		String documentPath = sharepointRequest.getRootPath();
 
@@ -356,7 +355,7 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 		serviceContext.setAddGuestPermissions(true);
 
 		String contentType = GetterUtil.get(
-			request.getHeader(HttpHeaders.CONTENT_TYPE),
+			httpServletRequest.getHeader(HttpHeaders.CONTENT_TYPE),
 			ContentTypes.APPLICATION_OCTET_STREAM);
 
 		String extension = FileUtil.getExtension(title);
@@ -499,8 +498,11 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 	protected Tree getFileEntryTree(
 		FileEntry fileEntry, String parentFolderPath) {
 
-		String documentPath = parentFolderPath.concat(StringPool.SLASH).concat(
-			fileEntry.getTitle());
+		String documentPath = parentFolderPath.concat(
+			StringPool.SLASH
+		).concat(
+			fileEntry.getTitle()
+		);
 
 		return getDocumentTree(
 			documentPath, fileEntry.getCreateDate(),
@@ -509,8 +511,11 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 	}
 
 	protected Tree getFolderTree(Folder folder, String parentFolderPath) {
-		String folderPath = parentFolderPath.concat(StringPool.SLASH).concat(
-			folder.getName());
+		String folderPath = parentFolderPath.concat(
+			StringPool.SLASH
+		).concat(
+			folder.getName()
+		);
 
 		return getFolderTree(
 			folderPath, folder.getCreateDate(), folder.getModifiedDate(),

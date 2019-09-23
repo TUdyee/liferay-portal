@@ -14,18 +14,12 @@
 
 package com.liferay.jenkins.results.parser;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,7 +33,7 @@ import org.json.JSONObject;
 /**
  * @author Peter Yoo
  */
-public class RebaseErrorTopLevelBuild extends TopLevelBuild {
+public class RebaseErrorTopLevelBuild extends DefaultTopLevelBuild {
 
 	public RebaseErrorTopLevelBuild(String url, TopLevelBuild topLevelBuild) {
 		super(url, topLevelBuild);
@@ -47,6 +41,8 @@ public class RebaseErrorTopLevelBuild extends TopLevelBuild {
 
 	@Override
 	public String getResult() {
+		String result = super.getResult();
+
 		if (_validResult) {
 			return result;
 		}
@@ -68,14 +64,17 @@ public class RebaseErrorTopLevelBuild extends TopLevelBuild {
 				return result;
 			}
 
+			waitForNonzeroDuration();
+
+			Map<String, String> buildEnvMap = new HashMap<>();
 			int retries = 0;
 			long time = System.currentTimeMillis();
-			Map<String, String> stopPropertiesTempMap =
-				getStopPropertiesTempMap();
 
-			while (!stopPropertiesTempMap.containsKey(
-						"TOP_LEVEL_GITHUB_COMMENT_ID")) {
+			if (fromArchive) {
+				buildEnvMap = getStopPropertiesTempMap();
+			}
 
+			while (!buildEnvMap.containsKey("TOP_LEVEL_GITHUB_COMMENT_ID")) {
 				if (retries > 2) {
 					throw new RuntimeException(
 						"Unable to get TOP_LEVE_GITHUB_COMMENT_ID from stop " +
@@ -90,18 +89,20 @@ public class RebaseErrorTopLevelBuild extends TopLevelBuild {
 					return result;
 				}
 
+				buildEnvMap.putAll(getInjectedEnvironmentVariablesMap());
+
 				retries++;
 
 				JenkinsResultsParserUtil.sleep(10 * 1000);
-
-				stopPropertiesTempMap = getStopPropertiesTempMap();
 			}
 
 			if (matchCommentTokens(
-					getActualCommentTokens(stopPropertiesTempMap),
+					getActualCommentTokens(buildEnvMap),
 					getExpectedCommentTokens())) {
 
-				result = "SUCCESS";
+				setResult("SUCCESS");
+
+				result = super.getResult();
 			}
 
 			return result;
@@ -121,22 +122,16 @@ public class RebaseErrorTopLevelBuild extends TopLevelBuild {
 			Map<String, String> stopPropertiesTempMap)
 		throws IOException {
 
-		StringBuilder sb = new StringBuilder();
+		String url = JenkinsResultsParserUtil.getGitHubApiUrl(
+			"liferay-portal-ee", getParameterValue("GITHUB_RECEIVER_USERNAME"),
+			"issues/comments/" +
+				stopPropertiesTempMap.get("TOP_LEVEL_GITHUB_COMMENT_ID"));
 
-		sb.append("https://api.github.com/repos/");
-		sb.append(getParameterValue("GITHUB_RECEIVER_USERNAME"));
-		sb.append("/");
-		sb.append("liferay-portal-ee");
-		sb.append("/issues/comments/");
-		sb.append(stopPropertiesTempMap.get("TOP_LEVEL_GITHUB_COMMENT_ID"));
-
-		JSONObject jsonObject = getJSONObjectFromURL(sb.toString());
+		JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(url);
 
 		String commentBody = jsonObject.getString("body");
 
-		Element rootElement = getElement(commentBody);
-
-		return getCommentTokens(rootElement);
+		return getCommentTokens(getRootElement(commentBody));
 	}
 
 	protected List<String> getCommentTokens(Element element) {
@@ -144,17 +139,11 @@ public class RebaseErrorTopLevelBuild extends TopLevelBuild {
 
 		tokens.add("tag: " + element.getName() + " text: " + element.getText());
 
-		List<?> elementObjects = element.elements();
-
-		for (Object childElementObject : elementObjects) {
-			tokens.addAll(getCommentTokens((Element)childElementObject));
+		for (Element childElement : element.elements()) {
+			tokens.addAll(getCommentTokens(childElement));
 		}
 
-		List<?> attributeObjects = element.attributes();
-
-		for (Object attributeObject : attributeObjects) {
-			Attribute attribute = (Attribute)attributeObject;
-
+		for (Attribute attribute : element.attributes()) {
 			tokens.add(
 				"tag: " + element.getName() + " attribute: " +
 					attribute.getName() + " text: " + attribute.getValue());
@@ -163,7 +152,14 @@ public class RebaseErrorTopLevelBuild extends TopLevelBuild {
 		return tokens;
 	}
 
-	protected Element getElement(String content) {
+	protected List<String> getExpectedCommentTokens() throws IOException {
+		String resource = JenkinsResultsParserUtil.getResourceFileContent(
+			"dependencies/RebaseErrorTopLevelBuildTemplate.html");
+
+		return getCommentTokens(getRootElement(resource));
+	}
+
+	protected Element getRootElement(String content) {
 		try {
 			Document document = Dom4JUtil.parse(
 				JenkinsResultsParserUtil.combine("<div>", content, "</div>"));
@@ -175,71 +171,21 @@ public class RebaseErrorTopLevelBuild extends TopLevelBuild {
 		}
 	}
 
-	protected List<String> getExpectedCommentTokens() throws IOException {
-		Element rootElement = null;
-
-		Class<?> clazz = getClass();
-
-		String resource = JenkinsResultsParserUtil.readInputStream(
-			clazz.getResourceAsStream("RebaseErrorTopLevelBuildTemplate.html"));
-
-		rootElement = getElement(resource);
-
-		return getCommentTokens(rootElement);
-	}
-
-	protected JSONObject getJSONObjectFromURL(String url) throws IOException {
-		Properties properties = JenkinsResultsParserUtil.getBuildProperties();
-
-		StringBuilder sb = new StringBuilder();
-
-		URL urlObject = new URL(url);
-
-		HttpURLConnection httpURLConnection =
-			(HttpURLConnection)urlObject.openConnection();
-
-		httpURLConnection.setRequestMethod("GET");
-		httpURLConnection.setRequestProperty(
-			"Authorization",
-			"token " + properties.getProperty("github.access.token"));
-		httpURLConnection.setRequestProperty(
-			"Content-Type", "application/json");
-
-		InputStream inputStream = httpURLConnection.getInputStream();
-
-		InputStreamReader inputStreamReader = new InputStreamReader(
-			inputStream);
-
-		BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-		String line = null;
-
-		while ((line = bufferedReader.readLine()) != null) {
-			sb.append(line);
-		}
-
-		bufferedReader.close();
-
-		return new JSONObject(sb.toString());
-	}
-
 	protected boolean matchCommentTokens(
 		List<String> actualCommentTokens, List<String> expectedCommentTokens) {
-
-		/*if (actualCommentTokens.size() != expectedCommentTokens.size()) {
-			return false;
-		}*/
 
 		for (int i = 0; i < expectedCommentTokens.size(); i++) {
 			System.out.println();
 			System.out.println("Test " + i);
 
+			String expectedCommentToken = expectedCommentTokens.get(i);
+
 			Pattern pattern = Pattern.compile(
-				expectedCommentTokens.get(i).replaceAll("\\s+", "\\\\s*"));
+				expectedCommentToken.replaceAll("\\s+", "\\\\s*"));
 
 			Matcher matcher = pattern.matcher(actualCommentTokens.get(i));
 
-			System.out.println("'" + expectedCommentTokens.get(i) + "'");
+			System.out.println("'" + expectedCommentToken + "'");
 			System.out.println("pattern: " + pattern.pattern());
 			System.out.println("'" + actualCommentTokens.get(i) + "'");
 
@@ -254,6 +200,27 @@ public class RebaseErrorTopLevelBuild extends TopLevelBuild {
 		}
 
 		return true;
+	}
+
+	protected void waitForNonzeroDuration() throws IOException {
+		long maxWaitTime = 300 * 1000;
+		long startTime = System.currentTimeMillis();
+
+		String localBuildURL = JenkinsResultsParserUtil.getLocalURL(
+			getBuildURL());
+
+		while ((System.currentTimeMillis() - startTime) < maxWaitTime) {
+			JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
+				localBuildURL + "/api/json?tree=duration", false);
+
+			int duration = jsonObject.getInt("duration");
+
+			if (duration > 0) {
+				return;
+			}
+
+			JenkinsResultsParserUtil.sleep(10 * 1000);
+		}
 	}
 
 	private boolean _validResult;

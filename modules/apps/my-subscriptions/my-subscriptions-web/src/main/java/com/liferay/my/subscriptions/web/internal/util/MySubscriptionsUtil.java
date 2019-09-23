@@ -18,16 +18,17 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.blogs.model.BlogsEntry;
-import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.message.boards.kernel.model.MBCategory;
-import com.liferay.message.boards.kernel.model.MBMessage;
-import com.liferay.message.boards.kernel.model.MBThread;
-import com.liferay.message.boards.kernel.service.MBThreadLocalServiceUtil;
+import com.liferay.message.boards.model.MBCategory;
+import com.liferay.message.boards.model.MBMessage;
+import com.liferay.message.boards.model.MBThread;
+import com.liferay.message.boards.service.MBThreadLocalServiceUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -45,8 +46,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.model.WikiNode;
@@ -112,10 +111,8 @@ public class MySubscriptionsUtil {
 
 			StringBundler sb = new StringBundler(5);
 
-			Layout layout = LayoutLocalServiceUtil.getLayout(plid);
-
 			String layoutFullURL = PortalUtil.getLayoutFullURL(
-				layout, themeDisplay);
+				LayoutLocalServiceUtil.getLayout(plid), themeDisplay);
 
 			sb.append(layoutFullURL);
 
@@ -144,11 +141,6 @@ public class MySubscriptionsUtil {
 			className.equals(_BLOGS_ENTRY_CLASSNAME)) {
 
 			title = "Blog at ";
-		}
-		else if (className.equals(BookmarksFolder.class.getName())) {
-			if (group != null) {
-				return LanguageUtil.get(locale, "home");
-			}
 		}
 		else if (className.equals(DLFileEntryType.class.getName())) {
 			if (group != null) {

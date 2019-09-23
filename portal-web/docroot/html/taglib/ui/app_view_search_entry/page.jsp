@@ -123,7 +123,7 @@ summary.setQueryTerms(queryTerms);
 					<div class="image">
 
 						<%
-						String fileEntryThumbnailSrc = DLUtil.getThumbnailSrc(fileEntry, themeDisplay);
+						String fileEntryThumbnailSrc = assetRenderer.getThumbnailPath(portletRequest);
 						%>
 
 						<c:if test="<%= Validator.isNotNull(fileEntryThumbnailSrc) %>">
@@ -169,7 +169,7 @@ summary.setQueryTerms(queryTerms);
 				<aui:a class="lfr-discussion-details" href="<%= url %>">
 					<div class="image">
 						<liferay-ui:user-portrait
-							user="<%= userDisplay %>"
+							userId="<%= userDisplay.getUserId() %>"
 						/>
 					</div>
 

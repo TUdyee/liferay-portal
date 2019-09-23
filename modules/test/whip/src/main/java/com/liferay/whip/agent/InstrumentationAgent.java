@@ -128,8 +128,7 @@ public class InstrumentationAgent {
 					_originalClassDefinitions = null;
 
 					_instrumentation.redefineClasses(
-						classDefinitions.toArray(
-							new ClassDefinition[classDefinitions.size()]));
+						classDefinitions.toArray(new ClassDefinition[0]));
 				}
 				catch (Exception e) {
 					throw new RuntimeException(
@@ -211,7 +210,7 @@ public class InstrumentationAgent {
 		}
 
 		_instrumentation.retransformClasses(
-			modifiableClasses.toArray(new Class<?>[modifiableClasses.size()]));
+			modifiableClasses.toArray(new Class<?>[0]));
 
 		_dynamicallyInstrumented = true;
 		_originalClassDefinitions = null;
@@ -434,8 +433,9 @@ public class InstrumentationAgent {
 			ClassLoader classLoader, String className, byte[] bytes) {
 
 			_classLoader = classLoader;
-			_className = className.replace('/', '.');
 			_bytes = bytes;
+
+			_className = className.replace('/', '.');
 		}
 
 		private final byte[] _bytes;

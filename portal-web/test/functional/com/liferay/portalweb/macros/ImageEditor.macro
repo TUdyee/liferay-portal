@@ -1,128 +1,84 @@
-<definition>
-	<command name="_applyChanges">
-		<execute function="AssertClick" locator1="Button#APPLY_EFFECTS" value1="Apply" />
-	</command>
+definition {
 
-	<command name="_saveFile">
-		<execute function="AssertClick" locator1="Button#SAVE" value1="Save" />
-	</command>
+	macro _applyChanges {
+		AssertClick(
+			locator1 = "Button#APPLY_EFFECTS",
+			value1 = "Apply");
+	}
 
-	<command name="applyChangesAndSaveFile">
-		<execute macro="ImageEditor#_applyChanges" />
+	macro _saveFile {
+		AssertClick(
+			locator1 = "Button#SAVE",
+			value1 = "Save");
+	}
 
-		<execute function="Pause" locator1="3000" />
+	macro applyChangesAndSaveFile {
+		ImageEditor._applyChanges();
 
-		<execute macro="ImageEditor#_saveFile" />
-	</command>
+		Pause(locator1 = "3000");
 
-	<command name="cancel Changes">
-		<execute function="AssertClick" locator1="Button#CANCEL_EFFECTS" value1="Cancel" />
-	</command>
+		ImageEditor._saveFile();
+	}
 
-	<command name="gotoCropImage">
-		<execute function="Click" locator1="Button#TRANSFORM" />
+	macro gotoImageEditorViaDM {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Crop">
-			<var name="key_menuItem" value="Crop" />
-		</execute>
-	</command>
+		Click(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_VERTICAL_ELLIPSIS");
 
-	<command name="gotoEditBrightness">
-		<execute function="Click" locator1="Button#COLOR_EFFECT" />
+		MenuItem.click(menuItem = "Edit With Image Editor");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Brightness">
-			<var name="key_menuItem" value="Brightness" />
-		</execute>
-	</command>
+		Pause(locator1 = "5000");
 
-	<command name="gotoEditContrast">
-		<execute function="Click" locator1="Button#COLOR_EFFECT" />
+		SelectFrame(locator1 = "ImageEditor#IMAGE_EDITOR_IFRAME");
+	}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Contrast">
-			<var name="key_menuItem" value="Contrast" />
-		</execute>
-	</command>
+	macro gotoImageEditorViaItemSelector {
+		ItemSelector.gotoItemSelectorViaAlloyEditor();
 
-	<command name="gotoEditSaturation">
-		<execute function="Click" locator1="Button#COLOR_EFFECT" />
+		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Saturation">
-			<var name="key_menuItem" value="Saturation" />
-		</execute>
-	</command>
+		var key_navTab = "${navTab}";
 
-	<command name="gotoImageEditorViaDM">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+		AssertClick(
+			locator1 = "ItemSelector#NAVIGATION_SPECIFIC_TAB",
+			value1 = "${navTab}");
 
-		<execute function="Click" locator1="DocumentsAndMedia#ICON_DOCUMENT_VERTICAL_ELLIPSIS" />
+		var key_imageFileName = StringUtil.replace("${imageFileName}", " ", "+");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit With Image Editor">
-			<var name="key_menuItem" value="Edit With Image Editor" />
-		</execute>
+		Pause(locator1 = "1000");
 
-		<execute function="SelectFrame" locator1="ImageEditor#IMAGE_EDITOR_IFRAME" />
-	</command>
+		Click(locator1 = "ItemSelector#SELECT_FILE_IMAGE_PREVIEW");
 
-	<command name="gotoImageEditorViaItemSelector">
-		<execute macro="ItemSelector#gotoItemSelectorViaAlloyEditor" />
+		Click(locator1 = "Icon#EDIT_PENCIL");
 
-		<execute function="SelectFrame" locator1="ItemSelector#ITEM_SELECTOR_IFRAME" />
+		SelectFrameTop(value1 = "relative=top");
 
-		<execute function="AssertClick" locator1="ItemSelector#NAVIGATION_DOCUMENTS_AND_MEDIA" value1="Documents and Media" />
+		SelectFrame(locator1 = "ImageEditor#IMAGE_EDITOR_IFRAME");
+	}
 
-		<var method="StringUtil#replace('${imageFileName}', ' ', '+')" name="key_imageFileName" />
+	macro gotoRotateImage {
+		Click(locator1 = "Button#TRANSFORM");
 
-		<execute function="Pause" locator1="1000" />
+		MenuItem.click(menuItem = "Rotate");
+	}
 
-		<execute function="Click" locator1="ItemSelector#SELECT_FILE_IMAGE_PREVIEW" />
+	macro rotateImage {
+		ImageEditor.gotoRotateImage();
 
-		<execute function="Click" locator1="Icon#EDIT_PENCIL" />
+		if ("${rotateDirection}" == "left") {
+			Click(locator1 = "Button#ROTATE_LEFT");
+		}
+		else if ("${rotateDirection}" == "right") {
+			Click(locator1 = "Button#ROTATE_RIGHT");
+		}
+	}
 
-		<execute function="SelectFrameTop" value1="relative=top" />
+	macro viewBaseControls {
+		AssertVisible(locator1 = "Button#TRANSFORM");
 
-		<execute function="SelectFrame" locator1="ImageEditor#IMAGE_EDITOR_IFRAME" />
-	</command>
+		AssertVisible(locator1 = "Button#FILTER_EFFECT");
 
-	<command name="gotoResizeImage">
-		<execute function="Click" locator1="Button#TRANSFORM" />
+		AssertVisible(locator1 = "Button#COLOR_EFFECT");
+	}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Resize">
-			<var name="key_menuItem" value="Resize" />
-		</execute>
-	</command>
-
-	<command name="gotoRotateImage">
-		<execute function="Click" locator1="Button#TRANSFORM" />
-
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Rotate">
-			<var name="key_menuItem" value="Rotate" />
-		</execute>
-	</command>
-
-	<command name="rotateImage">
-		<execute macro="ImageEditor#gotoRotateImage" />
-
-		<if>
-			<equals arg1="${rotateDirection}" arg2="left" />
-			<then>
-				<execute function="Click" locator1="Button#ROTATE_LEFT" />
-			</then>
-			<elseif>
-				<equals arg1="${rotateDirection}" arg2="right" />
-				<then>
-					<execute function="Click" locator1="Button#ROTATE_RIGHT" />
-				</then>
-			</elseif>
-		</if>
-	</command>
-
-	<command name="viewBaseControls">
-		<execute function="AssertVisible" locator1="Button#TRANSFORM" />
-		<execute function="AssertVisible" locator1="Button#FILTER_EFFECT" />
-		<execute function="AssertVisible" locator1="Button#COLOR_EFFECT" />
-	</command>
-
-	<command name="viewImageEditorPortletHeader">
-		<execute function="AssertTextEquals#assertPartialText" locator1="Portlet#H3_MODAL_TITLE" value1="${imageFileName} (Copy)" />
-	</command>
-</definition>
+}

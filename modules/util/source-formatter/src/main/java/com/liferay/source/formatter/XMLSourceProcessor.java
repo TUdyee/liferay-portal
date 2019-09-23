@@ -14,6 +14,12 @@
 
 package com.liferay.source.formatter;
 
+import com.liferay.source.formatter.checks.util.SourceUtil;
+import com.liferay.source.formatter.checks.util.XMLSourceUtil;
+
+import java.io.File;
+import java.io.IOException;
+
 import java.util.List;
 
 /**
@@ -22,7 +28,7 @@ import java.util.List;
 public class XMLSourceProcessor extends BaseSourceProcessor {
 
 	@Override
-	protected List<String> doGetFileNames() throws Exception {
+	protected List<String> doGetFileNames() throws IOException {
 		String[] excludes = {
 			"**/.bnd/**", "**/.idea/**", "**/.ivy/**", "**/bin/**",
 			"**/javadocs-*.xml", "**/logs/**", "**/portal-impl/**/*.action",
@@ -40,9 +46,54 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 		return _INCLUDES;
 	}
 
+	@Override
+	protected File format(
+			File file, String fileName, String absolutePath, String content)
+		throws Exception {
+
+		if ((fileName.endsWith(".function") || fileName.endsWith(".macro") ||
+			 fileName.endsWith(".testcase")) &&
+			!SourceUtil.isXML(content)) {
+
+			return file;
+		}
+
+		return super.format(file, fileName, absolutePath, content);
+	}
+
+	@Override
+	protected boolean hasGeneratedTag(String content) {
+		return _hasGeneratedTag(content, "@generated", "<!-- Generated");
+	}
+
+	private boolean _hasGeneratedTag(String content, String... tags) {
+		for (String tag : tags) {
+			if (!content.contains(tag)) {
+				continue;
+			}
+
+			int pos = -1;
+
+			while (true) {
+				pos = content.indexOf(tag, pos + 1);
+
+				if (pos == -1) {
+					break;
+				}
+
+				if (!XMLSourceUtil.isInsideCDATAMarkup(content, pos)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	private static final String[] _INCLUDES = {
-		"**/*.action", "**/*.function", "**/*.jrxml", "**/*.macro",
-		"**/*.testcase", "**/*.toggle", "**/*.xml"
+		"**/*.action", "**/*.function", "**/*.jrxml", "**/*.macro", "**/*.pom",
+		"**/*.testcase", "**/*.toggle", "**/*.wsdl", "**/*.xml",
+		"**/definitions/liferay-*.xsd"
 	};
 
 }

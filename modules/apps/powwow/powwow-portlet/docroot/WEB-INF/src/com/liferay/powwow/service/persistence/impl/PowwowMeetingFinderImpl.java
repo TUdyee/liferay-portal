@@ -14,7 +14,9 @@
 
 package com.liferay.powwow.service.persistence.impl;
 
-import com.liferay.portal.dao.orm.custom.sql.CustomSQLUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
@@ -25,9 +27,8 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.powwow.model.PowwowMeeting;
 import com.liferay.powwow.model.PowwowMeetingConstants;
 import com.liferay.powwow.model.impl.PowwowMeetingImpl;
@@ -56,7 +57,7 @@ public class PowwowMeetingFinderImpl
 		try {
 			session = openSession();
 
-			String sql = CustomSQLUtil.get(getClass(), COUNT_BY_U_S);
+			String sql = _customSQL.get(getClass(), COUNT_BY_U_S);
 
 			sql = StringUtil.replace(
 				sql, "[$STATUSES$]", getStatusesSQL(statuses));
@@ -65,13 +66,13 @@ public class PowwowMeetingFinderImpl
 
 			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
-
 			User user = UserLocalServiceUtil.fetchUser(userId);
 
 			if (user == null) {
 				return 0;
 			}
+
+			QueryPos qPos = QueryPos.getInstance(q);
 
 			qPos.add(user.getUserId());
 			qPos.add(user.getUserId());
@@ -107,7 +108,7 @@ public class PowwowMeetingFinderImpl
 		try {
 			session = openSession();
 
-			String sql = CustomSQLUtil.get(getClass(), FIND_BY_U_S);
+			String sql = _customSQL.get(getClass(), FIND_BY_U_S);
 
 			sql = StringUtil.replace(
 				sql, "[$STATUSES$]", getStatusesSQL(statuses));
@@ -125,13 +126,13 @@ public class PowwowMeetingFinderImpl
 
 			q.addEntity("PowwowMeeting", PowwowMeetingImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
-
 			User user = UserLocalServiceUtil.fetchUser(userId);
 
 			if (user == null) {
 				return Collections.emptyList();
 			}
+
+			QueryPos qPos = QueryPos.getInstance(q);
 
 			qPos.add(user.getUserId());
 			qPos.add(user.getUserId());
@@ -158,8 +159,8 @@ public class PowwowMeetingFinderImpl
 		sb.append("AND PowwowMeeting.status IN ");
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < statuses.length; i++) {
-			sb.append(statuses[i]);
+		for (int status : statuses) {
+			sb.append(status);
 			sb.append(StringPool.COMMA_AND_SPACE);
 		}
 
@@ -169,5 +170,8 @@ public class PowwowMeetingFinderImpl
 
 		return sb.toString();
 	}
+
+	@ServiceReference(type = CustomSQL.class)
+	private CustomSQL _customSQL;
 
 }

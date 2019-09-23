@@ -17,25 +17,33 @@ package com.liferay.gradle.plugins.defaults;
 import aQute.bnd.osgi.Constants;
 import aQute.bnd.version.Version;
 
+import com.gradle.publish.PublishPlugin;
+
+import com.liferay.gradle.plugins.JspCDefaultsPlugin;
 import com.liferay.gradle.plugins.LiferayBasePlugin;
 import com.liferay.gradle.plugins.LiferayOSGiPlugin;
 import com.liferay.gradle.plugins.baseline.BaselinePlugin;
-import com.liferay.gradle.plugins.baseline.BaselineTask;
 import com.liferay.gradle.plugins.cache.CacheExtension;
 import com.liferay.gradle.plugins.cache.CachePlugin;
 import com.liferay.gradle.plugins.cache.task.TaskCache;
+import com.liferay.gradle.plugins.defaults.internal.BaselineDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.FindSecurityBugsPlugin;
+import com.liferay.gradle.plugins.defaults.internal.JSDocDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.JaCoCoPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayRelengPlugin;
+import com.liferay.gradle.plugins.defaults.internal.PublishPluginDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.WhipDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.util.BackupFilesBuildAdapter;
+import com.liferay.gradle.plugins.defaults.internal.util.CopyrightUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.FileUtil;
+import com.liferay.gradle.plugins.defaults.internal.util.GitRepo;
 import com.liferay.gradle.plugins.defaults.internal.util.GitUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradlePluginsDefaultsUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.IncrementVersionClosure;
+import com.liferay.gradle.plugins.defaults.internal.util.NameSuffixFileSpec;
+import com.liferay.gradle.plugins.defaults.internal.util.StringUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.XMLUtil;
-import com.liferay.gradle.plugins.defaults.internal.util.copy.RenameDependencyAction;
 import com.liferay.gradle.plugins.defaults.internal.util.copy.ReplaceContentFilterReader;
 import com.liferay.gradle.plugins.defaults.tasks.CheckOSGiBundleStateTask;
 import com.liferay.gradle.plugins.defaults.tasks.InstallCacheTask;
@@ -46,31 +54,37 @@ import com.liferay.gradle.plugins.dependency.checker.DependencyCheckerExtension;
 import com.liferay.gradle.plugins.dependency.checker.DependencyCheckerPlugin;
 import com.liferay.gradle.plugins.extensions.LiferayExtension;
 import com.liferay.gradle.plugins.extensions.LiferayOSGiExtension;
+import com.liferay.gradle.plugins.jasper.jspc.CompileJSPTask;
 import com.liferay.gradle.plugins.jasper.jspc.JspCPlugin;
 import com.liferay.gradle.plugins.js.transpiler.JSTranspilerPlugin;
+import com.liferay.gradle.plugins.jsdoc.JSDocPlugin;
+import com.liferay.gradle.plugins.jsdoc.JSDocTask;
+import com.liferay.gradle.plugins.lang.builder.LangBuilderPlugin;
 import com.liferay.gradle.plugins.node.tasks.PublishNodeModuleTask;
 import com.liferay.gradle.plugins.patcher.PatchTask;
+import com.liferay.gradle.plugins.rest.builder.BuildRESTTask;
+import com.liferay.gradle.plugins.rest.builder.RESTBuilderPlugin;
 import com.liferay.gradle.plugins.service.builder.BuildServiceTask;
 import com.liferay.gradle.plugins.service.builder.ServiceBuilderPlugin;
 import com.liferay.gradle.plugins.source.formatter.SourceFormatterPlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationBasePlugin;
+import com.liferay.gradle.plugins.test.integration.TestIntegrationTomcatExtension;
 import com.liferay.gradle.plugins.tlddoc.builder.TLDDocBuilderPlugin;
 import com.liferay.gradle.plugins.tlddoc.builder.tasks.TLDDocTask;
 import com.liferay.gradle.plugins.upgrade.table.builder.UpgradeTableBuilderPlugin;
+import com.liferay.gradle.plugins.util.BndBuilderUtil;
 import com.liferay.gradle.plugins.util.PortalTools;
 import com.liferay.gradle.plugins.whip.WhipPlugin;
 import com.liferay.gradle.plugins.wsdd.builder.BuildWSDDTask;
 import com.liferay.gradle.plugins.wsdd.builder.WSDDBuilderPlugin;
 import com.liferay.gradle.plugins.wsdl.builder.WSDLBuilderPlugin;
 import com.liferay.gradle.plugins.xsd.builder.XSDBuilderPlugin;
-import com.liferay.gradle.util.StringUtil;
 import com.liferay.gradle.util.Validator;
 import com.liferay.gradle.util.copy.ExcludeExistingFileAction;
 import com.liferay.gradle.util.copy.RenameDependencyClosure;
 import com.liferay.gradle.util.copy.ReplaceLeadingPathAction;
+import com.liferay.gradle.util.copy.StripPathSegmentsAction;
 import com.liferay.portal.tools.wsdd.builder.WSDDBuilderArgs;
-
-import groovy.json.JsonSlurper;
 
 import groovy.lang.Closure;
 
@@ -93,10 +107,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -116,10 +130,9 @@ import java.util.regex.Pattern;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
 
-import nebula.plugin.extraconfigurations.OptionalBasePlugin;
 import nebula.plugin.extraconfigurations.ProvidedBasePlugin;
 
-import org.dm.gradle.plugins.bundle.BundleExtension;
+import org.apache.commons.io.FileUtils;
 
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
@@ -132,17 +145,20 @@ import org.gradle.api.UncheckedIOException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.DependencyResolveDetails;
 import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.artifacts.DependencySubstitutions;
-import org.gradle.api.artifacts.DependencySubstitutions.Substitution;
 import org.gradle.api.artifacts.ExcludeRule;
 import org.gradle.api.artifacts.ExternalDependency;
 import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.LenientConfiguration;
 import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.ModuleVersionSelector;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.artifacts.ResolvableDependencies;
 import org.gradle.api.artifacts.ResolveException;
+import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.dsl.ArtifactHandler;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -150,6 +166,7 @@ import org.gradle.api.artifacts.dsl.RepositoryHandler;
 import org.gradle.api.artifacts.maven.Conf2ScopeMapping;
 import org.gradle.api.artifacts.maven.Conf2ScopeMappingContainer;
 import org.gradle.api.artifacts.maven.MavenDeployer;
+import org.gradle.api.artifacts.maven.MavenPom;
 import org.gradle.api.execution.TaskExecutionGraph;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.CopySpec;
@@ -182,6 +199,7 @@ import org.gradle.api.reporting.SingleFileReport;
 import org.gradle.api.resources.ResourceHandler;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.specs.Specs;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -189,19 +207,18 @@ import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.api.tasks.StopActionException;
 import org.gradle.api.tasks.TaskCollection;
 import org.gradle.api.tasks.TaskContainer;
+import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.TaskOutputs;
 import org.gradle.api.tasks.Upload;
 import org.gradle.api.tasks.VerificationTask;
 import org.gradle.api.tasks.bundling.Jar;
+import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.JUnitXmlReport;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat;
-import org.gradle.api.tasks.testing.logging.TestLogEvent;
-import org.gradle.api.tasks.testing.logging.TestLoggingContainer;
 import org.gradle.execution.ProjectConfigurer;
 import org.gradle.external.javadoc.CoreJavadocOptions;
 import org.gradle.external.javadoc.StandardJavadocDocletOptions;
@@ -226,6 +243,7 @@ import org.w3c.dom.NodeList;
 
 /**
  * @author Andrea Di Giorgi
+ * @author Charles Wu
  */
 public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
@@ -242,17 +260,20 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	public static final String DEPLOY_APP_SERVER_LIB_TASK_NAME =
 		"deployAppServerLib";
 
-	public static final String DEPLOY_DEPENDENCIES_TASK_NAME =
-		"deployDependencies";
+	public static final String DEPLOY_CONFIGS_TASK_NAME = "deployConfigs";
 
 	public static final String DEPLOY_TOOL_TASK_NAME = "deployTool";
 
 	public static final String DOWNLOAD_COMPILED_JSP_TASK_NAME =
 		"downloadCompiledJSP";
 
+	public static final String GENERATE_POM_INFO_TASK_NAME = "generatePomInfo";
+
 	public static final String INSTALL_CACHE_TASK_NAME = "installCache";
 
 	public static final String JAR_JAVADOC_TASK_NAME = "jarJavadoc";
+
+	public static final String JAR_JSDOC_TASK_NAME = "jarJSDoc";
 
 	public static final String JAR_JSP_TASK_NAME = "jarJSP";
 
@@ -264,6 +285,9 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	public static final String JAR_TLDDOC_TASK_NAME = "jarTLDDoc";
 
 	public static final String PORTAL_TEST_CONFIGURATION_NAME = "portalTest";
+
+	public static final String PORTAL_TEST_SNAPSHOT_CONFIGURATION_NAME =
+		"portalTestSnapshot";
 
 	public static final String RELEASE_PORTAL_ROOT_DIR_PROPERTY_NAME =
 		"release.versions.test.other.dir";
@@ -281,7 +305,11 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	public static final String UPDATE_FILE_VERSIONS_TASK_NAME =
 		"updateFileVersions";
 
+	public static final String ZIP_ZIPPABLE_RESOURCES_TASK_NAME =
+		"zipZippableResources";
+
 	@Override
+	@SuppressWarnings("serial")
 	public void apply(final Project project) {
 		final File portalRootDir = GradleUtil.getRootDir(
 			project.getRootProject(), "portal-impl");
@@ -291,9 +319,11 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		final LiferayExtension liferayExtension = GradleUtil.getExtension(
 			project, LiferayExtension.class);
 
-		final GitRepo gitRepo = _getGitRepo(project.getProjectDir());
-		boolean privateProject = _isPrivateProject(project);
-		final boolean testProject = GradleUtil.isTestProject(project);
+		final GitRepo gitRepo = GitRepo.getGitRepo(project.getProjectDir());
+		boolean privateProject = GradlePluginsDefaultsUtil.isPrivateProject(
+			project);
+		final boolean testProject = GradlePluginsDefaultsUtil.isTestProject(
+			project);
 
 		File versionOverrideFile = _getVersionOverrideFile(project, gitRepo);
 
@@ -345,19 +375,27 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				project, LiferayBasePlugin.PORTAL_CONFIGURATION_NAME);
 			Configuration portalTestConfiguration = _addConfigurationPortalTest(
 				project);
+			Configuration portalTestSnapshotConfiguration =
+				_addConfigurationPortalTestSnapshot(project);
 
 			_addDependenciesPortalTest(project);
+			_addDependenciesPortalTestSnapshot(project);
 			_addDependenciesTestCompile(project);
+
+			_configureConfigurationTest(
+				project, JavaPlugin.TEST_COMPILE_CLASSPATH_CONFIGURATION_NAME);
+			_configureConfigurationTest(
+				project, JavaPlugin.TEST_RUNTIME_CONFIGURATION_NAME);
 			_configureEclipse(project, portalTestConfiguration);
 			_configureIdea(project, portalTestConfiguration);
 			_configureSourceSetTest(
-				project, portalConfiguration, portalTestConfiguration);
+				project, portalConfiguration, portalTestConfiguration,
+				portalTestSnapshotConfiguration);
 			_configureSourceSetTestIntegration(
 				project, portalConfiguration, portalTestConfiguration);
 
-			if (GradleUtil.getProperty(
-					project, "junit.code.coverage",
-					Boolean.getBoolean("junit.code.coverage"))) {
+			if (Boolean.getBoolean("junit.code.coverage") ||
+				GradleUtil.getProperty(project, "junit.code.coverage", false)) {
 
 				JaCoCoPlugin.INSTANCE.apply(project);
 			}
@@ -365,6 +403,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		Task baselineTask = GradleUtil.getTask(
 			project, BaselinePlugin.BASELINE_TASK_NAME);
+		Jar jar = (Jar)GradleUtil.getTask(project, JavaPlugin.JAR_TASK_NAME);
 		Task syncVersionsTask = _addTaskSyncVersions(project);
 
 		baselineTask.finalizedBy(syncVersionsTask);
@@ -385,8 +424,9 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		_addTaskCopyLibs(project);
 
-		Copy deployDependenciesTask = _addTaskDeployDependencies(
+		Copy deployConfigsTask = _addTaskDeployConfigs(
 			project, liferayExtension);
+		Task zipZippableResourcesTask = _addTaskZipZippableResources(project);
 
 		if (deployToAppServerLibs) {
 			_addTaskAlias(
@@ -401,24 +441,28 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		final Jar jarJSPsTask = _addTaskJarJSP(project);
 		final Jar jarJavadocTask = _addTaskJarJavadoc(project);
+		final Jar jarJSDocTask = _addTaskJarJSDoc(project);
 		final Jar jarSourcesTask = _addTaskJarSources(project, testProject);
 		final Jar jarSourcesCommercialTask = _addTaskJarSourcesCommercial(
 			project, privateProject, testProject);
 		final Jar jarTLDDocTask = _addTaskJarTLDDoc(project);
 
 		final ReplaceRegexTask updateFileVersionsTask =
-			_addTaskUpdateFileVersions(project, gitRepo);
+			_addTaskUpdateFileVersions(project);
 		final ReplaceRegexTask updateVersionTask = _addTaskUpdateVersion(
 			project);
 
 		_configureBasePlugin(project, portalRootDir);
 		_configureBundleDefaultInstructions(project, portalRootDir, publishing);
-		_configureConfigurations(project, gitRepo, liferayExtension);
+		_configureConfigurations(project, liferayExtension);
 		_configureDependencyChecker(project);
 		_configureDeployDir(
 			project, liferayExtension, deployToAppServerLibs, deployToTools);
 		_configureEclipse(project);
 		_configureJavaPlugin(project);
+		_configureLocalPortalTool(
+			project, portalRootDir, LangBuilderPlugin.CONFIGURATION_NAME,
+			_LANG_BUILDER_PORTAL_TOOL_NAME);
 		_configureLocalPortalTool(
 			project, portalRootDir, SourceFormatterPlugin.CONFIGURATION_NAME,
 			_SOURCE_FORMATTER_PORTAL_TOOL_NAME);
@@ -426,22 +470,26 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		_configureProject(project);
 		GradlePluginsDefaultsUtil.configureRepositories(project, portalRootDir);
 		_configureSourceSetMain(project);
-		_configureTaskDeploy(project, deployDependenciesTask);
-		_configureTaskJar(project, testProject);
+		_configureTaskDeploy(project, deployConfigsTask);
+		_configureTaskJar(jar, zipZippableResourcesTask, testProject);
 		_configureTaskJavadoc(project, portalRootDir);
 		_configureTaskTest(project);
 		_configureTaskTestIntegration(project);
 		_configureTaskTlddoc(project, portalRootDir);
-		_configureTasksBaseline(project);
 		_configureTasksCheckOSGiBundleState(project, liferayExtension);
 		_configureTasksFindBugs(project);
 		_configureTasksJavaCompile(project);
+		_configureTasksJspC(project);
 		_configureTasksPmd(project);
-		_configureTasksPublishNodeModule(project);
+		_configureTestIntegrationTomcat(project);
 
 		_addTaskUpdateFileSnapshotVersions(project);
 
 		if (publishing) {
+			Task generatePomInfoTask = _addTaskGeneratePomInfo(project);
+
+			jar.dependsOn(generatePomInfoTask);
+
 			_configureTasksEnabledIfStaleSnapshot(
 				project, testProject, MavenPlugin.INSTALL_TASK_NAME,
 				BasePlugin.UPLOAD_ARCHIVES_TASK_NAME);
@@ -454,8 +502,24 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				@Override
 				public void execute(JSTranspilerPlugin jsTranspilerPlugin) {
 					_configureConfigurationNoCrossRepoDependencies(
-						project,
+						project, gitRepo,
 						JSTranspilerPlugin.SOY_COMPILE_CONFIGURATION_NAME);
+				}
+
+			});
+
+		GradleUtil.withPlugin(
+			project, RESTBuilderPlugin.class,
+			new Action<RESTBuilderPlugin>() {
+
+				@Override
+				public void execute(RESTBuilderPlugin restBuilderPlugin) {
+					_configureLocalPortalTool(
+						project, portalRootDir,
+						RESTBuilderPlugin.CONFIGURATION_NAME,
+						_REST_BUILDER_PORTAL_TOOL_NAME);
+
+					_configureTaskBuildREST(project);
 				}
 
 			});
@@ -470,6 +534,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 						project, portalRootDir,
 						ServiceBuilderPlugin.CONFIGURATION_NAME,
 						_SERVICE_BUILDER_PORTAL_TOOL_NAME);
+
 					_configureTaskBuildService(project);
 				}
 
@@ -491,17 +556,16 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 				@Override
 				public void execute(Project project) {
-					_checkVersion(project);
-
 					_configureArtifacts(
-						project, jarJSPsTask, jarJavadocTask, jarSourcesTask,
-						jarSourcesCommercialTask, jarTLDDocTask);
+						project, jarJSDocTask, jarJSPsTask, jarJavadocTask,
+						jarSourcesTask, jarSourcesCommercialTask,
+						jarTLDDocTask);
 					_configureTaskJarSources(jarSourcesTask);
 					_configureTaskJarSources(jarSourcesCommercialTask);
 					_configureTaskUpdateFileVersions(
 						updateFileVersionsTask, portalRootDir);
 
-					GradleUtil.setProjectSnapshotVersion(
+					GradlePluginsDefaultsUtil.setProjectSnapshotVersion(
 						project, _SNAPSHOT_PROPERTY_NAMES);
 
 					if (GradleUtil.hasPlugin(project, CachePlugin.class)) {
@@ -540,7 +604,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 						project, JavaPlugin.JAR_TASK_NAME);
 
 					if (taskExecutionGraph.hasTask(jarTask)) {
-						_configureBundleInstructions(project, gitRepo);
+						_configureBundleInstructions(project);
 					}
 				}
 
@@ -553,6 +617,18 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		configuration.setDescription(
 			"Configures Liferay portal test utility artifacts for this " +
+				"project.");
+		configuration.setVisible(false);
+
+		return configuration;
+	}
+
+	private Configuration _addConfigurationPortalTestSnapshot(Project project) {
+		Configuration configuration = GradleUtil.addConfiguration(
+			project, PORTAL_TEST_SNAPSHOT_CONFIGURATION_NAME);
+
+		configuration.setDescription(
+			"Configures Liferay portal test snapshot artifacts for this " +
 				"project.");
 		configuration.setVisible(false);
 
@@ -576,6 +652,15 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		GradleUtil.addDependency(
 			project, PORTAL_TEST_CONFIGURATION_NAME, _GROUP_PORTAL,
 			"com.liferay.portal.test.integration", "default");
+	}
+
+	private void _addDependenciesPortalTestSnapshot(Project project) {
+		GradleUtil.addDependency(
+			project, PORTAL_TEST_SNAPSHOT_CONFIGURATION_NAME, _GROUP_PORTAL,
+			"com.liferay.portal.impl", "default");
+		GradleUtil.addDependency(
+			project, PORTAL_TEST_SNAPSHOT_CONFIGURATION_NAME, _GROUP_PORTAL,
+			"com.liferay.portal.kernel", "default");
 	}
 
 	private void _addDependenciesTestCompile(Project project) {
@@ -629,7 +714,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 				@Override
 				public String call() throws Exception {
-					return _getBundleInstruction(
+					return BndBuilderUtil.getInstruction(
 						project, Constants.BUNDLE_SYMBOLICNAME);
 				}
 
@@ -675,6 +760,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 					}
 
 					Logger logger = task.getLogger();
+
 					Project project = task.getProject();
 
 					boolean deleted = project.delete(oldCachedVersionDir);
@@ -764,14 +850,21 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		copy.eachFile(new ExcludeExistingFileAction(libDir));
 
-		Configuration configuration = GradleUtil.getConfiguration(
+		Configuration compileOnlyConfiguration = GradleUtil.getConfiguration(
+			project, JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
+		Configuration runtimeConfiguration = GradleUtil.getConfiguration(
 			project, JavaPlugin.RUNTIME_CONFIGURATION_NAME);
 
-		copy.from(configuration);
+		copy.from(compileOnlyConfiguration, runtimeConfiguration);
 
 		copy.into(libDir);
-		copy.rename(
-			new RenameDependencyClosure(project, configuration.getName()));
+
+		Closure<String> renameDependencyClosure = new RenameDependencyClosure(
+			project, compileOnlyConfiguration.getName(),
+			runtimeConfiguration.getName());
+
+		copy.rename(renameDependencyClosure);
+
 		copy.setEnabled(false);
 
 		Task classesTask = GradleUtil.getTask(
@@ -782,38 +875,28 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		return copy;
 	}
 
-	private Copy _addTaskDeployDependencies(
+	private Copy _addTaskDeployConfigs(
 		Project project, final LiferayExtension liferayExtension) {
 
 		final Copy copy = GradleUtil.addTask(
-			project, DEPLOY_DEPENDENCIES_TASK_NAME, Copy.class);
-
-		final boolean keepVersions = Boolean.getBoolean(
-			"deploy.dependencies.keep.versions");
+			project, DEPLOY_CONFIGS_TASK_NAME, Copy.class);
 
 		GradleUtil.setProperty(
 			copy, LiferayOSGiPlugin.AUTO_CLEAN_PROPERTY_NAME, false);
-		GradleUtil.setProperty(copy, "keepVersions", keepVersions);
 
-		String renameSuffix = ".jar";
-
-		if (keepVersions) {
-			renameSuffix = "-$1.jar";
-		}
-
-		GradleUtil.setProperty(copy, "renameSuffix", renameSuffix);
-
+		copy.from("configs");
 		copy.into(
 			new Callable<File>() {
 
 				@Override
 				public File call() throws Exception {
-					return liferayExtension.getDeployDir();
+					return new File(
+						liferayExtension.getLiferayHome(), "osgi/configs");
 				}
 
 			});
 
-		copy.setDescription("Deploys additional dependencies.");
+		copy.setDescription("Deploys additional configuration files.");
 
 		TaskOutputs taskOutputs = copy.getOutputs();
 
@@ -827,22 +910,12 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 			});
 
-		project.afterEvaluate(
-			new Action<Project>() {
-
-				@Override
-				public void execute(Project project) {
-					copy.eachFile(new RenameDependencyAction(keepVersions));
-				}
-
-			});
-
 		return copy;
 	}
 
 	private Copy _addTaskDownloadCompiledJSP(
-		JavaCompile compileJSPTask, final Jar jarJSPsTask,
-		Properties artifactProperties) {
+		final JavaCompile compileJSPTask, final Jar jarJSPsTask,
+		Properties artifactProperties, LiferayExtension liferayExtension) {
 
 		final String artifactJspcURL = artifactProperties.getProperty(
 			"artifact.jspc.url");
@@ -917,12 +990,120 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 			});
 
+		copy.into(
+			new Callable<File>() {
+
+				@Override
+				public File call() throws Exception {
+					return compileJSPTask.getDestinationDir();
+				}
+
+			});
+
+		copy.into(
+			new Callable<File>() {
+
+				@Override
+				public File call() throws Exception {
+					File liferayHomeDir = liferayExtension.getLiferayHome();
+
+					int index = artifactJspcURL.lastIndexOf('/');
+
+					String dirName = artifactJspcURL.substring(
+						index + 1, artifactJspcURL.length() - 9);
+
+					return new File(liferayHomeDir, "work/" + dirName);
+				}
+
+			});
+
 		copy.setDescription(
 			"Downloads the latest compiled JSP classes for this project.");
-		copy.setDestinationDir(compileJSPTask.getDestinationDir());
 		copy.setIncludeEmptyDirs(false);
 
 		return copy;
+	}
+
+	private Task _addTaskGeneratePomInfo(final Project project) {
+		Task task = project.task(GENERATE_POM_INFO_TASK_NAME);
+
+		task.doLast(
+			new Action<Task>() {
+
+				@Override
+				@SuppressWarnings("serial")
+				public void execute(Task task) {
+					MavenPluginConvention mavenPluginConvention =
+						GradleUtil.getConvention(
+							project, MavenPluginConvention.class);
+
+					final String artifactId = GradleUtil.getArchivesBaseName(
+						project);
+					final String groupId = String.valueOf(project.getGroup());
+
+					StringBuilder sb = new StringBuilder();
+
+					SourceSet sourceSet = GradleUtil.getSourceSet(
+						project, SourceSet.MAIN_SOURCE_SET_NAME);
+
+					sb.append(FileUtil.getJavaClassesDir(sourceSet));
+
+					sb.append("/META-INF/maven/");
+					sb.append(groupId);
+					sb.append('/');
+					sb.append(artifactId);
+
+					final String dirName = sb.toString();
+
+					mavenPluginConvention.pom(
+						new Closure<MavenPom>(project) {
+
+							@SuppressWarnings("unused")
+							public MavenPom doCall(MavenPom mavenPom) {
+								Conf2ScopeMappingContainer
+									conf2ScopeMappingContainer =
+										mavenPom.getScopeMappings();
+
+								String compileOnlyConfigurationName =
+									JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME;
+
+								Configuration configuration =
+									GradleUtil.getConfiguration(
+										project, compileOnlyConfigurationName);
+
+								conf2ScopeMappingContainer.addMapping(
+									MavenPlugin.PROVIDED_COMPILE_PRIORITY,
+									configuration,
+									Conf2ScopeMappingContainer.PROVIDED);
+
+								mavenPom.setArtifactId(artifactId);
+								mavenPom.setGroupId(groupId);
+
+								mavenPom.writeTo(dirName + "/pom.xml");
+
+								return mavenPom;
+							}
+
+						});
+
+					File file = new File(dirName, "pom.properties");
+
+					Properties properties = new Properties();
+
+					properties.setProperty("artifactId", artifactId);
+					properties.setProperty("groupId", groupId);
+					properties.setProperty(
+						"version", String.valueOf(project.getVersion()));
+
+					FileUtil.writeProperties(file, properties);
+				}
+
+			});
+
+		task.setDescription(
+			"Generates Maven pom.properties and pom.xml for this jar.");
+
+		return task;
 	}
 
 	private InstallCacheTask _addTaskInstallCache(
@@ -1019,6 +1200,25 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		return jar;
 	}
 
+	private Jar _addTaskJarJSDoc(Project project) {
+		Jar jar = GradleUtil.addTask(project, JAR_JSDOC_TASK_NAME, Jar.class);
+
+		jar.setClassifier("jsdoc");
+		jar.setDescription(
+			"Assembles a jar archive containing the Javascript API " +
+				"documentation files for this project.");
+		jar.eachFile(new StripPathSegmentsAction(2));
+		jar.setGroup(BasePlugin.BUILD_GROUP);
+		jar.setIncludeEmptyDirs(false);
+
+		JSDocTask jsDocTask = (JSDocTask)GradleUtil.getTask(
+			project, JSDocPlugin.JSDOC_TASK_NAME);
+
+		jar.from(jsDocTask);
+
+		return jar;
+	}
+
 	private Jar _addTaskJarJSP(Project project) {
 		Jar jar = GradleUtil.addTask(project, JAR_JSP_TASK_NAME, Jar.class);
 
@@ -1052,6 +1252,29 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		Project project, String taskName, boolean testProject) {
 
 		Jar jar = GradleUtil.addTask(project, taskName, Jar.class);
+
+		final File compileIncludeSourcesDir = new File(
+			project.getBuildDir(), "compile-include-sources");
+
+		Action<Task> copyCompileIncludeSourcesAction = new Action<Task>() {
+
+			@Override
+			public void execute(Task task) {
+				try {
+					FileUtils.deleteDirectory(compileIncludeSourcesDir);
+				}
+				catch (IOException ioe) {
+					throw new UncheckedIOException(ioe);
+				}
+
+				_copyCompileIncludeSources(project, compileIncludeSourcesDir);
+			}
+
+		};
+
+		jar.doFirst(copyCompileIncludeSourcesAction);
+
+		jar.from(compileIncludeSourcesDir);
 
 		jar.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
 		jar.setGroup(BasePlugin.BUILD_GROUP);
@@ -1148,10 +1371,10 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				"Documentation files for this project.");
 		jar.setGroup(BasePlugin.BUILD_GROUP);
 
-		TLDDocTask tlddocTask = (TLDDocTask)GradleUtil.getTask(
+		TLDDocTask tldDocTask = (TLDDocTask)GradleUtil.getTask(
 			project, TLDDocBuilderPlugin.TLDDOC_TASK_NAME);
 
-		jar.from(tlddocTask);
+		jar.from(tldDocTask);
 
 		return jar;
 	}
@@ -1225,11 +1448,14 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		return replaceRegexTask;
 	}
 
-	private ReplaceRegexTask _addTaskUpdateFileVersions(
-		final Project project, final GitRepo gitRepo) {
-
-		ReplaceRegexTask replaceRegexTask = GradleUtil.addTask(
+	@SuppressWarnings({"serial", "unchecked"})
+	private ReplaceRegexTask _addTaskUpdateFileVersions(final Project project) {
+		final ReplaceRegexTask replaceRegexTask = GradleUtil.addTask(
 			project, UPDATE_FILE_VERSIONS_TASK_NAME, ReplaceRegexTask.class);
+
+		GradleUtil.setProperty(
+			replaceRegexTask, _UPDATE_FILE_VERSIONS_EXACT_VERSION_PROPERTY_NAME,
+			Boolean.FALSE);
 
 		replaceRegexTask.pre(
 			new Closure<String>(project) {
@@ -1238,20 +1464,42 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				public String doCall(String content, File file) {
 					String fileName = file.getName();
 
-					if (!fileName.equals("build.gradle")) {
+					if (!fileName.equals("build.gradle") ||
+						GradlePluginsDefaultsUtil.isTestProject(
+							file.getParentFile())) {
+
 						return content;
 					}
 
-					String configuration =
-						ProvidedBasePlugin.getPROVIDED_CONFIGURATION_NAME() +
-							" ";
+					File markerDir = GradleUtil.getRootDir(
+						file.getParentFile(),
+						".lfrbuild-releng-skip-update-file-versions");
 
-					return content.replaceAll(
-						Pattern.quote(
-							configuration + _getProjectDependency(project)),
-						Matcher.quoteReplacement(
-							configuration +
-								_getModuleDependency(project, true)));
+					if (markerDir != null) {
+						return content;
+					}
+
+					GitRepo contentGitRepo = GitRepo.getGitRepo(
+						file.getParentFile());
+
+					if ((contentGitRepo != null) && contentGitRepo.readOnly) {
+						return content;
+					}
+
+					StringBuilder sb = new StringBuilder();
+
+					sb.append('(');
+					sb.append(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
+					sb.append('|');
+					sb.append(
+						ProvidedBasePlugin.getPROVIDED_CONFIGURATION_NAME());
+					sb.append(") ");
+					sb.append(Pattern.quote(_getProjectDependency(project)));
+
+					String replament = Matcher.quoteReplacement(
+						_getModuleDependency(project, true));
+
+					return content.replaceAll(sb.toString(), "$1 " + replament);
 				}
 
 			});
@@ -1264,13 +1512,10 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 					String group, String replacement, String content,
 					File contentFile) {
 
-					GitRepo contentGitRepo = _getGitRepo(
+					GitRepo contentGitRepo = GitRepo.getGitRepo(
 						contentFile.getParentFile());
 
-					if ((contentGitRepo != null) && contentGitRepo.readOnly &&
-						((gitRepo == null) ||
-						 !contentGitRepo.dir.equals(gitRepo.dir))) {
-
+					if ((contentGitRepo != null) && contentGitRepo.readOnly) {
 						return false;
 					}
 
@@ -1278,9 +1523,18 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 					if (!projectPath.startsWith(":apps:") &&
 						!projectPath.startsWith(":core:") &&
-						!projectPath.startsWith(":private:") &&
-						(gitRepo == null)) {
+						!projectPath.startsWith(":private:apps:") &&
+						!projectPath.startsWith(":private:core:")) {
 
+						return true;
+					}
+
+					boolean exactVersion = GradleUtil.getProperty(
+						replaceRegexTask,
+						_UPDATE_FILE_VERSIONS_EXACT_VERSION_PROPERTY_NAME,
+						false);
+
+					if (exactVersion) {
 						return true;
 					}
 
@@ -1353,6 +1607,53 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		return replaceRegexTask;
 	}
 
+	private Zip _addTaskZipDirectory(
+		Project project, String taskName, File dir, File destinationDir) {
+
+		Zip zip = GradleUtil.addTask(project, taskName, Zip.class);
+
+		zip.from(dir);
+		zip.setArchiveName(dir.getName() + ".zip");
+		zip.setDestinationDir(destinationDir);
+
+		zip.setDescription(
+			"Assembles " + project.relativePath(zip.getArchivePath()) +
+				" with the contents of the " + project.relativePath(dir) +
+					" directory.");
+
+		return zip;
+	}
+
+	private Task _addTaskZipZippableResources(Project project) {
+		Task task = project.task(ZIP_ZIPPABLE_RESOURCES_TASK_NAME);
+
+		File zippableResourcesDir = project.file("src/main/zippableResources");
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("Assembles Zip files from the subdirectories of ");
+		sb.append(project.relativePath(zippableResourcesDir));
+		sb.append('.');
+
+		task.setDescription(sb.toString());
+
+		File[] dirs = FileUtil.getDirectories(zippableResourcesDir);
+
+		if (dirs != null) {
+			for (File dir : dirs) {
+				String taskName = GradleUtil.getTaskName(
+					ZIP_ZIPPABLE_RESOURCES_TASK_NAME, dir);
+
+				Zip zip = _addTaskZipDirectory(
+					project, taskName, dir, project.file("classes"));
+
+				task.dependsOn(zip);
+			}
+		}
+
+		return task;
+	}
+
 	private void _applyConfigScripts(Project project) {
 		GradleUtil.applyScript(
 			project,
@@ -1362,7 +1663,9 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	}
 
 	private void _applyPlugins(Project project) {
-		if (Validator.isNotNull(_getBundleInstruction(project, "Main-Class"))) {
+		if (Validator.isNotNull(
+				BndBuilderUtil.getInstruction(project, "Main-Class"))) {
+
 			GradleUtil.applyPlugin(project, ApplicationPlugin.class);
 		}
 
@@ -1370,10 +1673,14 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		GradleUtil.applyPlugin(project, DependencyCheckerPlugin.class);
 		GradleUtil.applyPlugin(project, FindBugsPlugin.class);
 		GradleUtil.applyPlugin(project, IdeaPlugin.class);
+		GradleUtil.applyPlugin(project, JSDocPlugin.class);
 		GradleUtil.applyPlugin(project, MavenPlugin.class);
-		GradleUtil.applyPlugin(project, OptionalBasePlugin.class);
 		GradleUtil.applyPlugin(project, PmdPlugin.class);
 		GradleUtil.applyPlugin(project, ProvidedBasePlugin.class);
+
+		if (FileUtil.exists(project, "rest-config.yaml")) {
+			GradleUtil.applyPlugin(project, RESTBuilderPlugin.class);
+		}
 
 		if (FileUtil.exists(project, "service.xml")) {
 			GradleUtil.applyPlugin(project, ServiceBuilderPlugin.class);
@@ -1389,7 +1696,10 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			GradleUtil.applyPlugin(project, XSDBuilderPlugin.class);
 		}
 
+		BaselineDefaultsPlugin.INSTANCE.apply(project);
 		FindSecurityBugsPlugin.INSTANCE.apply(project);
+		JSDocDefaultsPlugin.INSTANCE.apply(project);
+		PublishPluginDefaultsPlugin.INSTANCE.apply(project);
 	}
 
 	private void _applyVersionOverrideJson(Project project, String fileName)
@@ -1438,8 +1748,8 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			Constants.BUNDLE_VERSION);
 
 		if (Validator.isNotNull(bundleVersion)) {
-			Map<String, String> bundleInstructions = _getBundleInstructions(
-				project);
+			Map<String, Object> bundleInstructions =
+				BndBuilderUtil.getInstructions(project);
 
 			bundleInstructions.put(Constants.BUNDLE_VERSION, bundleVersion);
 
@@ -1483,7 +1793,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 					ComponentSelector componentSelector =
 						dependencySubstitutions.module(dependencyNotation);
 
-					Substitution substitution =
+					DependencySubstitutions.Substitution substitution =
 						dependencySubstitutions.substitute(componentSelector);
 
 					ComponentSelector newComponentSelector;
@@ -1543,6 +1853,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			new Action<FileCopyDetails>() {
 
 				@Override
+				@SuppressWarnings("serial")
 				public void execute(final FileCopyDetails fileCopyDetails) {
 					fileCopyDetails.filter(
 						new Closure<Void>(copy) {
@@ -1576,67 +1887,20 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			});
 	}
 
-	private void _checkJsonVersion(Project project, String fileName) {
-		File file = project.file(fileName);
-
-		if (!file.exists()) {
-			return;
-		}
-
-		JsonSlurper jsonSlurper = new JsonSlurper();
-
-		Map<String, Object> map = (Map<String, Object>)jsonSlurper.parse(file);
-
-		String jsonVersion = (String)map.get("version");
-
-		if (Validator.isNotNull(jsonVersion) &&
-			!jsonVersion.equals(String.valueOf(project.getVersion()))) {
-
-			throw new GradleException(
-				"Version in " + fileName + " must match project version");
-		}
-	}
-
-	private void _checkVersion(Project project) {
-		for (String fileName :
-				GradlePluginsDefaultsUtil.JSON_VERSION_FILE_NAMES) {
-
-			_checkJsonVersion(project, fileName);
-			_checkJsonVersion(project, fileName);
-		}
-	}
-
+	@SuppressWarnings("serial")
 	private void _configureArtifacts(
-		Project project, Jar jarJSPTask, Jar jarJavadocTask, Jar jarSourcesTask,
-		Jar jarSourcesCommercialTask, Jar jarTLDDocTask) {
+		Project project, Jar jarJSDocTask, Jar jarJSPTask, Jar jarJavadocTask,
+		Jar jarSourcesTask, Jar jarSourcesCommercialTask, Jar jarTLDDocTask) {
 
 		ArtifactHandler artifactHandler = project.getArtifacts();
 
-		if (!GradleUtil.isSnapshot(project, _SNAPSHOT_PROPERTY_NAMES)) {
+		if (!GradlePluginsDefaultsUtil.isSnapshot(
+				project, _SNAPSHOT_PROPERTY_NAMES)) {
+
 			SourceSet sourceSet = GradleUtil.getSourceSet(
 				project, SourceSet.MAIN_SOURCE_SET_NAME);
 
-			FileCollection resourcesFileCollection = sourceSet.getResources();
-
-			FileCollection jspFileCollection = resourcesFileCollection.filter(
-				new Spec<File>() {
-
-					@Override
-					public boolean isSatisfiedBy(File file) {
-						String fileName = file.getName();
-
-						if (fileName.endsWith(".jsp") ||
-							fileName.endsWith(".jspf")) {
-
-							return true;
-						}
-
-						return false;
-					}
-
-				});
-
-			if (!jspFileCollection.isEmpty()) {
+			if (FileUtil.hasFiles(sourceSet.getResources(), _jspSpec)) {
 				artifactHandler.add(
 					Dependency.ARCHIVES_CONFIGURATION, jarJSPTask);
 			}
@@ -1662,7 +1926,9 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				Dependency.ARCHIVES_CONFIGURATION, jarSourcesTask);
 		}
 
-		if (FileUtil.hasSourceFiles(jarSourcesCommercialTask, spec)) {
+		if (!GradleUtil.hasPlugin(project, PublishPlugin.class) &&
+			FileUtil.hasSourceFiles(jarSourcesCommercialTask, spec)) {
+
 			artifactHandler.add(
 				Dependency.ARCHIVES_CONFIGURATION, jarSourcesCommercialTask);
 		}
@@ -1670,45 +1936,31 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		Task javadocTask = GradleUtil.getTask(
 			project, JavaPlugin.JAVADOC_TASK_NAME);
 
-		spec = new Spec<File>() {
-
-			@Override
-			public boolean isSatisfiedBy(File file) {
-				String fileName = file.getName();
-
-				if (fileName.endsWith(".java")) {
-					return true;
-				}
-
-				return false;
-			}
-
-		};
-
-		if (FileUtil.hasSourceFiles(javadocTask, spec)) {
+		if (FileUtil.hasSourceFiles(javadocTask, _javaSpec)) {
 			artifactHandler.add(
 				Dependency.ARCHIVES_CONFIGURATION, jarJavadocTask);
 		}
 
-		Task tlddocTask = GradleUtil.getTask(
+		Task jsDocTask = GradleUtil.getTask(
+			project, JSDocPlugin.JSDOC_TASK_NAME);
+
+		TaskInputs taskInputs = jsDocTask.getInputs();
+
+		FileCollection fileCollection = taskInputs.getFiles();
+
+		FileTree fileTree = fileCollection.getAsFileTree();
+
+		fileCollection = fileTree.filter(_jsdocSpec);
+
+		if (!fileCollection.isEmpty()) {
+			artifactHandler.add(
+				Dependency.ARCHIVES_CONFIGURATION, jarJSDocTask);
+		}
+
+		Task tldDocTask = GradleUtil.getTask(
 			project, TLDDocBuilderPlugin.TLDDOC_TASK_NAME);
 
-		spec = new Spec<File>() {
-
-			@Override
-			public boolean isSatisfiedBy(File file) {
-				String fileName = file.getName();
-
-				if (fileName.endsWith(".tld")) {
-					return true;
-				}
-
-				return false;
-			}
-
-		};
-
-		if (FileUtil.hasSourceFiles(tlddocTask, spec)) {
+		if (FileUtil.hasSourceFiles(tldDocTask, _tldSpec)) {
 			artifactHandler.add(
 				Dependency.ARCHIVES_CONFIGURATION, jarTLDDocTask);
 		}
@@ -1765,9 +2017,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		bundleDefaultInstructions.put(
 			Constants.DONOTCOPY,
 			"(" + LiferayOSGiExtension.DONOTCOPY_DEFAULT + "|.touch)");
-		bundleDefaultInstructions.put(
-			Constants.FIXUPMESSAGES + ".deprecated",
-			"annotations are deprecated");
 		bundleDefaultInstructions.put(Constants.SOURCES, "false");
 
 		if (publishing) {
@@ -1781,9 +2030,19 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		File appBndFile = _getAppBndFile(project, portalRootDir);
 
 		if (appBndFile != null) {
+			List<String> relativePaths = new ArrayList<>(2);
+
+			relativePaths.add(FileUtil.getRelativePath(project, appBndFile));
+
+			File suiteBndFile = _getSuiteBndFile(appBndFile, portalRootDir);
+
+			if (suiteBndFile != null) {
+				relativePaths.add(
+					FileUtil.getRelativePath(project, suiteBndFile));
+			}
+
 			bundleDefaultInstructions.put(
-				Constants.INCLUDE,
-				FileUtil.getRelativePath(project, appBndFile));
+				Constants.INCLUDE, StringUtil.merge(relativePaths, ","));
 		}
 
 		File packageJsonFile = project.file("package.json");
@@ -1798,19 +2057,17 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			bundleDefaultInstructions);
 	}
 
-	private void _configureBundleInstructions(
-		Project project, GitRepo gitRepo) {
-
-		Map<String, String> bundleInstructions = _getBundleInstructions(
+	private void _configureBundleInstructions(Project project) {
+		Map<String, Object> bundleInstructions = BndBuilderUtil.getInstructions(
 			project);
 
 		String projectPath = project.getPath();
 
 		if (projectPath.startsWith(":apps:") ||
-			projectPath.startsWith(":private:") || (gitRepo != null)) {
+			projectPath.startsWith(":private:apps:")) {
 
-			String exportPackage = bundleInstructions.get(
-				Constants.EXPORT_PACKAGE);
+			String exportPackage = GradleUtil.toString(
+				bundleInstructions.get(Constants.EXPORT_PACKAGE));
 
 			if (Validator.isNotNull(exportPackage)) {
 				exportPackage = "!com.liferay.*.kernel.*," + exportPackage;
@@ -1822,7 +2079,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		if (!bundleInstructions.containsKey(Constants.EXPORT_CONTENTS) &&
 			!bundleInstructions.containsKey("-check")) {
 
-			bundleInstructions.put("-check", "exports");
+			bundleInstructions.put("-check", "EXPORTS");
 		}
 	}
 
@@ -1837,7 +2094,11 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				public void execute(ExternalDependency externalDependency) {
 					String version = externalDependency.getVersion();
 
-					if (version.endsWith(GradleUtil.SNAPSHOT_VERSION_SUFFIX)) {
+					if (Validator.isNotNull(version) &&
+						version.endsWith(
+							GradlePluginsDefaultsUtil.
+								SNAPSHOT_VERSION_SUFFIX)) {
+
 						throw new GradleException(
 							"Please use a timestamp version for " +
 								externalDependency);
@@ -1862,6 +2123,12 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 						moduleDependency.exclude(
 							Collections.singletonMap("group", _GROUP_PORTAL));
+					}
+					else if (name.equals("easyconf")) {
+						moduleDependency.exclude(
+							Collections.singletonMap("group", "xdoclet"));
+						moduleDependency.exclude(
+							Collections.singletonMap("group", "xpp3"));
 					}
 				}
 
@@ -1895,8 +2162,16 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		final Project project, final LiferayExtension liferayExtension) {
 
 		final Logger logger = project.getLogger();
+
 		final boolean compilingJSP = GradleUtil.hasStartParameterTask(
 			project, JspCPlugin.COMPILE_JSP_TASK_NAME);
+		final boolean jspPrecompileFromSource = GradleUtil.getProperty(
+			project, "jsp.precompile.from.source", true);
+
+		final File taglibDependencyDir = new File(
+			liferayExtension.getLiferayHome(), "osgi");
+		final File utilTaglibDependencyDir =
+			liferayExtension.getAppServerPortalDir();
 
 		GradleInternal gradleInternal = (GradleInternal)project.getGradle();
 
@@ -1926,6 +2201,9 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 						projectName = projectName.replace('.', '-');
 
+						projectName = projectName.replaceFirst(
+							"exportimport", "export-import");
+
 						Project taglibProject = GradleUtil.getProject(
 							project.getRootProject(), projectName);
 
@@ -1950,7 +2228,9 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 								configuration, externalModuleDependency,
 								taglibProject);
 						}
-						else {
+						else if (taglibDependencyDir.exists() &&
+								 jspPrecompileFromSource) {
+
 							Map<String, String> args = new HashMap<>();
 
 							args.put("group", group);
@@ -1959,7 +2239,9 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 							configuration.exclude(args);
 						}
 					}
-					else if (_isUtilTaglibDependency(group, name)) {
+					else if (utilTaglibDependencyDir.exists() &&
+							 _isUtilTaglibDependency(group, name)) {
+
 						Map<String, String> args = new HashMap<>();
 
 						args.put("group", group);
@@ -1990,12 +2272,11 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 						File file;
 
 						if (_isTaglibDependency(group, name)) {
-							File dir = new File(
-								liferayExtension.getLiferayHome(), "osgi");
 							String fileName = name + ".jar";
 
 							try {
-								file = FileUtil.findFile(dir, fileName);
+								file = FileUtil.findFile(
+									taglibDependencyDir, fileName);
 							}
 							catch (IOException ioe) {
 								throw new UncheckedIOException(ioe);
@@ -2004,12 +2285,12 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 							if (file == null) {
 								throw new GradleException(
 									"Unable to find " + fileName + " in " +
-										dir);
+										taglibDependencyDir);
 							}
 						}
 						else if (_isUtilTaglibDependency(group, name)) {
 							file = new File(
-								liferayExtension.getAppServerPortalDir(),
+								utilTaglibDependencyDir,
 								"WEB-INF/lib/util-taglib.jar");
 
 							if (!file.exists()) {
@@ -2047,7 +2328,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	}
 
 	private void _configureConfigurationNoCrossRepoDependencies(
-		final Project project, String name) {
+		final Project project, final GitRepo gitRepo, String name) {
 
 		Configuration configuration = GradleUtil.getConfiguration(
 			project, name);
@@ -2062,10 +2343,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				public void execute(
 					ResolvableDependencies resolvableDependencies) {
 
-					File rootDir = GradleUtil.getRootDir(
-						project, _GIT_REPO_FILE_NAME);
-
-					if (rootDir == null) {
+					if (gitRepo == null) {
 						return;
 					}
 
@@ -2078,10 +2356,10 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 						Project dependencyProject =
 							projectDependency.getDependencyProject();
 
-						File dependencyRootDir = GradleUtil.getRootDir(
-							dependencyProject, _GIT_REPO_FILE_NAME);
+						GitRepo dependencyGitRepo = GitRepo.getGitRepo(
+							dependencyProject.getProjectDir());
 
-						if (!rootDir.equals(dependencyRootDir)) {
+						if (!gitRepo.dir.equals(dependencyGitRepo.dir)) {
 							throw new GradleException(
 								projectDependency + " in " + project +
 									" is not allowed to cross subrepository " +
@@ -2094,7 +2372,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	}
 
 	private void _configureConfigurations(
-		Project project, GitRepo gitRepo, LiferayExtension liferayExtension) {
+		Project project, LiferayExtension liferayExtension) {
 
 		_configureConfigurationDefault(project);
 		_configureConfigurationJspC(project, liferayExtension);
@@ -2104,7 +2382,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		if (projectPath.startsWith(":apps:") ||
 			projectPath.startsWith(":core:") ||
 			projectPath.startsWith(":private:apps:") ||
-			projectPath.startsWith(":private:core:") || (gitRepo != null)) {
+			projectPath.startsWith(":private:core:")) {
 
 			_configureConfigurationTransitive(
 				project, JavaPlugin.COMPILE_CONFIGURATION_NAME, false);
@@ -2126,6 +2404,62 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				@Override
 				public void execute(Configuration configuration) {
 					_configureConfiguration(configuration);
+				}
+
+			});
+	}
+
+	private void _configureConfigurationTest(Project project, String name) {
+		final Configuration configuration = GradleUtil.getConfiguration(
+			project, name);
+
+		ResolutionStrategy resolutionStrategy =
+			configuration.getResolutionStrategy();
+
+		resolutionStrategy.eachDependency(
+			new Action<DependencyResolveDetails>() {
+
+				@Override
+				public void execute(
+					DependencyResolveDetails dependencyResolveDetails) {
+
+					ModuleVersionSelector moduleVersionSelector =
+						dependencyResolveDetails.getRequested();
+
+					String target = _getEasyConfDependencyTarget(
+						moduleVersionSelector.getGroup(),
+						moduleVersionSelector.getName());
+
+					if (Validator.isNotNull(target) &&
+						GradleUtil.hasDependency(
+							configuration.getAllDependencies(), "easyconf",
+							"easyconf")) {
+
+						dependencyResolveDetails.useTarget(target);
+					}
+				}
+
+				private String _getEasyConfDependencyTarget(
+					String group, String name) {
+
+					String target = null;
+
+					if (group.equals("commons-configuration") &&
+						name.equals("commons-configuration")) {
+
+						target =
+							"commons-configuration:commons-configuration:1.10";
+					}
+					else if (group.equals("xerces") && name.equals("xerces")) {
+						target = "xerces:xercesImpl:2.11.0";
+					}
+					else if (group.equals("xml-apis") &&
+							 name.equals("xml-apis")) {
+
+						target = "xml-apis:xml-apis:1.4.01";
+					}
+
+					return target;
 				}
 
 			});
@@ -2167,7 +2501,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		Map<String, Object> args = new HashMap<>();
 
 		args.put("configuration", SourceFormatterPlugin.CONFIGURATION_NAME);
-		args.put("group", GradleUtil.PORTAL_TOOL_GROUP);
+		args.put("group", _GROUP);
 		args.put("maxAge", _PORTAL_TOOL_MAX_AGE);
 		args.put("name", _SOURCE_FORMATTER_PORTAL_TOOL_NAME);
 		args.put("throwError", Boolean.TRUE);
@@ -2216,6 +2550,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			});
 	}
 
+	@SuppressWarnings("serial")
 	private void _configureEclipse(Project project) {
 		EclipseModel eclipseModel = GradleUtil.getExtension(
 			project, EclipseModel.class);
@@ -2301,19 +2636,24 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		Project project, File portalRootDir, String configurationName,
 		String portalToolName) {
 
-		if ((portalRootDir == null) ||
-			GradleUtil.getProperty(
+		if (GradleUtil.getProperty(
 				project, portalToolName + ".ignore.local", true)) {
 
 			return;
 		}
 
+		String portalRootDirValue = System.getProperty("portal.root.dir");
+
+		if (Validator.isNotNull(portalRootDirValue)) {
+			portalRootDir = new File(portalRootDirValue);
+		}
+
+		Logger logger = project.getLogger();
+
 		File dir = new File(
 			portalRootDir, "tools/sdk/dependencies/" + portalToolName + "/lib");
 
 		if (!dir.exists()) {
-			Logger logger = project.getLogger();
-
 			if (logger.isWarnEnabled()) {
 				logger.warn(
 					"Unable to find {}, using default version of {}", dir,
@@ -2321,6 +2661,10 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			}
 
 			return;
+		}
+
+		if (logger.isLifecycleEnabled()) {
+			logger.lifecycle("Using local portal tool: {}", dir);
 		}
 
 		Configuration configuration = GradleUtil.getConfiguration(
@@ -2412,13 +2756,18 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	private void _configureSourceSetClassesDir(
 		Project project, SourceSet sourceSet, String classesDirName) {
 
-		SourceSetOutput sourceSetOutput = sourceSet.getOutput();
-
 		if (FileUtil.isChild(
-				sourceSetOutput.getClassesDir(), project.getBuildDir())) {
+				FileUtil.getJavaClassesDir(sourceSet), project.getBuildDir())) {
 
-			sourceSetOutput.setClassesDir(classesDirName);
-			sourceSetOutput.setResourcesDir(classesDirName);
+			File javaClassesDir = project.file(classesDirName);
+
+			SourceDirectorySet javaSourceDirectorySet = sourceSet.getJava();
+
+			javaSourceDirectorySet.setOutputDir(javaClassesDir);
+
+			SourceSetOutput sourceSetOutput = sourceSet.getOutput();
+
+			sourceSetOutput.setResourcesDir(javaClassesDir);
 		}
 	}
 
@@ -2431,7 +2780,8 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 	private void _configureSourceSetTest(
 		Project project, Configuration portalConfiguration,
-		Configuration portalTestConfiguration) {
+		Configuration portalTestConfiguration,
+		Configuration portalTestSnapshotConfiguration) {
 
 		SourceSet sourceSet = GradleUtil.getSourceSet(
 			project, SourceSet.TEST_SOURCE_SET_NAME);
@@ -2444,13 +2794,14 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		sourceSet.setCompileClasspath(
 			FileUtil.join(
-				compileClasspathConfiguration, portalConfiguration,
-				sourceSet.getCompileClasspath(), portalTestConfiguration));
+				compileClasspathConfiguration, sourceSet.getCompileClasspath(),
+				portalTestConfiguration));
 
 		sourceSet.setRuntimeClasspath(
 			FileUtil.join(
-				compileClasspathConfiguration, portalConfiguration,
-				sourceSet.getRuntimeClasspath(), portalTestConfiguration));
+				portalTestSnapshotConfiguration, compileClasspathConfiguration,
+				portalConfiguration, sourceSet.getRuntimeClasspath(),
+				portalTestConfiguration));
 	}
 
 	private void _configureSourceSetTestIntegration(
@@ -2464,42 +2815,18 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		_configureSourceSetClassesDir(
 			project, sourceSet, "test-classes/integration");
 
+		Configuration compileOnlyConfiguration = GradleUtil.getConfiguration(
+			project, JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
+
 		sourceSet.setCompileClasspath(
 			FileUtil.join(
-				portalConfiguration, sourceSet.getCompileClasspath(),
-				portalTestConfiguration));
+				portalConfiguration, compileOnlyConfiguration,
+				sourceSet.getCompileClasspath(), portalTestConfiguration));
 
 		sourceSet.setRuntimeClasspath(
 			FileUtil.join(
-				portalConfiguration, sourceSet.getRuntimeClasspath(),
-				portalTestConfiguration));
-	}
-
-	private void _configureTaskBaseline(BaselineTask baselineTask) {
-		Project project = baselineTask.getProject();
-
-		String reportLevel = GradleUtil.getProperty(
-			project, "baseline.jar.report.level", "standard");
-
-		boolean reportLevelIsDiff = reportLevel.equals("diff");
-		boolean reportLevelIsPersist = reportLevel.equals("persist");
-
-		if (reportLevelIsPersist && FileUtil.exists(project, "bnd.bnd")) {
-			baselineTask.setBndFile("bnd.bnd");
-		}
-
-		boolean reportDiff = false;
-
-		if (reportLevelIsDiff || reportLevelIsPersist) {
-			reportDiff = true;
-		}
-
-		baselineTask.setReportDiff(reportDiff);
-
-		boolean reportOnlyDirtyPackages = GradleUtil.getProperty(
-			project, "baseline.jar.report.only.dirty.packages", true);
-
-		baselineTask.setReportOnlyDirtyPackages(reportOnlyDirtyPackages);
+				portalConfiguration, compileOnlyConfiguration,
+				sourceSet.getRuntimeClasspath(), portalTestConfiguration));
 	}
 
 	private void _configureTaskBaselineSyncReleaseVersions(
@@ -2652,6 +2979,36 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		}
 	}
 
+	private void _configureTaskBuildREST(final Project project) {
+		BuildRESTTask buildRESTTask = (BuildRESTTask)GradleUtil.getTask(
+			project, RESTBuilderPlugin.BUILD_REST_TASK_NAME);
+
+		buildRESTTask.setCopyrightFile(
+			new Callable<File>() {
+
+				@Override
+				public File call() throws Exception {
+					File copyrightDir = new File(
+						project.getBuildDir(), "/copyright");
+
+					Files.createDirectories(copyrightDir.toPath());
+
+					File copyrightFile = new File(
+						copyrightDir, "copyright.txt");
+
+					String copyright = CopyrightUtil.getCopyright(
+						project.getProjectDir());
+
+					Files.write(
+						copyrightFile.toPath(),
+						copyright.getBytes(StandardCharsets.UTF_8));
+
+					return copyrightFile;
+				}
+
+			});
+	}
+
 	private void _configureTaskBuildService(Project project) {
 		BuildServiceTask buildServiceTask =
 			(BuildServiceTask)GradleUtil.getTask(
@@ -2724,10 +3081,11 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	private void _configureTaskCompileJSP(
 		Project project, Jar jarJSPsTask, LiferayExtension liferayExtension) {
 
-		boolean jspPrecompileEnabled = GradleUtil.getProperty(
-			project, "jsp.precompile.enabled", false);
+		boolean compileJspInclude = GradleUtil.getProperty(
+			project, JspCDefaultsPlugin.COMPILE_JSP_INCLUDE_PROPERTY_NAME,
+			false);
 
-		if (!jspPrecompileEnabled) {
+		if (!compileJspInclude) {
 			return;
 		}
 
@@ -2735,7 +3093,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			project, JspCPlugin.COMPILE_JSP_TASK_NAME);
 
 		Properties artifactProperties = null;
-		String dirName = null;
 
 		TaskContainer taskContainer = project.getTasks();
 
@@ -2744,57 +3101,111 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				LiferayRelengPlugin.RECORD_ARTIFACT_TASK_NAME);
 
 		if (recordArtifactTask != null) {
-			String artifactURL = null;
-
 			File artifactPropertiesFile = recordArtifactTask.getOutputFile();
 
 			if (artifactPropertiesFile.exists()) {
 				artifactProperties = GUtil.loadProperties(
 					artifactPropertiesFile);
-
-				artifactURL = artifactProperties.getProperty("artifact.url");
-			}
-
-			if (Validator.isNotNull(artifactURL)) {
-				int index = artifactURL.lastIndexOf('/');
-
-				dirName = artifactURL.substring(
-					index + 1, artifactURL.length() - 4);
 			}
 		}
-
-		if (Validator.isNull(dirName)) {
-			dirName =
-				GradleUtil.getArchivesBaseName(project) + "-" +
-					project.getVersion();
-		}
-
-		File dir = new File(
-			liferayExtension.getLiferayHome(), "work/" + dirName);
-
-		javaCompile.setDestinationDir(dir);
 
 		boolean jspPrecompileFromSource = GradleUtil.getProperty(
 			project, "jsp.precompile.from.source", true);
 
 		if (!jspPrecompileFromSource && (artifactProperties != null)) {
+			Task generateJSPJavaTask = GradleUtil.getTask(
+				project, JspCPlugin.GENERATE_JSP_JAVA_TASK_NAME);
+
+			generateJSPJavaTask.setEnabled(false);
+
 			Copy copy = _addTaskDownloadCompiledJSP(
-				javaCompile, jarJSPsTask, artifactProperties);
+				javaCompile, jarJSPsTask, artifactProperties, liferayExtension);
 
 			if (copy != null) {
-				javaCompile.deleteAllActions();
+				javaCompile.setActions(Collections.emptyList());
 				javaCompile.setDependsOn(Collections.singleton(copy));
 			}
+
+			_configureTaskGenerateJSPJava(project, liferayExtension);
 		}
 	}
 
-	private void _configureTaskDeploy(
-		Project project, Copy deployDepenciesTask) {
-
-		Task deployTask = GradleUtil.getTask(
+	private void _configureTaskDeploy(Project project, Copy deployConfigsTask) {
+		final Task deployTask = GradleUtil.getTask(
 			project, LiferayBasePlugin.DEPLOY_TASK_NAME);
 
-		deployTask.finalizedBy(deployDepenciesTask);
+		String projectName = project.getName();
+
+		if (projectName.endsWith("-demo")) {
+			_configureTaskDeployDemo(project, deployTask);
+		}
+
+		deployTask.finalizedBy(deployConfigsTask);
+
+		GradleUtil.withPlugin(
+			project, WSDDBuilderPlugin.class,
+			new Action<WSDDBuilderPlugin>() {
+
+				@Override
+				public void execute(WSDDBuilderPlugin wsddBuilderPlugin) {
+					if (FileUtil.exists(
+							deployTask.getProject(), ".lfrbuild-deploy-wsdd")) {
+
+						deployTask.dependsOn(
+							WSDDBuilderPlugin.BUILD_WSDD_TASK_NAME);
+					}
+				}
+
+			});
+	}
+
+	private void _configureTaskDeployDemo(
+		Project project, final Task deployTask) {
+
+		project.afterEvaluate(
+			new Action<Project>() {
+
+				@Override
+				public void execute(Project project) {
+					Configuration configuration = GradleUtil.fetchConfiguration(
+						project, JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
+
+					if (configuration == null) {
+						return;
+					}
+
+					DependencySet dependencySet =
+						configuration.getAllDependencies();
+
+					for (ProjectDependency projectDependency :
+							dependencySet.withType(ProjectDependency.class)) {
+
+						Project dependencyProject =
+							projectDependency.getDependencyProject();
+
+						String name = dependencyProject.getName();
+
+						if (!name.endsWith("-demo-data-creator-api")) {
+							continue;
+						}
+
+						String path = dependencyProject.getPath();
+
+						deployTask.finalizedBy(
+							path + ':' + LiferayBasePlugin.DEPLOY_TASK_NAME);
+
+						dependencyProject = project.findProject(
+							path.substring(0, path.length() - 3) + "impl");
+
+						if (dependencyProject != null) {
+							deployTask.finalizedBy(
+								dependencyProject.getPath() + ':' +
+									LiferayBasePlugin.DEPLOY_TASK_NAME);
+						}
+					}
+				}
+
+			});
 	}
 
 	private void _configureTaskFindBugs(FindBugs findBugs) {
@@ -2829,13 +3240,11 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		}
 
 		if (sourceSet != null) {
-			SourceSetOutput sourceSetOutput = sourceSet.getOutput();
-
 			ConfigurableFileTree configurableFileTree = project.fileTree(
-				sourceSetOutput.getClassesDir());
+				FileUtil.getJavaClassesDir(sourceSet));
 
 			configurableFileTree.setBuiltBy(
-				Collections.singleton(sourceSetOutput));
+				Collections.singleton(sourceSet.getOutput()));
 
 			configurableFileTree.setIncludes(
 				Collections.singleton("**/*.class"));
@@ -2844,14 +3253,94 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		}
 	}
 
-	private void _configureTaskJar(Project project, boolean testProject) {
-		Jar jar = (Jar)GradleUtil.getTask(project, JavaPlugin.JAR_TASK_NAME);
+	private void _configureTaskGenerateJSPJava(
+		Project project, LiferayExtension liferayExtension) {
+
+		boolean compileJspInclude = GradleUtil.getProperty(
+			project, JspCDefaultsPlugin.COMPILE_JSP_INCLUDE_PROPERTY_NAME,
+			false);
+
+		if (!compileJspInclude) {
+			return;
+		}
+
+		Task generateJSPJavaTask = GradleUtil.getTask(
+			project, JspCPlugin.GENERATE_JSP_JAVA_TASK_NAME);
+
+		String dirName = null;
+
+		TaskContainer taskContainer = project.getTasks();
+
+		WritePropertiesTask recordArtifactTask =
+			(WritePropertiesTask)taskContainer.findByName(
+				LiferayRelengPlugin.RECORD_ARTIFACT_TASK_NAME);
+
+		if (recordArtifactTask != null) {
+			String artifactURL = null;
+
+			File artifactPropertiesFile = recordArtifactTask.getOutputFile();
+
+			if (artifactPropertiesFile.exists()) {
+				Properties artifactProperties = GUtil.loadProperties(
+					artifactPropertiesFile);
+
+				artifactURL = artifactProperties.getProperty("artifact.url");
+			}
+
+			if (Validator.isNotNull(artifactURL)) {
+				int index = artifactURL.lastIndexOf('/');
+
+				dirName = artifactURL.substring(
+					index + 1, artifactURL.length() - 4);
+			}
+		}
+
+		boolean jspPrecompileFromSource = GradleUtil.getProperty(
+			project, "jsp.precompile.from.source", true);
+
+		if (Validator.isNull(dirName) || jspPrecompileFromSource) {
+			dirName =
+				GradleUtil.getArchivesBaseName(project) + "-" +
+					project.getVersion();
+		}
+
+		final File jspPrecompileDir = new File(
+			liferayExtension.getLiferayHome(), "work/" + dirName);
+
+		Action<Task> taskAction = new Action<Task>() {
+
+			@Override
+			public void execute(Task task) {
+				final CompileJSPTask compileJSPTask = (CompileJSPTask)task;
+
+				Action<CopySpec> copySpecAction = new Action<CopySpec>() {
+
+					@Override
+					public void execute(CopySpec copySpec) {
+						copySpec.from(compileJSPTask.getDestinationDir());
+						copySpec.into(jspPrecompileDir);
+					}
+
+				};
+
+				project.copy(copySpecAction);
+			}
+
+		};
+
+		generateJSPJavaTask.doLast(taskAction);
+	}
+
+	private void _configureTaskJar(
+		Jar jar, Task zipZippableResourcesTask, boolean testProject) {
+
+		jar.dependsOn(zipZippableResourcesTask);
 
 		if (testProject) {
 			jar.dependsOn(JavaPlugin.TEST_CLASSES_TASK_NAME);
 
 			SourceSet sourceSet = GradleUtil.getSourceSet(
-				project,
+				jar.getProject(),
 				TestIntegrationBasePlugin.TEST_INTEGRATION_SOURCE_SET_NAME);
 
 			jar.dependsOn(sourceSet.getClassesTaskName());
@@ -2870,6 +3359,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			new Action<PatchTask>() {
 
 				@Override
+				@SuppressWarnings("serial")
 				public void execute(final PatchTask patchTask) {
 					jarSourcesTask.from(
 						new Callable<FileCollection>() {
@@ -2967,7 +3457,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	}
 
 	private void _configureTaskJavadocFilter(Javadoc javadoc) {
-		String exportPackage = _getBundleInstruction(
+		String exportPackage = BndBuilderUtil.getInstruction(
 			javadoc.getProject(), Constants.EXPORT_PACKAGE);
 
 		if (Validator.isNull(exportPackage)) {
@@ -3071,32 +3561,14 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		sb.append(' ');
 		sb.append(project.getVersion());
 		sb.append(" - ");
-
-		String moduleName = project.getDescription();
-
-		if (Validator.isNull(moduleName)) {
-			moduleName = project.getName();
-		}
-
-		sb.append(moduleName);
+		sb.append(
+			BndBuilderUtil.getInstruction(project, Constants.BUNDLE_NAME));
 
 		javadoc.setTitle(sb.toString());
 	}
 
 	private void _configureTaskPmd(Pmd pmd) {
 		pmd.setClasspath(null);
-	}
-
-	private void _configureTaskPublishNodeModule(
-		PublishNodeModuleTask publishNodeModuleTask) {
-
-		publishNodeModuleTask.setModuleAuthor(
-			"Nathan Cavanaugh <nathan.cavanaugh@liferay.com> " +
-				"(https://github.com/natecavanaugh)");
-		publishNodeModuleTask.setModuleBugsUrl("https://issues.liferay.com/");
-		publishNodeModuleTask.setModuleLicense("LGPL");
-		publishNodeModuleTask.setModuleMain("package.json");
-		publishNodeModuleTask.setModuleRepository("liferay/liferay-portal");
 	}
 
 	private void _configureTaskReplaceRegexJSMatches(
@@ -3115,21 +3587,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 					file);
 			}
 		}
-	}
-
-	private void _configureTasksBaseline(Project project) {
-		TaskContainer taskContainer = project.getTasks();
-
-		taskContainer.withType(
-			BaselineTask.class,
-			new Action<BaselineTask>() {
-
-				@Override
-				public void execute(BaselineTask baselineTask) {
-					_configureTaskBaseline(baselineTask);
-				}
-
-			});
 	}
 
 	private void _configureTasksCheckOSGiBundleState(
@@ -3205,6 +3662,23 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			});
 	}
 
+	private void _configureTasksJspC(Project project) {
+		String fragmentHost = BndBuilderUtil.getInstruction(
+			project, Constants.FRAGMENT_HOST);
+
+		if (Validator.isNotNull(fragmentHost)) {
+			Task compileJSPTask = GradleUtil.getTask(
+				project, JspCPlugin.COMPILE_JSP_TASK_NAME);
+
+			compileJSPTask.setEnabled(false);
+
+			Task generateJSPJavaTask = GradleUtil.getTask(
+				project, JspCPlugin.GENERATE_JSP_JAVA_TASK_NAME);
+
+			generateJSPJavaTask.setEnabled(false);
+		}
+	}
+
 	private void _configureTasksPmd(Project project) {
 		TaskContainer taskContainer = project.getTasks();
 
@@ -3220,36 +3694,27 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			});
 	}
 
-	private void _configureTasksPublishNodeModule(Project project) {
-		TaskContainer taskContainer = project.getTasks();
-
-		taskContainer.withType(
-			PublishNodeModuleTask.class,
-			new Action<PublishNodeModuleTask>() {
-
-				@Override
-				public void execute(
-					PublishNodeModuleTask publishNodeModuleTask) {
-
-					_configureTaskPublishNodeModule(publishNodeModuleTask);
-				}
-
-			});
-	}
-
 	private void _configureTaskTest(Project project) {
 		Test test = (Test)GradleUtil.getTask(
 			project, JavaPlugin.TEST_TASK_NAME);
 
 		_configureTaskTestIgnoreFailures(test);
 		_configureTaskTestJvmArgs(test, "junit.java.unit.gc");
-		_configureTaskTestLogging(test);
+		_configureTaskTestOutputs(test);
 
 		test.setEnableAssertions(false);
 	}
 
 	private void _configureTaskTestIgnoreFailures(Test test) {
-		test.setIgnoreFailures(true);
+		String ignoreFailures = GradleUtil.getTaskPrefixedProperty(
+			test, "ignore.failures");
+
+		if (Validator.isNotNull(ignoreFailures)) {
+			test.setIgnoreFailures(Boolean.parseBoolean(ignoreFailures));
+		}
+		else {
+			test.setIgnoreFailures(true);
+		}
 	}
 
 	private void _configureTaskTestIntegration(Project project) {
@@ -3258,7 +3723,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		_configureTaskTestIgnoreFailures(test);
 		_configureTaskTestJvmArgs(test, "junit.java.integration.gc");
-		_configureTaskTestLogging(test);
+		_configureTaskTestOutputs(test);
 
 		test.systemProperty("org.apache.maven.offline", Boolean.TRUE);
 
@@ -3282,12 +3747,18 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		}
 	}
 
-	private void _configureTaskTestLogging(Test test) {
-		TestLoggingContainer testLoggingContainer = test.getTestLogging();
+	private void _configureTaskTestOutputs(Test test) {
+		TaskOutputs taskOutputs = test.getOutputs();
 
-		testLoggingContainer.setEvents(EnumSet.allOf(TestLogEvent.class));
-		testLoggingContainer.setExceptionFormat(TestExceptionFormat.FULL);
-		testLoggingContainer.setStackTraceFilters(Collections.emptyList());
+		taskOutputs.upToDateWhen(
+			new Spec<Task>() {
+
+				@Override
+				public boolean isSatisfiedBy(Task task) {
+					return false;
+				}
+
+			});
 	}
 
 	private void _configureTaskTlddoc(Project project, File portalRootDir) {
@@ -3295,12 +3766,12 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			return;
 		}
 
-		TLDDocTask tlddocTask = (TLDDocTask)GradleUtil.getTask(
+		TLDDocTask tldDocTask = (TLDDocTask)GradleUtil.getTask(
 			project, TLDDocBuilderPlugin.TLDDOC_TASK_NAME);
 
 		File xsltDir = new File(portalRootDir, "tools/styles/taglibs");
 
-		tlddocTask.setXsltDir(xsltDir);
+		tldDocTask.setXsltDir(xsltDir);
 	}
 
 	private void _configureTaskUpdateFileVersions(
@@ -3312,11 +3783,18 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		Map<String, Object> args = new HashMap<>();
 
-		if (portalRootDir == null) {
-			portalRootDir = project.getRootDir();
+		File dir = project.getRootDir();
+
+		if (portalRootDir != null) {
+			dir = new File(portalRootDir, "modules");
 		}
 
-		args.put("dir", portalRootDir);
+		args.put("dir", dir);
+		args.put(
+			"excludes",
+			Arrays.asList(
+				"**/bin/", "**/build/", "**/classes/", "**/node_modules/",
+				"**/node_modules_cache/", "**/test-classes/", "**/tmp/"));
 		args.put(
 			"includes",
 			Arrays.asList("**/*.gradle", "**/sdk/*/README.markdown"));
@@ -3364,10 +3842,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			return;
 		}
 
-		if (GradleUtil.isSnapshot(project)) {
-			return;
-		}
-
 		TaskContainer taskContainer = project.getTasks();
 
 		TaskCollection<PublishNodeModuleTask> publishNodeModuleTasks =
@@ -3375,8 +3849,85 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		uploadArchivesTask.dependsOn(publishNodeModuleTasks);
 
-		uploadArchivesTask.finalizedBy(
-			updateFileVersionsTask, updateVersionTask);
+		if (!GradlePluginsDefaultsUtil.isSnapshot(project)) {
+			uploadArchivesTask.finalizedBy(
+				updateFileVersionsTask, updateVersionTask);
+		}
+	}
+
+	private void _configureTestIntegrationTomcat(Project project) {
+		TestIntegrationTomcatExtension testIntegrationTomcatExtension =
+			GradleUtil.getExtension(
+				project, TestIntegrationTomcatExtension.class);
+
+		testIntegrationTomcatExtension.setOverwriteCopyTestModules(false);
+	}
+
+	private void _copyCompileIncludeSources(Project project, File outputDir) {
+		Logger logger = project.getLogger();
+
+		ConfigurationContainer configurationContainer =
+			project.getConfigurations();
+
+		Set<Dependency> dependencies = new HashSet<>();
+
+		Configuration configuration = GradleUtil.getConfiguration(
+			project, LiferayOSGiPlugin.COMPILE_INCLUDE_CONFIGURATION_NAME);
+
+		DependencySet dependencySet = configuration.getDependencies();
+
+		Iterator<Dependency> iterator = dependencySet.iterator();
+
+		while (iterator.hasNext()) {
+			Dependency dependency = iterator.next();
+
+			Map<String, Object> args = new HashMap<>();
+
+			args.put("classifier", "sources");
+			args.put("group", dependency.getGroup());
+			args.put("name", dependency.getName());
+			args.put("transitive", false);
+			args.put("version", dependency.getVersion());
+
+			DependencyHandler dependencyHandler = project.getDependencies();
+
+			dependencies.add(dependencyHandler.create(args));
+		}
+
+		Configuration detachedConfiguration =
+			configurationContainer.detachedConfiguration(
+				dependencies.toArray(new Dependency[0]));
+
+		ResolvedConfiguration resolvedConfiguration =
+			detachedConfiguration.getResolvedConfiguration();
+
+		LenientConfiguration lenientConfiguration =
+			resolvedConfiguration.getLenientConfiguration();
+
+		for (File file : lenientConfiguration.getFiles(Specs.satisfyAll())) {
+			final FileTree fileTree = project.zipTree(file);
+
+			Action<CopySpec> copySpecAction = new Action<CopySpec>() {
+
+				@Override
+				public void execute(CopySpec copySpec) {
+					copySpec.from(fileTree);
+					copySpec.include("**/*.java");
+					copySpec.into(outputDir);
+					copySpec.setIncludeEmptyDirs(false);
+				}
+
+			};
+
+			try {
+				project.copy(copySpecAction);
+			}
+			catch (RuntimeException re) {
+				if (logger.isInfoEnabled()) {
+					logger.info("Unable to copy {}", file);
+				}
+			}
+		}
 	}
 
 	private void _forceProjectDependenciesEvaluation(Project project) {
@@ -3432,8 +3983,8 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		String path = FileUtil.relativize(
 			project.getProjectDir(), modulesPrivateDir);
 
-		if (File.pathSeparatorChar != '/') {
-			path = path.replace(File.pathSeparatorChar, '/');
+		if (File.separatorChar != '/') {
+			path = path.replace(File.separatorChar, '/');
 		}
 
 		while (true) {
@@ -3470,6 +4021,8 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		Configuration configuration =
 			configurationContainer.detachedConfiguration(dependency);
 
+		configuration.setTransitive(false);
+
 		_configureConfigurationNoCache(configuration);
 
 		File file = CollectionUtils.single(configuration.resolve());
@@ -3492,49 +4045,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		catch (IOException ioe) {
 			throw new UncheckedIOException(ioe);
 		}
-	}
-
-	private String _getBundleInstruction(Project project, String key) {
-		Map<String, String> bundleInstructions = _getBundleInstructions(
-			project);
-
-		return bundleInstructions.get(key);
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map<String, String> _getBundleInstructions(Project project) {
-		BundleExtension bundleExtension = GradleUtil.getExtension(
-			project, BundleExtension.class);
-
-		return (Map<String, String>)bundleExtension.getInstructions();
-	}
-
-	private GitRepo _getGitRepo(File dir) {
-		dir = GradleUtil.getRootDir(dir, _GIT_REPO_FILE_NAME);
-
-		if (dir == null) {
-			return null;
-		}
-
-		String content;
-
-		try {
-			File file = new File(dir, _GIT_REPO_FILE_NAME);
-
-			content = new String(
-				Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
-		}
-		catch (IOException ioe) {
-			throw new UncheckedIOException(ioe);
-		}
-
-		boolean readOnly = false;
-
-		if (content.contains("mode = pull")) {
-			readOnly = true;
-		}
-
-		return new GitRepo(dir, readOnly);
 	}
 
 	private File _getLibDir(Project project) {
@@ -3697,6 +4207,30 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		return "project(\"" + project.getPath() + "\")";
 	}
 
+	private File _getSuiteBndFile(File appBndFile, File portalRootDir) {
+		if (portalRootDir == null) {
+			return null;
+		}
+
+		Properties properties = GUtil.loadProperties(appBndFile);
+
+		String liferayRelengSuite = properties.getProperty(
+			"Liferay-Releng-Suite");
+
+		if (Validator.isNull(liferayRelengSuite)) {
+			return null;
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("modules/suites/");
+		sb.append(liferayRelengSuite);
+		sb.append('/');
+		sb.append(_SUITE_BND_FILE_NAME);
+
+		return new File(portalRootDir, sb.toString());
+	}
+
 	private Version _getVersion(Object version) {
 		try {
 			return Version.parseVersion(String.valueOf(version));
@@ -3854,16 +4388,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		return false;
 	}
 
-	private boolean _isPrivateProject(Project project) {
-		String path = project.getPath();
-
-		if (path.startsWith(":private:")) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private boolean _isPublishing(Project project) {
 		Gradle gradle = project.getGradle();
 
@@ -3928,7 +4452,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	}
 
 	private boolean _isTaglibDependency(String group, String name) {
-		if (group.equals("com.liferay") && name.startsWith("com.liferay.") &&
+		if (group.equals(_GROUP) && name.startsWith("com.liferay.") &&
 			name.contains(".taglib")) {
 
 			return true;
@@ -4061,6 +4585,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		}
 
 		Properties releaseVersions = null;
+
 		Properties versions = null;
 
 		if ((versionOverrideFile != null) && versionOverrideFile.exists()) {
@@ -4116,58 +4641,49 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 	private static final char _DEPENDENCY_KEY_SEPARATOR = '/';
 
-	private static final String _GIT_REPO_FILE_NAME = ".gitrepo";
-
 	private static final String _GROUP = "com.liferay";
 
 	private static final String _GROUP_PORTAL = "com.liferay.portal";
 
-	private static final JavaVersion _JAVA_VERSION = JavaVersion.VERSION_1_7;
+	private static final JavaVersion _JAVA_VERSION = JavaVersion.VERSION_1_8;
+
+	private static final String _LANG_BUILDER_PORTAL_TOOL_NAME =
+		"com.liferay.lang.builder";
 
 	private static final String _PMD_PORTAL_TOOL_NAME = "com.liferay.pmd";
 
 	private static final Duration _PORTAL_TOOL_MAX_AGE = TimeCategory.getDays(
 		30);
 
+	private static final String _REST_BUILDER_PORTAL_TOOL_NAME =
+		"com.liferay.portal.tools.rest.builder";
+
 	private static final String _SERVICE_BUILDER_PORTAL_TOOL_NAME =
 		"com.liferay.portal.tools.service.builder";
 
-	private static final String[] _SNAPSHOT_PROPERTY_NAMES =
-		{SNAPSHOT_IF_STALE_PROPERTY_NAME};
+	private static final String[] _SNAPSHOT_PROPERTY_NAMES = {
+		SNAPSHOT_IF_STALE_PROPERTY_NAME
+	};
 
 	private static final String _SOURCE_FORMATTER_PORTAL_TOOL_NAME =
 		"com.liferay.source.formatter";
 
+	private static final String _SUITE_BND_FILE_NAME = "suite.bnd";
+
+	private static final String
+		_UPDATE_FILE_VERSIONS_EXACT_VERSION_PROPERTY_NAME = "exactVersion";
+
 	private static final BackupFilesBuildAdapter _backupFilesBuildAdapter =
 		new BackupFilesBuildAdapter();
-	private static final Set<String> _copyrightedExtensions;
-
-	static {
-		_copyrightedExtensions = new HashSet<>();
-
-		_copyrightedExtensions.add("ftl");
-		_copyrightedExtensions.add("groovy");
-		_copyrightedExtensions.add("htm");
-		_copyrightedExtensions.add("html");
-		_copyrightedExtensions.add("java");
-		_copyrightedExtensions.add("js");
-		_copyrightedExtensions.add("jsp");
-		_copyrightedExtensions.add("jspf");
-		_copyrightedExtensions.add("txt");
-		_copyrightedExtensions.add("vm");
-		_copyrightedExtensions.add("xml");
-	}
-
-	private static class GitRepo {
-
-		public GitRepo(File dir, boolean readOnly) {
-			this.dir = dir;
-			this.readOnly = readOnly;
-		}
-
-		public final File dir;
-		public final boolean readOnly;
-
-	}
+	private static final Set<String> _copyrightedExtensions = new HashSet<>(
+		Arrays.asList(
+			"ftl", "groovy", "htm", "html", "js", "jsp", "jspf", "txt", "vm",
+			"xml"));
+	private static final Spec<File> _javaSpec = new NameSuffixFileSpec(".java");
+	private static final Spec<File> _jsdocSpec = new NameSuffixFileSpec(
+		".es.js", ".jsdoc", ".jsx");
+	private static final Spec<File> _jspSpec = new NameSuffixFileSpec(
+		".jsp", ".jspf");
+	private static final Spec<File> _tldSpec = new NameSuffixFileSpec(".tld");
 
 }

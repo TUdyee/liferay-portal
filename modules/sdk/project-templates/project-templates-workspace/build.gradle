@@ -1,0 +1,7 @@
+generateSampleProject {
+	args "--liferay-version", "7.1", "--name", "sample-workspace"
+
+	doFirst {
+		delete "${buildDir}/sample-workspace"
+	}
+}

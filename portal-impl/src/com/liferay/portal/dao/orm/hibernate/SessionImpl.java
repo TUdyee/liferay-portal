@@ -14,33 +14,42 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.dao.orm.LockMode;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
-import com.liferay.portal.kernel.security.pacl.NotPrivileged;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.security.lang.DoPrivilegedUtil;
 
 import java.io.Serializable;
 
 import java.sql.Connection;
 
+import org.hibernate.LockOptions;
+
 /**
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
  */
-@DoPrivileged
 public class SessionImpl implements Session {
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link #SessionImpl(
+	 *             org.hibernate.Session, ClassLoader)}
+	 */
+	@Deprecated
 	public SessionImpl(org.hibernate.Session session) {
-		_session = session;
+		this(session, null);
 	}
 
-	@NotPrivileged
+	public SessionImpl(
+		org.hibernate.Session session, ClassLoader sessionFactoryClassLoader) {
+
+		_session = session;
+		_sessionFactoryClassLoader = sessionFactoryClassLoader;
+	}
+
 	@Override
 	public void clear() throws ORMException {
 		try {
@@ -51,7 +60,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public Connection close() throws ORMException {
 		try {
@@ -62,7 +70,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public boolean contains(Object object) throws ORMException {
 		try {
@@ -82,14 +89,21 @@ public class SessionImpl implements Session {
 	public Query createQuery(String queryString, boolean strictName)
 		throws ORMException {
 
-		try {
-			queryString = SQLTransformer.transformFromJPQLToHQL(queryString);
-
-			return DoPrivilegedUtil.wrapWhenActive(
-				new QueryImpl(_session.createQuery(queryString), strictName));
+		if (_sessionFactoryClassLoader == null) {
+			return _createQuery(queryString, strictName);
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+
+		Thread currentThread = Thread.currentThread();
+
+		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+
+		currentThread.setContextClassLoader(_sessionFactoryClassLoader);
+
+		try {
+			return _createQuery(queryString, strictName);
+		}
+		finally {
+			currentThread.setContextClassLoader(contextClassLoader);
 		}
 	}
 
@@ -105,9 +119,8 @@ public class SessionImpl implements Session {
 		try {
 			queryString = SQLTransformer.transformFromJPQLToHQL(queryString);
 
-			return DoPrivilegedUtil.wrapWhenActive(
-				new SQLQueryImpl(
-					_session.createSQLQuery(queryString), strictName));
+			return new SQLQueryImpl(
+				_session.createSQLQuery(queryString), strictName);
 		}
 		catch (Exception e) {
 			throw ExceptionTranslator.translate(e);
@@ -132,19 +145,16 @@ public class SessionImpl implements Session {
 			SQLQuery sqlQuery = new SQLQueryImpl(
 				_session.createSQLQuery(queryString), strictName);
 
-			String[] tableNames = SQLQueryTableNamesUtil.getTableNames(
-				queryString);
+			sqlQuery.addSynchronizedQuerySpaces(
+				SQLQueryTableNamesUtil.getTableNames(queryString));
 
-			sqlQuery.addSynchronizedQuerySpaces(tableNames);
-
-			return DoPrivilegedUtil.wrapWhenActive(sqlQuery);
+			return sqlQuery;
 		}
 		catch (Exception e) {
 			throw ExceptionTranslator.translate(e);
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public void delete(Object object) throws ORMException {
 		try {
@@ -155,7 +165,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public void evict(Object object) throws ORMException {
 		try {
@@ -166,7 +175,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public void flush() throws ORMException {
 		try {
@@ -177,7 +185,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public Object get(Class<?> clazz, Serializable id) throws ORMException {
 		try {
@@ -188,31 +195,26 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	/**
-	 * @deprecated As of 6.1.0
-	 */
-	@Deprecated
-	@NotPrivileged
 	@Override
 	public Object get(Class<?> clazz, Serializable id, LockMode lockMode)
 		throws ORMException {
 
+		LockOptions lockOptions = new LockOptions(
+			LockModeTranslator.translate(lockMode));
+
 		try {
-			return _session.get(
-				clazz, id, LockModeTranslator.translate(lockMode));
+			return _session.get(clazz, id, lockOptions);
 		}
 		catch (Exception e) {
 			throw ExceptionTranslator.translate(e);
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public Object getWrappedSession() {
 		return _session;
 	}
 
-	@NotPrivileged
 	@Override
 	public boolean isDirty() throws ORMException {
 		try {
@@ -223,7 +225,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public Object load(Class<?> clazz, Serializable id) throws ORMException {
 		try {
@@ -234,7 +235,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public Object merge(Object object) throws ORMException {
 		try {
@@ -245,7 +245,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public Serializable save(Object object) throws ORMException {
 		try {
@@ -256,7 +255,6 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	@NotPrivileged
 	@Override
 	public void saveOrUpdate(Object object) throws ORMException {
 		try {
@@ -278,6 +276,20 @@ public class SessionImpl implements Session {
 		return sb.toString();
 	}
 
+	private Query _createQuery(String queryString, boolean strictName)
+		throws ORMException {
+
+		try {
+			queryString = SQLTransformer.transformFromJPQLToHQL(queryString);
+
+			return new QueryImpl(_session.createQuery(queryString), strictName);
+		}
+		catch (Exception e) {
+			throw ExceptionTranslator.translate(e);
+		}
+	}
+
 	private final org.hibernate.Session _session;
+	private final ClassLoader _sessionFactoryClassLoader;
 
 }

@@ -14,12 +14,9 @@
 
 package com.liferay.exportimport.kernel.background.task;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class BackgroundTaskExecutorNames {
 
 	public static final String LAYOUT_EXPORT_BACKGROUND_TASK_EXECUTOR =
@@ -45,6 +42,10 @@ public class BackgroundTaskExecutorNames {
 	public static final String PORTLET_IMPORT_BACKGROUND_TASK_EXECUTOR =
 		"com.liferay.exportimport.internal.background.task." +
 			"PortletImportBackgroundTaskExecutor";
+
+	public static final String PORTLET_REMOTE_STAGING_BACKGROUND_TASK_EXECUTOR =
+		"com.liferay.exportimport.internal.background.task." +
+			"PortletRemoteStagingBackgroundTaskExecutor";
 
 	public static final String PORTLET_STAGING_BACKGROUND_TASK_EXECUTOR =
 		"com.liferay.exportimport.internal.background.task." +

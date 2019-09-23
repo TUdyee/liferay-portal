@@ -14,7 +14,7 @@
 
 package com.liferay.powwow.model;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 
 /**
  * @author Shinn Lok
@@ -56,9 +56,8 @@ public class PowwowMeetingConstants {
 		else if (status == STATUS_SCHEDULED) {
 			return LABEL_SCHEDULED;
 		}
-		else {
-			return StringPool.BLANK;
-		}
+
+		return StringPool.BLANK;
 	}
 
 }

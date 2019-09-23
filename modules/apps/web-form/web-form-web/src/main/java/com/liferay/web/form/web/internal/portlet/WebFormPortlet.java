@@ -22,11 +22,15 @@ import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
-import com.liferay.portal.kernel.captcha.CaptchaTextException;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
@@ -36,7 +40,6 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -44,12 +47,10 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.web.form.web.configuration.WebFormServiceConfiguration;
+import com.liferay.web.form.web.internal.configuration.WebFormServiceConfiguration;
 import com.liferay.web.form.web.internal.constants.WebFormPortletKeys;
 import com.liferay.web.form.web.internal.util.WebFormUtil;
 
@@ -92,7 +93,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.display-name=Web Form",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.copy-request-parameters=true",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + WebFormPortletKeys.WEB_FORM,
 		"javax.portlet.portlet-info.keywords=Web Form",
@@ -100,8 +101,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.portlet-info.title=Web Form",
 		"javax.portlet.preferences=classpath:/META-INF/portlet-preferences/default-portlet-preferences.xml",
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator,guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator,guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -114,11 +114,9 @@ public class WebFormPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String portletId = _portal.getPortletId(actionRequest);
-
 		PortletPermissionUtil.check(
 			themeDisplay.getPermissionChecker(), themeDisplay.getPlid(),
-			portletId, ActionKeys.CONFIGURATION);
+			_portal.getPortletId(actionRequest), ActionKeys.CONFIGURATION);
 
 		PortletPreferences preferences =
 			PortletPreferencesFactoryUtil.getPortletSetup(actionRequest);
@@ -137,9 +135,6 @@ public class WebFormPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		String portletId = _portal.getPortletId(actionRequest);
 
 		PortletPreferences preferences =
@@ -148,31 +143,22 @@ public class WebFormPortlet extends MVCPortlet {
 
 		boolean requireCaptcha = GetterUtil.getBoolean(
 			preferences.getValue("requireCaptcha", StringPool.BLANK));
-		String successURL = GetterUtil.getString(
-			preferences.getValue("successURL", StringPool.BLANK));
-		boolean sendAsEmail = GetterUtil.getBoolean(
-			preferences.getValue("sendAsEmail", StringPool.BLANK));
-		boolean saveToDatabase = GetterUtil.getBoolean(
-			preferences.getValue("saveToDatabase", StringPool.BLANK));
-		String databaseTableName = GetterUtil.getString(
-			preferences.getValue("databaseTableName", StringPool.BLANK));
-		boolean saveToFile = GetterUtil.getBoolean(
-			preferences.getValue("saveToFile", StringPool.BLANK));
 
 		if (requireCaptcha) {
 			try {
 				CaptchaUtil.check(actionRequest);
 			}
-			catch (CaptchaTextException cte) {
+			catch (CaptchaException ce) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(cte, cte);
+					_log.debug(ce, ce);
 				}
 
-				SessionErrors.add(
-					actionRequest, CaptchaTextException.class.getName());
+				Class<?> clazz = ce.getClass();
+
+				SessionErrors.add(actionRequest, clazz.getName());
 
 				return;
 			}
@@ -184,12 +170,12 @@ public class WebFormPortlet extends MVCPortlet {
 			String fieldLabel = preferences.getValue(
 				"fieldLabel" + i, StringPool.BLANK);
 
-			String fieldType = preferences.getValue(
-				"fieldType" + i, StringPool.BLANK);
-
 			if (Validator.isNull(fieldLabel)) {
 				break;
 			}
+
+			String fieldType = preferences.getValue(
+				"fieldType" + i, StringPool.BLANK);
 
 			if (StringUtil.equalsIgnoreCase(fieldType, "paragraph")) {
 				continue;
@@ -199,6 +185,9 @@ public class WebFormPortlet extends MVCPortlet {
 		}
 
 		Set<String> validationErrors = null;
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		WebFormServiceConfiguration webFormServiceConfiguration =
 			getWebFormServiceConfiguration(themeDisplay.getCompanyId());
@@ -210,22 +199,36 @@ public class WebFormPortlet extends MVCPortlet {
 		}
 		catch (Exception e) {
 			SessionErrors.add(
-				actionRequest, "validationScriptError", e.getMessage().trim());
+				actionRequest, "validationScriptError",
+				StringUtil.trim(e.getMessage()));
 
 			return;
 		}
+
+		String successURL = GetterUtil.getString(
+			preferences.getValue("successURL", StringPool.BLANK));
 
 		if (validationErrors.isEmpty()) {
 			boolean emailSuccess = true;
 			boolean databaseSuccess = true;
 			boolean fileSuccess = true;
 
+			boolean sendAsEmail = GetterUtil.getBoolean(
+				preferences.getValue("sendAsEmail", StringPool.BLANK));
+
 			if (sendAsEmail) {
 				emailSuccess = sendEmail(
 					fieldsMap, preferences, webFormServiceConfiguration);
 			}
 
+			boolean saveToDatabase = GetterUtil.getBoolean(
+				preferences.getValue("saveToDatabase", StringPool.BLANK));
+
 			if (saveToDatabase) {
+				String databaseTableName = GetterUtil.getString(
+					preferences.getValue(
+						"databaseTableName", StringPool.BLANK));
+
 				if (Validator.isNull(databaseTableName)) {
 					databaseTableName = WebFormUtil.getNewDatabaseTableName(
 						portletId);
@@ -240,6 +243,9 @@ public class WebFormPortlet extends MVCPortlet {
 					themeDisplay.getCompanyId(), fieldsMap, preferences,
 					databaseTableName);
 			}
+
+			boolean saveToFile = GetterUtil.getBoolean(
+				preferences.getValue("saveToFile", StringPool.BLANK));
 
 			if (saveToFile) {
 				String fileName = WebFormUtil.getFileName(
@@ -315,11 +321,8 @@ public class WebFormPortlet extends MVCPortlet {
 	protected void appendFieldValues(
 		Map<String, String> fieldsMap, String csvSeparator, StringBundler sb) {
 
-		for (String fieldLabel : fieldsMap.keySet()) {
-			String fieldValue = fieldsMap.get(fieldLabel);
-
-			sb.append(getCSVFormattedValue(fieldValue));
-
+		for (Map.Entry<String, String> entry : fieldsMap.entrySet()) {
+			sb.append(getCSVFormattedValue(entry.getValue()));
 			sb.append(csvSeparator);
 		}
 
@@ -335,11 +338,9 @@ public class WebFormPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String portletId = _portal.getPortletId(resourceRequest);
-
 		PortletPermissionUtil.check(
 			themeDisplay.getPermissionChecker(), themeDisplay.getPlid(),
-			portletId, ActionKeys.CONFIGURATION);
+			_portal.getPortletId(resourceRequest), ActionKeys.CONFIGURATION);
 
 		PortletPreferences preferences =
 			PortletPreferencesFactoryUtil.getPortletSetup(resourceRequest);
@@ -361,16 +362,17 @@ public class WebFormPortlet extends MVCPortlet {
 			String fieldLabel = preferences.getValue(
 				"fieldLabel" + i, StringPool.BLANK);
 
-			String localizedfieldLabel = LocalizationUtil.getPreferencesValue(
-				preferences, "fieldLabel" + i, themeDisplay.getLanguageId());
-
 			if (Validator.isNull(fieldLabel)) {
 				break;
 			}
 
 			fieldLabels.add(fieldLabel);
 
+			String localizedfieldLabel = LocalizationUtil.getPreferencesValue(
+				preferences, "fieldLabel" + i, themeDisplay.getLanguageId());
+
 			sb.append(getCSVFormattedValue(localizedfieldLabel));
+
 			sb.append(csvSeparator);
 		}
 
@@ -402,7 +404,11 @@ public class WebFormPortlet extends MVCPortlet {
 		}
 
 		String fileName = title + ".csv";
-		byte[] bytes = sb.toString().getBytes();
+
+		String s = sb.toString();
+
+		byte[] bytes = s.getBytes();
+
 		String contentType = ContentTypes.APPLICATION_TEXT;
 
 		PortletResponseUtil.sendFile(
@@ -423,12 +429,10 @@ public class WebFormPortlet extends MVCPortlet {
 	protected String getMailBody(Map<String, String> fieldsMap) {
 		StringBundler sb = new StringBundler();
 
-		for (String fieldLabel : fieldsMap.keySet()) {
-			String fieldValue = fieldsMap.get(fieldLabel);
-
-			sb.append(fieldLabel);
+		for (Map.Entry<String, String> entry : fieldsMap.entrySet()) {
+			sb.append(entry.getKey());
 			sb.append(" : ");
-			sb.append(fieldValue);
+			sb.append(entry.getValue());
 			sb.append(CharPool.NEW_LINE);
 		}
 
@@ -454,12 +458,10 @@ public class WebFormPortlet extends MVCPortlet {
 			WebFormUtil.class.getName());
 
 		try {
-			for (String fieldLabel : fieldsMap.keySet()) {
-				String fieldValue = fieldsMap.get(fieldLabel);
-
+			for (Map.Entry<String, String> entry : fieldsMap.entrySet()) {
 				_expandoValueLocalService.addValue(
 					companyId, WebFormUtil.class.getName(), databaseTableName,
-					fieldLabel, classPK, fieldValue);
+					entry.getKey(), classPK, entry.getValue());
 			}
 
 			return true;
@@ -584,6 +586,13 @@ public class WebFormPortlet extends MVCPortlet {
 		_mailService = mailService;
 	}
 
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.web.form.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
+	}
+
 	protected Set<String> validate(
 			Map<String, String> fieldsMap, boolean validationScriptEnable,
 			PortletPreferences preferences)
@@ -595,6 +604,10 @@ public class WebFormPortlet extends MVCPortlet {
 			String fieldType = preferences.getValue(
 				"fieldType" + (i + 1), StringPool.BLANK);
 
+			if (Objects.equals(fieldType, "paragraph")) {
+				continue;
+			}
+
 			String fieldLabel = preferences.getValue(
 				"fieldLabel" + (i + 1), StringPool.BLANK);
 
@@ -603,10 +616,6 @@ public class WebFormPortlet extends MVCPortlet {
 			boolean fieldOptional = GetterUtil.getBoolean(
 				preferences.getValue(
 					"fieldOptional" + (i + 1), StringPool.BLANK));
-
-			if (Objects.equals(fieldType, "paragraph")) {
-				continue;
-			}
 
 			if (!fieldOptional && Validator.isNotNull(fieldLabel) &&
 				Validator.isNull(fieldValue)) {
@@ -629,8 +638,6 @@ public class WebFormPortlet extends MVCPortlet {
 					fieldValue, fieldsMap, validationScript)) {
 
 				validationErrors.add(fieldLabel);
-
-				continue;
 			}
 		}
 

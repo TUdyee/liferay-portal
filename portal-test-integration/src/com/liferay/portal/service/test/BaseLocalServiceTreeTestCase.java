@@ -30,7 +30,10 @@ import org.junit.Test;
 
 /**
  * @author Shinn Lok
+ * @deprecated As of Mueller (7.2.x), replaced by {@link
+ *             com.liferay.portal.local.service.tree.test.util.BaseLocalServiceTreeTestCase}
  */
+@Deprecated
 public abstract class BaseLocalServiceTreeTestCase {
 
 	@Before
@@ -66,21 +69,19 @@ public abstract class BaseLocalServiceTreeTestCase {
 
 	protected void createTree() throws Exception {
 
-		/**
-		 * Tree 1
-		 *
-		 * /A--->/A--->/A
-		 *  |     |--->/B
-		 *  |     |--->/C
-		 *  |     |--->/D
-		 *  |
-		 *  |--->/B--->/A
-		 *  |     |--->/B
-		 *  |     |--->/C
-		 *  |
-		 *  |--->/C--->/A
-		 *        |--->/B
-		 */
+		// Tree 1
+
+		// /A--->/A--->/A
+		//  |     |--->/B
+		//  |     |--->/C
+		//  |     |--->/D
+		//  |
+		//  |--->/B--->/A
+		//  |     |--->/B
+		//  |     |--->/C
+		//  |
+		//  |--->/C--->/A
+		//        |--->/B
 
 		TreeModel treeModelA = addTreeModel(null);
 
@@ -134,21 +135,19 @@ public abstract class BaseLocalServiceTreeTestCase {
 
 		_treeModels.add(treeModelACB);
 
-		/**
-		 * Tree 2
-		 *
-		 * /B--->/A--->/A
-		 *  |     |--->/B
-		 *  |
-		 *  |--->/B--->/A
-		 *  |     |--->/B
-		 *  |     |--->/C
-		 *  |
-		 *  |--->/C--->/A
-		 *        |--->/B
-		 *        |--->/C
-		 *        |--->/D
-		 */
+		// Tree 2
+
+		// /B--->/A--->/A
+		//  |     |--->/B
+		//  |
+		//  |--->/B--->/A
+		//  |     |--->/B
+		//  |     |--->/C
+		//  |
+		//  |--->/C--->/A
+		//        |--->/B
+		//        |--->/C
+		//        |--->/D
 
 		TreeModel treeModelB = addTreeModel(null);
 

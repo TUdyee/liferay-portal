@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 
 import java.util.regex.Matcher;
@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public class JavaModuleServiceReferenceCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isModulesCheck() {
+	public boolean isModuleSourceCheck() {
 		return true;
 	}
 
@@ -63,7 +63,7 @@ public class JavaModuleServiceReferenceCheck extends BaseFileCheck {
 			if (className.startsWith(servicePackageName)) {
 				addMessage(
 					fileName, "Use @BeanReference instead of @ServiceReference",
-					getLineCount(content, matcher.start()));
+					getLineNumber(content, matcher.start()));
 			}
 		}
 	}
@@ -86,7 +86,7 @@ public class JavaModuleServiceReferenceCheck extends BaseFileCheck {
 		return packageName + StringPool.PERIOD + className;
 	}
 
-	private final Pattern _serviceReferencePattern = Pattern.compile(
+	private static final Pattern _serviceReferencePattern = Pattern.compile(
 		"@ServiceReference\\(\\s*type = ([\\w.]+)\\.class\\)\n");
 
 }

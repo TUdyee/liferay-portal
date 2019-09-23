@@ -14,9 +14,9 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.concurrent.Callable;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Daniel Kocsis
@@ -25,7 +25,7 @@ import java.util.concurrent.Callable;
 public interface ExportImportProcessCallbackRegistry {
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	public void registerCallback(Callable<?> callable);

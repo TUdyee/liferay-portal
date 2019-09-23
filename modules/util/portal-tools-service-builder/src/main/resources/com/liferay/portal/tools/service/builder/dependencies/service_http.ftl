@@ -4,8 +4,6 @@ package ${packagePath}.service.http;
 	import ${apiPackagePath}.service.${entity.name}ServiceUtil;
 </#if>
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
@@ -15,10 +13,11 @@ import com.liferay.portal.kernel.util.MethodKey;
 
 /**
  * Provides the HTTP utility for the
- * {@link ${apiPackagePath}.service.${entity.name}ServiceUtil} service utility. The
+ * <code>${apiPackagePath}.service.${entity.name}ServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link com.liferay.portal.kernel.security.auth.HttpPrincipal} parameter.
+ * <code>com.liferay.portal.kernel.security.auth.HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -37,8 +36,6 @@ import com.liferay.portal.kernel.util.MethodKey;
  *
  * @author ${author}
  * @see ${entity.name}ServiceSoap
- * @see com.liferay.portal.kernel.security.auth.HttpPrincipal
- * @see ${apiPackagePath}.service.${entity.name}ServiceUtil
 <#if classDeprecated>
  * @deprecated ${classDeprecatedComment}
 </#if>
@@ -48,8 +45,6 @@ import com.liferay.portal.kernel.util.MethodKey;
 <#if classDeprecated>
 	@Deprecated
 </#if>
-
-@ProviderType
 public class ${entity.name}ServiceHttp {
 
 	<#assign hasMethods = false />

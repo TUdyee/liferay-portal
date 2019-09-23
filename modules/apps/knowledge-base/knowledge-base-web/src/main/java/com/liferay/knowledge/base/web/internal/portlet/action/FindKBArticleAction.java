@@ -21,8 +21,9 @@ import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
 import com.liferay.knowledge.base.service.KBFolderLocalService;
-import com.liferay.knowledge.base.service.permission.KBArticlePermission;
-import com.liferay.knowledge.base.service.util.AdminUtil;
+import com.liferay.knowledge.base.util.AdminHelper;
+import com.liferay.knowledge.base.web.internal.security.permission.resource.KBArticlePermission;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -34,11 +35,9 @@ import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.struts.BaseStrutsAction;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -47,7 +46,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -74,22 +72,25 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true, property = "path=/knowledge_base/find_kb_article",
 	service = StrutsAction.class
 )
-public class FindKBArticleAction extends BaseStrutsAction {
+public class FindKBArticleAction implements StrutsAction {
 
 	@Override
 	public String execute(
-			StrutsAction originalStrutsAction, HttpServletRequest request,
-			HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		long plid = ParamUtil.getLong(request, "plid");
-		long resourcePrimKey = ParamUtil.getLong(request, "resourcePrimKey");
+		long plid = ParamUtil.getLong(httpServletRequest, "plid");
+		long resourcePrimKey = ParamUtil.getLong(
+			httpServletRequest, "resourcePrimKey");
 		int status = ParamUtil.getInteger(
-			request, "status", WorkflowConstants.STATUS_APPROVED);
-		boolean maximized = ParamUtil.getBoolean(request, "maximized");
+			httpServletRequest, "status", WorkflowConstants.STATUS_APPROVED);
+		boolean maximized = ParamUtil.getBoolean(
+			httpServletRequest, "maximized");
 
 		KBArticle kbArticle = getKBArticle(resourcePrimKey, status);
 
@@ -100,23 +101,25 @@ public class FindKBArticleAction extends BaseStrutsAction {
 		PortletURL portletURL = null;
 
 		if (kbArticle == null) {
-			portletURL = getDynamicPortletURL(plid, status, request);
+			portletURL = getDynamicPortletURL(plid, status, httpServletRequest);
 		}
 
 		if (status != WorkflowConstants.STATUS_APPROVED) {
-			portletURL = getDynamicPortletURL(plid, status, request);
+			portletURL = getDynamicPortletURL(plid, status, httpServletRequest);
 		}
 
 		if (portletURL == null) {
-			portletURL = getKBArticleURL(plid, false, kbArticle, request);
+			portletURL = getKBArticleURL(
+				plid, false, kbArticle, httpServletRequest);
 		}
 
 		if (portletURL == null) {
-			portletURL = getKBArticleURL(plid, true, kbArticle, request);
+			portletURL = getKBArticleURL(
+				plid, true, kbArticle, httpServletRequest);
 		}
 
 		if (portletURL == null) {
-			portletURL = getDynamicPortletURL(plid, status, request);
+			portletURL = getDynamicPortletURL(plid, status, httpServletRequest);
 		}
 
 		if (maximized) {
@@ -124,7 +127,7 @@ public class FindKBArticleAction extends BaseStrutsAction {
 			portletURL.setPortletMode(PortletMode.VIEW);
 		}
 
-		response.sendRedirect(portletURL.toString());
+		httpServletResponse.sendRedirect(portletURL.toString());
 
 		return null;
 	}
@@ -163,19 +166,21 @@ public class FindKBArticleAction extends BaseStrutsAction {
 	}
 
 	protected PortletURL getDynamicPortletURL(
-			long plid, int status, HttpServletRequest request)
+			long plid, int status, HttpServletRequest httpServletRequest)
 		throws Exception {
 
 		String portletId = getPortletId(plid);
 
-		PortletURL portletURL = getKBArticleURL(plid, portletId, null, request);
+		PortletURL portletURL = getKBArticleURL(
+			plid, portletId, null, httpServletRequest);
 
 		if (status != WorkflowConstants.STATUS_APPROVED) {
 			portletURL.setParameter("status", String.valueOf(status));
 		}
 
 		if (_PORTLET_ADD_DEFAULT_RESOURCE_CHECK_ENABLED) {
-			String token = AuthTokenUtil.getToken(request, plid, portletId);
+			String token = AuthTokenUtil.getToken(
+				httpServletRequest, plid, portletId);
 
 			portletURL.setParameter("p_p_auth", token);
 		}
@@ -202,11 +207,9 @@ public class FindKBArticleAction extends BaseStrutsAction {
 			return null;
 		}
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
 		if (!KBArticlePermission.contains(
-				permissionChecker, kbArticle, KBActionKeys.VIEW)) {
+				PermissionThreadLocal.getPermissionChecker(), kbArticle,
+				KBActionKeys.VIEW)) {
 
 			return null;
 		}
@@ -216,7 +219,7 @@ public class FindKBArticleAction extends BaseStrutsAction {
 
 	protected PortletURL getKBArticleURL(
 			long plid, boolean privateLayout, KBArticle kbArticle,
-			HttpServletRequest request)
+			HttpServletRequest httpServletRequest)
 		throws Exception {
 
 		PortletURL firstMatchPortletURL = null;
@@ -259,7 +262,7 @@ public class FindKBArticleAction extends BaseStrutsAction {
 
 							return getKBArticleURL(
 								layout.getPlid(), portlet.getPortletId(),
-								kbArticle, request);
+								kbArticle, httpServletRequest);
 						}
 					}
 					else if (resourcePrimKey ==
@@ -267,25 +270,18 @@ public class FindKBArticleAction extends BaseStrutsAction {
 
 						return getKBArticleURL(
 							layout.getPlid(), portlet.getPortletId(), kbArticle,
-							request);
+							httpServletRequest);
 					}
 
 					if (firstMatchPortletURL == null) {
 						firstMatchPortletURL = getKBArticleURL(
 							layout.getPlid(), portlet.getPortletId(), kbArticle,
-							request);
+							httpServletRequest);
 					}
 				}
 
 				if (rootPortletId.equals(
 						KBPortletKeys.KNOWLEDGE_BASE_SECTION)) {
-
-					PortletPreferences portletPreferences =
-						PortletPreferencesFactoryUtil.getPortletSetup(
-							layout, portlet.getPortletId(), StringPool.BLANK);
-
-					String[] kbArticlesSections = portletPreferences.getValues(
-						"kbArticlesSections", new String[0]);
 
 					KBArticle rootKBArticle =
 						_kbArticleLocalService.fetchLatestKBArticle(
@@ -296,7 +292,14 @@ public class FindKBArticleAction extends BaseStrutsAction {
 						continue;
 					}
 
-					String[] sections = AdminUtil.unescapeSections(
+					PortletPreferences portletPreferences =
+						PortletPreferencesFactoryUtil.getPortletSetup(
+							layout, portlet.getPortletId(), StringPool.BLANK);
+
+					String[] kbArticlesSections = portletPreferences.getValues(
+						"kbArticlesSections", new String[0]);
+
+					String[] sections = _adminHelper.unescapeSections(
 						rootKBArticle.getSections());
 
 					for (String section : sections) {
@@ -306,7 +309,7 @@ public class FindKBArticleAction extends BaseStrutsAction {
 
 						return getKBArticleURL(
 							layout.getPlid(), portlet.getPortletId(), kbArticle,
-							request);
+							httpServletRequest);
 					}
 				}
 
@@ -336,13 +339,13 @@ public class FindKBArticleAction extends BaseStrutsAction {
 					if (rootResourcePrimKey == selRootResourcePrimKey) {
 						return getKBArticleURL(
 							layout.getPlid(), portlet.getPortletId(), kbArticle,
-							request);
+							httpServletRequest);
 					}
 
 					if (firstMatchPortletURL == null) {
 						firstMatchPortletURL = getKBArticleURL(
 							layout.getPlid(), portlet.getPortletId(), kbArticle,
-							request);
+							httpServletRequest);
 					}
 				}
 			}
@@ -353,10 +356,11 @@ public class FindKBArticleAction extends BaseStrutsAction {
 
 	protected PortletURL getKBArticleURL(
 			long plid, String portletId, KBArticle kbArticle,
-			HttpServletRequest request)
+			HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		long resourcePrimKey = ParamUtil.getLong(request, "resourcePrimKey");
+		long resourcePrimKey = ParamUtil.getLong(
+			httpServletRequest, "resourcePrimKey");
 
 		String mvcPath = null;
 
@@ -370,7 +374,7 @@ public class FindKBArticleAction extends BaseStrutsAction {
 		}
 
 		PortletURL portletURL = PortletURLFactoryUtil.create(
-			request, portletId, plid, PortletRequest.RENDER_PHASE);
+			httpServletRequest, portletId, plid, PortletRequest.RENDER_PHASE);
 
 		if (mvcPath != null) {
 			portletURL.setParameter("mvcPath", mvcPath);
@@ -449,6 +453,11 @@ public class FindKBArticleAction extends BaseStrutsAction {
 	}
 
 	@Reference(unbind = "-")
+	protected void setAdminUtilHelper(AdminHelper adminHelper) {
+		_adminHelper = adminHelper;
+	}
+
+	@Reference(unbind = "-")
 	protected void setGroupLocalService(GroupLocalService groupLocalService) {
 		_groupLocalService = groupLocalService;
 	}
@@ -479,6 +488,7 @@ public class FindKBArticleAction extends BaseStrutsAction {
 			PropsUtil.get(
 				PropsKeys.PORTLET_ADD_DEFAULT_RESOURCE_CHECK_ENABLED));
 
+	private AdminHelper _adminHelper;
 	private GroupLocalService _groupLocalService;
 	private KBArticleLocalService _kbArticleLocalService;
 	private KBFolderLocalService _kbFolderLocalService;

@@ -14,14 +14,10 @@
 
 package com.liferay.opensocial.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.opensocial.model.OAuthToken;
-
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing OAuthToken in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see OAuthToken
  * @generated
  */
-@ProviderType
-public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
-	Externalizable {
+public class OAuthTokenCacheModel
+	implements CacheModel<OAuthToken>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -110,7 +105,7 @@ public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
 		oAuthTokenImpl.setUserId(userId);
 
 		if (userName == null) {
-			oAuthTokenImpl.setUserName(StringPool.BLANK);
+			oAuthTokenImpl.setUserName("");
 		}
 		else {
 			oAuthTokenImpl.setUserName(userName);
@@ -131,14 +126,14 @@ public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
 		}
 
 		if (gadgetKey == null) {
-			oAuthTokenImpl.setGadgetKey(StringPool.BLANK);
+			oAuthTokenImpl.setGadgetKey("");
 		}
 		else {
 			oAuthTokenImpl.setGadgetKey(gadgetKey);
 		}
 
 		if (serviceName == null) {
-			oAuthTokenImpl.setServiceName(StringPool.BLANK);
+			oAuthTokenImpl.setServiceName("");
 		}
 		else {
 			oAuthTokenImpl.setServiceName(serviceName);
@@ -147,28 +142,28 @@ public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
 		oAuthTokenImpl.setModuleId(moduleId);
 
 		if (accessToken == null) {
-			oAuthTokenImpl.setAccessToken(StringPool.BLANK);
+			oAuthTokenImpl.setAccessToken("");
 		}
 		else {
 			oAuthTokenImpl.setAccessToken(accessToken);
 		}
 
 		if (tokenName == null) {
-			oAuthTokenImpl.setTokenName(StringPool.BLANK);
+			oAuthTokenImpl.setTokenName("");
 		}
 		else {
 			oAuthTokenImpl.setTokenName(tokenName);
 		}
 
 		if (tokenSecret == null) {
-			oAuthTokenImpl.setTokenSecret(StringPool.BLANK);
+			oAuthTokenImpl.setTokenSecret("");
 		}
 		else {
 			oAuthTokenImpl.setTokenSecret(tokenSecret);
 		}
 
 		if (sessionHandle == null) {
-			oAuthTokenImpl.setSessionHandle(StringPool.BLANK);
+			oAuthTokenImpl.setSessionHandle("");
 		}
 		else {
 			oAuthTokenImpl.setSessionHandle(sessionHandle);
@@ -204,8 +199,7 @@ public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(oAuthTokenId);
 
 		objectOutput.writeLong(companyId);
@@ -213,7 +207,7 @@ public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
 		objectOutput.writeLong(userId);
 
 		if (userName == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(userName);
@@ -223,14 +217,14 @@ public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
 		objectOutput.writeLong(modifiedDate);
 
 		if (gadgetKey == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(gadgetKey);
 		}
 
 		if (serviceName == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(serviceName);
@@ -239,28 +233,28 @@ public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
 		objectOutput.writeLong(moduleId);
 
 		if (accessToken == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(accessToken);
 		}
 
 		if (tokenName == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(tokenName);
 		}
 
 		if (tokenSecret == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(tokenSecret);
 		}
 
 		if (sessionHandle == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(sessionHandle);
@@ -283,4 +277,5 @@ public class OAuthTokenCacheModel implements CacheModel<OAuthToken>,
 	public String tokenSecret;
 	public String sessionHandle;
 	public long expiration;
+
 }

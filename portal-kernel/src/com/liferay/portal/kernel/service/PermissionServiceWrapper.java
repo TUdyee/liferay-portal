@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Provides a wrapper for {@link PermissionService}.
@@ -23,46 +22,48 @@ import aQute.bnd.annotation.ProviderType;
  * @see PermissionService
  * @generated
  */
-@ProviderType
-public class PermissionServiceWrapper implements PermissionService,
-	ServiceWrapper<PermissionService> {
+public class PermissionServiceWrapper
+	implements PermissionService, ServiceWrapper<PermissionService> {
+
 	public PermissionServiceWrapper(PermissionService permissionService) {
 		_permissionService = permissionService;
 	}
 
 	/**
-	* Checks to see if the group has permission to the service.
-	*
-	* @param groupId the primary key of the group
-	* @param name the service name
-	* @param primKey the primary key of the service
-	*/
+	 * Checks to see if the group has permission to the service.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param name the service name
+	 * @param primKey the primary key of the service
+	 */
 	@Override
-	public void checkPermission(long groupId, java.lang.String name,
-		long primKey)
+	public void checkPermission(
+			long groupId, java.lang.String name, long primKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_permissionService.checkPermission(groupId, name, primKey);
 	}
 
 	/**
-	* Checks to see if the group has permission to the service.
-	*
-	* @param groupId the primary key of the group
-	* @param name the service name
-	* @param primKey the primary key of the service
-	*/
+	 * Checks to see if the group has permission to the service.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param name the service name
+	 * @param primKey the primary key of the service
+	 */
 	@Override
-	public void checkPermission(long groupId, java.lang.String name,
-		java.lang.String primKey)
+	public void checkPermission(
+			long groupId, java.lang.String name, java.lang.String primKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_permissionService.checkPermission(groupId, name, primKey);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public java.lang.String getOSGiServiceIdentifier() {
 		return _permissionService.getOSGiServiceIdentifier();
@@ -79,4 +80,5 @@ public class PermissionServiceWrapper implements PermissionService,
 	}
 
 	private PermissionService _permissionService;
+
 }

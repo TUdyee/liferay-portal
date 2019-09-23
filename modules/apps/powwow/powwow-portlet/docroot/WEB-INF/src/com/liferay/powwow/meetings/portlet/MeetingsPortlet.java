@@ -20,14 +20,18 @@ import com.liferay.calendar.model.CalendarResource;
 import com.liferay.calendar.service.CalendarBookingLocalServiceUtil;
 import com.liferay.calendar.service.CalendarLocalServiceUtil;
 import com.liferay.calendar.service.CalendarResourceLocalServiceUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -40,8 +44,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.powwow.model.PowwowMeeting;
@@ -55,7 +57,6 @@ import com.liferay.powwow.service.PowwowMeetingServiceUtil;
 import com.liferay.powwow.service.PowwowParticipantLocalServiceUtil;
 import com.liferay.powwow.util.PowwowSubscriptionSender;
 import com.liferay.powwow.util.PowwowUtil;
-import com.liferay.util.bridges.mvc.MVCPortlet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -63,6 +64,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -114,8 +116,10 @@ public class MeetingsPortlet extends MVCPortlet {
 		catch (Exception e) {
 			jsonObject.put(
 				"message",
-				translate(actionRequest, "the-meeting-could-not-be-deleted"));
-			jsonObject.put("success", false);
+				translate(actionRequest, "the-meeting-could-not-be-deleted")
+			).put(
+				"success", false
+			);
 		}
 
 		writeJSON(actionRequest, actionResponse, jsonObject);
@@ -137,18 +141,12 @@ public class MeetingsPortlet extends MVCPortlet {
 
 		long powwowMeetingId = ParamUtil.getLong(
 			actionRequest, "powwowMeetingId");
-		long powwowParticipantId = ParamUtil.getLong(
-			actionRequest, "powwowParticipantId");
-
-		String hash = ParamUtil.getString(actionRequest, "hash");
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		PowwowParticipant powwowParticipant =
-			PowwowParticipantLocalServiceUtil.fetchPowwowParticipant(
-				powwowParticipantId);
-
 		if (powwowMeetingId > 0) {
+			String hash = ParamUtil.getString(actionRequest, "hash");
+
 			if (!hash.equals(PowwowUtil.getHash(powwowMeetingId))) {
 				jsonObject.put("success", Boolean.FALSE);
 
@@ -157,6 +155,13 @@ public class MeetingsPortlet extends MVCPortlet {
 				return;
 			}
 		}
+
+		long powwowParticipantId = ParamUtil.getLong(
+			actionRequest, "powwowParticipantId");
+
+		PowwowParticipant powwowParticipant =
+			PowwowParticipantLocalServiceUtil.fetchPowwowParticipant(
+				powwowParticipantId);
 
 		try {
 			PowwowMeeting powwowMeeting =
@@ -169,13 +174,13 @@ public class MeetingsPortlet extends MVCPortlet {
 
 				name = ParamUtil.getString(actionRequest, "name");
 
-				if (powwowParticipant != null) {
-					if (!name.equals(powwowParticipant.getName())) {
-						powwowParticipant.setName(name);
+				if ((powwowParticipant != null) &&
+					!name.equals(powwowParticipant.getName())) {
 
-						PowwowParticipantLocalServiceUtil.
-							updatePowwowParticipant(powwowParticipant);
-					}
+					powwowParticipant.setName(name);
+
+					PowwowParticipantLocalServiceUtil.updatePowwowParticipant(
+						powwowParticipant);
 				}
 			}
 
@@ -238,9 +243,11 @@ public class MeetingsPortlet extends MVCPortlet {
 				PowwowServiceProviderUtil.getJoinPowwowMeetingURL(
 					powwowMeetingId, name, type);
 
-			jsonObject.put("joinPowwowMeetingURL", joinPowwowMeetingURL);
-
-			jsonObject.put("success", Boolean.TRUE);
+			jsonObject.put(
+				"joinPowwowMeetingURL", joinPowwowMeetingURL
+			).put(
+				"success", Boolean.TRUE
+			);
 		}
 		catch (Exception e) {
 			jsonObject.putException(e);
@@ -282,8 +289,6 @@ public class MeetingsPortlet extends MVCPortlet {
 
 		String name = ParamUtil.getString(actionRequest, "name");
 		String description = ParamUtil.getString(actionRequest, "description");
-		String providerType = ParamUtil.getString(
-			actionRequest, "providerType");
 		String languageId = ParamUtil.getString(actionRequest, "languageId");
 
 		PowwowMeeting powwowMeeting = null;
@@ -329,6 +334,9 @@ public class MeetingsPortlet extends MVCPortlet {
 			long powwowServerId =
 				PowwowMeetingConstants.POWWOW_SERVER_ID_DEFAULT;
 
+			String providerType = ParamUtil.getString(
+				actionRequest, "providerType");
+
 			int addPowwowMeetingStrategy =
 				PowwowServiceProviderUtil.getAddPowwowMeetingStrategy(
 					providerType);
@@ -345,10 +353,9 @@ public class MeetingsPortlet extends MVCPortlet {
 						providerType, options);
 			}
 
-			String portletId = PortalUtil.getPortletId(actionRequest);
-
 			PowwowMeetingServiceUtil.addPowwowMeeting(
-				themeDisplay.getScopeGroupId(), portletId, powwowServerId, name,
+				themeDisplay.getScopeGroupId(),
+				PortalUtil.getPortletId(actionRequest), powwowServerId, name,
 				description, providerType, providerTypeMetadataMap, languageId,
 				calendarBooking.getCalendarBookingId(),
 				PowwowMeetingConstants.STATUS_SCHEDULED, powwowParticipants,
@@ -509,8 +516,7 @@ public class MeetingsPortlet extends MVCPortlet {
 			}
 		}
 
-		return ArrayUtil.toArray(
-			childCalendarIds.toArray(new Long[childCalendarIds.size()]));
+		return ArrayUtil.toArray(childCalendarIds.toArray(new Long[0]));
 	}
 
 	protected void getEmailNotificationPreview(
@@ -535,20 +541,23 @@ public class MeetingsPortlet extends MVCPortlet {
 			jsonObject.put(
 				"emailBody",
 				powwowSubscriptionSender.getEmailNotificationBody(
-					serviceContext.getLocale()));
-			jsonObject.put(
+					serviceContext.getLocale())
+			).put(
 				"emailSubject",
 				powwowSubscriptionSender.getEmailNotificationSubject(
-					serviceContext.getLocale()));
-
-			jsonObject.put("success", Boolean.TRUE);
+					serviceContext.getLocale())
+			).put(
+				"success", Boolean.TRUE
+			);
 		}
 		catch (Exception e) {
 			jsonObject.put(
 				"message",
 				translate(
-					resourceRequest, "unable-to-render-meeting-invitation"));
-			jsonObject.put("success", Boolean.FALSE);
+					resourceRequest, "unable-to-render-meeting-invitation")
+			).put(
+				"success", Boolean.FALSE
+			);
 		}
 
 		writeJSON(resourceRequest, resourceResponse, jsonObject);
@@ -612,7 +621,7 @@ public class MeetingsPortlet extends MVCPortlet {
 
 		int amPm = ParamUtil.getInteger(portletRequest, name + "AmPm");
 
-		if (amPm == java.util.Calendar.PM) {
+		if (amPm == Calendar.PM) {
 			hour += 12;
 		}
 
@@ -641,13 +650,15 @@ public class MeetingsPortlet extends MVCPortlet {
 				(OrderByComparator)null);
 
 			for (User user : users) {
-				JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-				jsonObject.put("emailAddress", user.getEmailAddress());
-				jsonObject.put("fullName", user.getFullName());
-				jsonObject.put(
-					"portraitURL", user.getPortraitURL(themeDisplay));
-				jsonObject.put("userId", user.getUserId());
+				JSONObject jsonObject = JSONUtil.put(
+					"emailAddress", user.getEmailAddress()
+				).put(
+					"fullName", user.getFullName()
+				).put(
+					"portraitURL", user.getPortraitURL(themeDisplay)
+				).put(
+					"userId", user.getUserId()
+				);
 
 				jsonArray.put(jsonObject);
 			}
@@ -713,6 +724,8 @@ public class MeetingsPortlet extends MVCPortlet {
 				CalendarBookingLocalServiceUtil.addCalendarBooking(
 					themeDisplay.getUserId(), calendarId, childCalendarIds,
 					CalendarBookingConstants.PARENT_CALENDAR_BOOKING_ID_DEFAULT,
+					CalendarBookingConstants.
+						RECURRING_CALENDAR_BOOKING_ID_DEFAULT,
 					titleMap, descriptionMap, StringPool.BLANK, startTime,
 					endTime, false, null, 0, "email", 0, "email",
 					serviceContext);

@@ -14,14 +14,13 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaClassParser;
 import com.liferay.source.formatter.parser.JavaTerm;
-import com.liferay.source.formatter.parser.JavaVariable;
 import com.liferay.source.formatter.util.FileUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -44,14 +43,16 @@ public class PersistenceCallCheck extends BaseCheck {
 
 	@Override
 	public int[] getDefaultTokens() {
-		return new int[] {TokenTypes.CLASS_DEF};
+		return new int[] {
+			TokenTypes.CLASS_DEF, TokenTypes.ENUM_DEF, TokenTypes.INTERFACE_DEF
+		};
 	}
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		DetailAST parent = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
-		if (parent != null) {
+		if (parentDetailAST != null) {
 			return;
 		}
 
@@ -82,12 +83,13 @@ public class PersistenceCallCheck extends BaseCheck {
 		variablesMap.putAll(
 			_getVariablesMap(_getExtendedJavaClass(fileName, content)));
 
-		List<DetailAST> methodCallASTList = DetailASTUtil.getAllChildTokens(
-			detailAST, true, TokenTypes.METHOD_CALL);
+		List<DetailAST> methodCallDetailASTList =
+			DetailASTUtil.getAllChildTokens(
+				detailAST, true, TokenTypes.METHOD_CALL);
 
-		for (DetailAST methodCallAST : methodCallASTList) {
+		for (DetailAST methodCallDetailAST : methodCallDetailASTList) {
 			_checkMethodCall(
-				methodCallAST, javaClass.getImports(), variablesMap,
+				methodCallDetailAST, javaClass.getImports(), variablesMap,
 				javaClass.getPackageName());
 		}
 	}
@@ -114,25 +116,25 @@ public class PersistenceCallCheck extends BaseCheck {
 	}
 
 	private void _checkMethodCall(
-		DetailAST methodCallAST, List<String> importNames,
+		DetailAST methodCallDetailAST, List<String> importNames,
 		Map<String, String> variablesMap, String packageName) {
 
-		DetailAST childAST = methodCallAST.getFirstChild();
+		DetailAST childDetailAST = methodCallDetailAST.getFirstChild();
 
-		if (childAST.getType() != TokenTypes.DOT) {
+		if (childDetailAST.getType() != TokenTypes.DOT) {
 			return;
 		}
 
-		childAST = childAST.getFirstChild();
+		childDetailAST = childDetailAST.getFirstChild();
 
-		if (childAST.getType() != TokenTypes.IDENT) {
+		if (childDetailAST.getType() != TokenTypes.IDENT) {
 			return;
 		}
 
-		DetailAST siblingAST = childAST.getNextSibling();
+		DetailAST siblingDetailAST = childDetailAST.getNextSibling();
 
-		if (siblingAST.getType() == TokenTypes.IDENT) {
-			String methodName = siblingAST.getText();
+		if (siblingDetailAST.getType() == TokenTypes.IDENT) {
+			String methodName = siblingDetailAST.getText();
 
 			if (methodName.equals("clearCache") ||
 				methodName.startsWith("create")) {
@@ -141,16 +143,17 @@ public class PersistenceCallCheck extends BaseCheck {
 			}
 		}
 
-		String fieldName = childAST.getText();
+		String fieldName = childDetailAST.getText();
 
 		if (fieldName.matches("[A-Z].*")) {
 			_checkClass(
-				fieldName, importNames, packageName, methodCallAST.getLineNo());
+				fieldName, importNames, packageName,
+				methodCallDetailAST.getLineNo());
 		}
 		else {
 			_checkVariable(
 				fieldName, variablesMap, packageName,
-				methodCallAST.getLineNo());
+				methodCallDetailAST.getLineNo());
 		}
 	}
 
@@ -239,7 +242,7 @@ public class PersistenceCallCheck extends BaseCheck {
 		}
 
 		for (JavaTerm javaTerm : javaClass.getChildJavaTerms()) {
-			if (!(javaTerm instanceof JavaVariable)) {
+			if (!javaTerm.isJavaVariable()) {
 				continue;
 			}
 
@@ -268,7 +271,7 @@ public class PersistenceCallCheck extends BaseCheck {
 	private static final String _MSG_ILLEGAL_PERSISTENCE_CALL =
 		"persistence.call.illegal";
 
-	private final Pattern _extendedClassPattern = Pattern.compile(
+	private static final Pattern _extendedClassPattern = Pattern.compile(
 		"\\sextends\\s+(\\w+)\\W");
 
 }

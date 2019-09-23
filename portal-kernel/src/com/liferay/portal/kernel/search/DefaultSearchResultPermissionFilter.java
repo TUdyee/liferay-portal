@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.facet.Facet;
@@ -34,18 +32,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Tina Tian
+ * @author     Tina Tian
+ * @deprecated As of Judson (7.1.x), moved to {@link
+ *             com.liferay.portal.search.internal.permission.DefaultSearchResultPermissionFilter}
  */
-@ProviderType
+@Deprecated
 public class DefaultSearchResultPermissionFilter
 	extends BaseSearchResultPermissionFilter {
 
 	/**
-	 * @deprecated As of 7.0.0, replace with
-	 *             {@link #DefaultSearchResultPermissionFilter(
-	 *                  SearchExecutor, PermissionChecker)}
-	 * @param baseIndexer
-	 * @param permissionChecker
+	 * @param      baseIndexer
+	 * @param      permissionChecker
+	 * @deprecated As of Judson (7.1.x), replace with {@link
+	 *             #DefaultSearchResultPermissionFilter(SearchExecutor,
+	 *             PermissionChecker)}
 	 */
 	@Deprecated
 	public DefaultSearchResultPermissionFilter(
@@ -106,7 +106,7 @@ public class DefaultSearchResultPermissionFilter
 			}
 		}
 
-		hits.setDocs(docs.toArray(new Document[docs.size()]));
+		hits.setDocs(docs.toArray(new Document[0]));
 		hits.setScores(ArrayUtil.toFloatArray(scores));
 		hits.setSearchTime(
 			(float)(System.currentTimeMillis() - hits.getStart()) /

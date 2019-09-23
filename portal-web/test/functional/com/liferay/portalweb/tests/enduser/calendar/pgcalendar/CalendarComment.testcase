@@ -1,170 +1,152 @@
-<definition component-name="portal-calendar">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="custom.properties" value="default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles" />
-	<property name="testray.main.component.name" value="Calendar" />
+@component-name = "portal-calendar"
+definition {
 
-	<var name="pageName" value="Calendar Page" />
-	<var name="portletName" value="Calendar" />
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property testray.main.component.name = "Calendar";
+	var pageName = "Calendar Page";
+	var portletName = "Calendar";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			panel = "Site Administration",
+			portlet = "Pages");
 
-		<execute macro="Portlet#addPG">
-			<var name="pageName" value="Calendar Page" />
-			<var name="portletName" value="Calendar" />
-		</execute>
+		SitePages.addPublicPage(
+			pageName = "Calendar Page",
+			sitePageType = "Widget Page");
 
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+		SitePages.configurePage(
+			columnName = "1 Column",
+			pageName = "Calendar Page",
+			privacy = "Public Pages",
+			sitePageType = "Widget Page");
 
-		<execute macro="Calendar#enableComments">
-			<var name="calendarName" value="${siteName}" />
-			<var name="calendarType" value="Current Site Calendars" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
-	</set-up>
+		Portlet.addPG(
+			pageName = "Calendar Page",
+			portletName = "Calendar");
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="Navigator#gotoPage">
-					<var name="pageName" value="Calendar Page" />
-				</execute>
+		Calendar.enableComments(
+			calendarName = "${siteName}",
+			calendarType = "Current Site Calendars",
+			site = "${siteName}",
+			user = "Test Test");
 
-				<if>
-					<condition function="IsElementPresent" locator1="Calendar#SCHEDULER_EVENT_GENERIC" />
-					<then>
-						<execute macro="CalendarEvent#tearDown" />
-					</then>
-				</if>
+		Navigator.gotoPage(pageName = "Calendar Page");
+	}
 
-				<execute macro="Calendar#tearDown" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-				<execute macro="CalendarConfiguration#tearDown" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			Navigator.gotoPage(pageName = "Calendar Page");
 
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
+			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
+				CalendarEvent.tearDown();
+			}
 
-	<command name="AddToEventAllDay" priority="3">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+			Calendar.tearDown();
 
-		<execute macro="CalendarNavigator#gotoAddEvent" />
+			CalendarConfiguration.tearDown();
 
-		<execute macro="CalendarEvent#add">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event All Day Comment" />
-			<var name="eventCommentEnabled" value="true" />
-			<var name="eventTitle" value="Calendar Event All Day Title" />
-			<var name="eventType" value="All Day" />
-			<var name="pageName" value="Calendar Page" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
+			Page.tearDownCP();
+		}
+	}
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+	@priority = "3"
+	test AddToEventAllDay {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<execute macro="CalendarEvent#viewComment">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event All Day Comment" />
-			<var name="eventTitle" value="Calendar Event All Day Title" />
-			<var name="eventType" value="All Day" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
-	</command>
+		CalendarNavigator.gotoAddEvent();
 
-	<command name="AddToEventRegular" priority="4">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+		CalendarEvent.add(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event All Day Comment",
+			eventCommentEnabled = "true",
+			eventTitle = "Calendar Event All Day Title",
+			eventType = "All Day",
+			pageName = "Calendar Page",
+			site = "${siteName}",
+			user = "Test Test");
 
-		<execute macro="CalendarNavigator#gotoAddEvent" />
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="CalendarEvent#add">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event Regular Comment" />
-			<var name="eventCommentEnabled" value="true" />
-			<var name="eventTitle" value="Calendar Event Regular Title" />
-			<var name="eventType" value="Regular" />
-			<var name="pageName" value="Calendar Page" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
+		CalendarEvent.viewComment(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event All Day Comment",
+			eventTitle = "Calendar Event All Day Title",
+			eventType = "All Day",
+			site = "${siteName}",
+			user = "Test Test");
+	}
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+	@priority = "4"
+	test AddToEventRegular {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<execute macro="CalendarEvent#viewComment">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event Regular Comment" />
-			<var name="eventTitle" value="Calendar Event Regular Title" />
-			<var name="eventType" value="Regular" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
-	</command>
+		CalendarNavigator.gotoAddEvent();
 
-	<command name="AddToEventRepeating" priority="3">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+		CalendarEvent.add(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event Regular Comment",
+			eventCommentEnabled = "true",
+			eventTitle = "Calendar Event Regular Title",
+			eventType = "Regular",
+			pageName = "Calendar Page",
+			site = "${siteName}",
+			user = "Test Test");
 
-		<execute macro="CalendarNavigator#gotoAddEvent" />
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="CalendarEvent#add">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event Repeating Comment" />
-			<var name="eventCommentEnabled" value="true" />
-			<var name="eventTitle" value="Calendar Event Repeating Title" />
-			<var name="eventType" value="Repeating" />
-			<var name="frequency" value="Daily" />
-			<var name="numberOfOccurrences" value="1" />
-			<var name="pageName" value="Calendar Page" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
+		CalendarEvent.viewComment(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event Regular Comment",
+			eventTitle = "Calendar Event Regular Title",
+			eventType = "Regular",
+			site = "${siteName}",
+			user = "Test Test");
+	}
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+	@priority = "3"
+	test AddToEventRepeating {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<execute macro="CalendarEvent#viewComment">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event Repeating Comment" />
-			<var name="eventTitle" value="Calendar Event Repeating Title" />
-			<var name="eventType" value="Repeating" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
-	</command>
-</definition>
+		CalendarNavigator.gotoAddEvent();
+
+		CalendarEvent.add(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event Repeating Comment",
+			eventCommentEnabled = "true",
+			eventTitle = "Calendar Event Repeating Title",
+			eventType = "Repeating",
+			frequency = "Daily",
+			numberOfOccurrences = "1",
+			pageName = "Calendar Page",
+			site = "${siteName}",
+			user = "Test Test");
+
+		Navigator.gotoPage(pageName = "Calendar Page");
+
+		CalendarEvent.viewComment(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event Repeating Comment",
+			eventTitle = "Calendar Event Repeating Title",
+			eventType = "Repeating",
+			site = "${siteName}",
+			user = "Test Test");
+	}
+
+}

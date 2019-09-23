@@ -14,9 +14,8 @@
 
 package com.liferay.portal.kernel.upgrade.util;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.portal.kernel.cache.MultiVMPoolUtil;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -43,7 +42,6 @@ import java.util.Map;
  * @author Alexander Chow
  * @author Raymond Augé
  */
-@ProviderType
 public class UpgradeProcessUtil {
 
 	public static String getDefaultLanguageId(long companyId)
@@ -55,7 +53,7 @@ public class UpgradeProcessUtil {
 			return languageId;
 		}
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				"select languageId from User_ where companyId = ? and " +
 					"defaultUser = ?")) {
@@ -71,9 +69,8 @@ public class UpgradeProcessUtil {
 
 					return languageId;
 				}
-				else {
-					return LocaleUtil.toLanguageId(LocaleUtil.US);
-				}
+
+				return LocaleUtil.toLanguageId(LocaleUtil.US);
 			}
 		}
 	}
@@ -152,7 +149,8 @@ public class UpgradeProcessUtil {
 			IndexWriterHelperUtil.setIndexReadOnly(tempIndexReadOnly);
 
 			if (ranUpgradeProcess) {
-				MultiVMPoolUtil.clear();
+				PortalCacheHelperUtil.clearPortalCaches(
+					PortalCacheManagerNames.MULTI_VM);
 			}
 		}
 

@@ -14,30 +14,31 @@
 
 package com.liferay.tasks.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the TasksEntry service. Represents a row in the &quot;TMS_TasksEntry&quot; database table, with each column mapped to a property of this class.
  *
  * @author Ryan Park
  * @see TasksEntryModel
- * @see com.liferay.tasks.model.impl.TasksEntryImpl
- * @see com.liferay.tasks.model.impl.TasksEntryModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.tasks.model.impl.TasksEntryImpl")
 @ProviderType
-public interface TasksEntry extends TasksEntryModel, PersistedModel {
-	/*
+public interface TasksEntry extends PersistedModel, TasksEntryModel {
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.tasks.model.impl.TasksEntryImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.tasks.model.impl.TasksEntryImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<TasksEntry, Long> TASKS_ENTRY_ID_ACCESSOR = new Accessor<TasksEntry, Long>() {
+	public static final Accessor<TasksEntry, Long> TASKS_ENTRY_ID_ACCESSOR =
+		new Accessor<TasksEntry, Long>() {
+
 			@Override
 			public Long get(TasksEntry tasksEntry) {
 				return tasksEntry.getTasksEntryId();
@@ -52,13 +53,15 @@ public interface TasksEntry extends TasksEntryModel, PersistedModel {
 			public Class<TasksEntry> getTypeClass() {
 				return TasksEntry.class;
 			}
+
 		};
 
-	public java.lang.String getAssigneeFullName();
+	public String getAssigneeFullName();
 
-	public java.lang.String getPriorityLabel();
+	public String getPriorityLabel();
 
-	public java.lang.String getReporterFullName();
+	public String getReporterFullName();
 
-	public java.lang.String getStatusLabel();
+	public String getStatusLabel();
+
 }

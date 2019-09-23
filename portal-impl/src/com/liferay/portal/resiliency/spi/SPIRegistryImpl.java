@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.resiliency.spi.SPIConfiguration;
 import com.liferay.portal.kernel.resiliency.spi.SPIRegistry;
 import com.liferay.portal.kernel.resiliency.spi.SPIRegistryValidator;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
-import com.liferay.portal.spring.aop.ServiceBeanAopCacheManagerUtil;
 
 import java.rmi.RemoteException;
 
@@ -132,16 +131,13 @@ public class SPIRegistryImpl implements SPIRegistry {
 				_portletSPIs.put(portletId, spi);
 			}
 
-			_portletIds.put(
-				spi, portletIds.toArray(new String[portletIds.size()]));
+			_portletIds.put(spi, portletIds.toArray(new String[0]));
 
 			for (String servletContextName : servletContextNames) {
 				_servletContextSPIs.put(servletContextName, spi);
 			}
 
 			_servletContextNames.put(spi, servletContextNames.clone());
-
-			ServiceBeanAopCacheManagerUtil.reset();
 		}
 		finally {
 			_lock.unlock();

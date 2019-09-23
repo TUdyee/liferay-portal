@@ -14,10 +14,7 @@
 
 package com.liferay.external.data.source.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.service.ServiceContext;
 
@@ -36,8 +33,8 @@ import java.util.Objects;
  * @see TestEntity
  * @generated
  */
-@ProviderType
 public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
+
 	public TestEntityWrapper(TestEntity testEntity) {
 		_testEntity = testEntity;
 	}
@@ -78,7 +75,7 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	@Override
-	public java.lang.Object clone() {
+	public Object clone() {
 		return new TestEntityWrapper((TestEntity)_testEntity.clone());
 	}
 
@@ -88,12 +85,12 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	/**
-	* Returns the data of this test entity.
-	*
-	* @return the data of this test entity
-	*/
+	 * Returns the data of this test entity.
+	 *
+	 * @return the data of this test entity
+	 */
 	@Override
-	public java.lang.String getData() {
+	public String getData() {
 		return _testEntity.getData();
 	}
 
@@ -103,20 +100,20 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	/**
-	* Returns the ID of this test entity.
-	*
-	* @return the ID of this test entity
-	*/
+	 * Returns the ID of this test entity.
+	 *
+	 * @return the ID of this test entity
+	 */
 	@Override
 	public long getId() {
 		return _testEntity.getId();
 	}
 
 	/**
-	* Returns the primary key of this test entity.
-	*
-	* @return the primary key of this test entity
-	*/
+	 * Returns the primary key of this test entity.
+	 *
+	 * @return the primary key of this test entity
+	 */
 	@Override
 	public long getPrimaryKey() {
 		return _testEntity.getPrimaryKey();
@@ -147,6 +144,11 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 		return _testEntity.isNew();
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this class directly. All methods that expect a test entity model instance should use the <code>TestEntity</code> interface instead.
+	 */
 	@Override
 	public void persist() {
 		_testEntity.persist();
@@ -158,18 +160,19 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	/**
-	* Sets the data of this test entity.
-	*
-	* @param data the data of this test entity
-	*/
+	 * Sets the data of this test entity.
+	 *
+	 * @param data the data of this test entity
+	 */
 	@Override
-	public void setData(java.lang.String data) {
+	public void setData(String data) {
 		_testEntity.setData(data);
 	}
 
 	@Override
 	public void setExpandoBridgeAttributes(
 		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
+
 		_testEntity.setExpandoBridgeAttributes(baseModel);
 	}
 
@@ -184,10 +187,10 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	/**
-	* Sets the ID of this test entity.
-	*
-	* @param id the ID of this test entity
-	*/
+	 * Sets the ID of this test entity.
+	 *
+	 * @param id the ID of this test entity
+	 */
 	@Override
 	public void setId(long id) {
 		_testEntity.setId(id);
@@ -199,10 +202,10 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	/**
-	* Sets the primary key of this test entity.
-	*
-	* @param primaryKey the primary key of this test entity
-	*/
+	 * Sets the primary key of this test entity.
+	 *
+	 * @param primaryKey the primary key of this test entity
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		_testEntity.setPrimaryKey(primaryKey);
@@ -214,7 +217,9 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.CacheModel<TestEntity> toCacheModel() {
+	public com.liferay.portal.kernel.model.CacheModel<TestEntity>
+		toCacheModel() {
+
 		return _testEntity.toCacheModel();
 	}
 
@@ -224,7 +229,7 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _testEntity.toString();
 	}
 
@@ -234,7 +239,7 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _testEntity.toXmlString();
 	}
 
@@ -278,4 +283,5 @@ public class TestEntityWrapper implements TestEntity, ModelWrapper<TestEntity> {
 	}
 
 	private final TestEntity _testEntity;
+
 }

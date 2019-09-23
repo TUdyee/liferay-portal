@@ -51,7 +51,9 @@ if (portletTitleBasedNavigation) {
 }
 %>
 
-<liferay-util:buffer var="kbArticleStatus">
+<liferay-util:buffer
+	var="kbArticleStatus"
+>
 	<c:if test="<%= kbArticle != null %>">
 		<aui:workflow-status id="<%= String.valueOf(resourcePrimKey) %>" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= kbArticle.getStatus() %>" version="<%= String.valueOf(kbArticle.getVersion()) %>" />
 	</c:if>
@@ -144,7 +146,14 @@ if (portletTitleBasedNavigation) {
 			<aui:fieldset-group markupView="lexicon">
 				<aui:fieldset>
 					<h1 class="kb-title">
-						<liferay-ui:input-editor contents="<%= HtmlUtil.escape(title) %>" editorName="alloyeditor" name="titleEditor" onChangeMethod='<%= (kbArticle == null) ? "OnChangeEditor" : StringPool.BLANK %>' placeholder="title" showSource="<%= false %>" />
+						<liferay-ui:input-editor
+							contents="<%= HtmlUtil.escape(title) %>"
+							editorName="alloyeditor"
+							name="titleEditor"
+							onChangeMethod='<%= (kbArticle == null) ? "OnChangeEditor" : StringPool.BLANK %>'
+							placeholder="title"
+							showSource="<%= false %>"
+						/>
 					</h1>
 
 					<aui:input name="title" type="hidden" />
@@ -159,7 +168,13 @@ if (portletTitleBasedNavigation) {
 						}
 						%>
 
-						<liferay-ui:input-editor contents="<%= content %>" editorName="<%= kbGroupServiceConfiguration.getEditorName() %>" fileBrowserParams="<%= fileBrowserParams %>" name="contentEditor" placeholder="content" />
+						<liferay-ui:input-editor
+							contents="<%= content %>"
+							editorName="<%= kbGroupServiceConfiguration.getEditorName() %>"
+							fileBrowserParams="<%= fileBrowserParams %>"
+							name="contentEditor"
+							placeholder="content"
+						/>
 
 						<aui:input name="content" type="hidden" />
 					</div>
@@ -171,7 +186,9 @@ if (portletTitleBasedNavigation) {
 					</div>
 				</aui:fieldset>
 
-				<liferay-expando:custom-attributes-available className="<%= KBArticle.class.getName() %>">
+				<liferay-expando:custom-attributes-available
+					className="<%= KBArticle.class.getName() %>"
+				>
 					<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="custom-fields">
 						<liferay-expando:custom-attribute-list
 							className="<%= KBArticle.class.getName() %>"
@@ -183,9 +200,15 @@ if (portletTitleBasedNavigation) {
 				</liferay-expando:custom-attributes-available>
 
 				<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="categorization">
-					<liferay-asset:asset-categories-selector className="<%= KBArticle.class.getName() %>" classPK="<%= (kbArticle != null) ? kbArticle.getClassPK() : 0 %>" />
+					<liferay-asset:asset-categories-selector
+						className="<%= KBArticle.class.getName() %>"
+						classPK="<%= (kbArticle != null) ? kbArticle.getClassPK() : 0 %>"
+					/>
 
-					<liferay-asset:asset-tags-selector className="<%= KBArticle.class.getName() %>" classPK="<%= (kbArticle != null) ? kbArticle.getClassPK() : 0 %>" />
+					<liferay-asset:asset-tags-selector
+						className="<%= KBArticle.class.getName() %>"
+						classPK="<%= (kbArticle != null) ? kbArticle.getClassPK() : 0 %>"
+					/>
 				</aui:fieldset>
 
 				<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="related-assets">
@@ -196,7 +219,7 @@ if (portletTitleBasedNavigation) {
 				</aui:fieldset>
 
 				<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="configuration">
-					<aui:input cssClass="input-medium" data-customUrl="<%= false %>" disabled="<%= kbArticle != null %>" helpMessage='<%= LanguageUtil.format(request, "for-example-x", "<em>/introduction-to-service-builder</em>") %>' ignoreRequestValue="<%= true %>" label="friendly-url" name="urlTitle" placeholder="sample-article-url-title" prefix="<%= _getFriendlyURLPrefix(parentResourceClassNameId, parentResourcePrimKey) %>" type="text" value="<%= urlTitle %>" />
+					<aui:input cssClass="input-medium" data-custom-url="<%= false %>" disabled="<%= kbArticle != null %>" helpMessage='<%= LanguageUtil.format(request, "for-example-x", "<em>/introduction-to-service-builder</em>") %>' ignoreRequestValue="<%= true %>" label="friendly-url" name="urlTitle" placeholder="sample-article-url-title" prefix="<%= _getFriendlyURLPrefix(parentResourceClassNameId, parentResourcePrimKey) %>" type="text" value="<%= urlTitle %>" />
 
 					<c:if test="<%= enableKBArticleDescription %>">
 						<aui:input name="description" />
@@ -265,11 +288,11 @@ if (portletTitleBasedNavigation) {
 			}
 			%>
 
-			<aui:button cssClass="btn-lg" disabled="<%= pending %>" name="publishButton" type="submit" value="<%= publishButtonLabel %>" />
+			<aui:button disabled="<%= pending %>" name="publishButton" type="submit" value="<%= publishButtonLabel %>" />
 
-			<aui:button cssClass="btn-lg" primary="<%= false %>" type="submit" value="<%= saveButtonLabel %>" />
+			<aui:button primary="<%= false %>" type="submit" value="<%= saveButtonLabel %>" />
 
-			<aui:button cssClass="btn-lg" href="<%= redirect %>" type="cancel" />
+			<aui:button href="<%= redirect %>" type="cancel" />
 		</aui:button-row>
 	</aui:form>
 </div>
@@ -279,84 +302,65 @@ if (portletTitleBasedNavigation) {
 		var urlTitleInput = document.getElementById('<portlet:namespace />urlTitle');
 
 		function <portlet:namespace />OnChangeEditor(html) {
-			var customUrl = urlTitleInput.getAttribute('data-customUrl');
+			var customUrl = urlTitleInput.dataset.customUrl;
 
 			if (customUrl === 'false') {
 				urlTitleInput.value = Liferay.Util.normalizeFriendlyURL(html);
 			}
 		}
-	</c:if>
-</aui:script>
 
-<aui:script use="aui-base,event-input">
-	var form = A.one('#<portlet:namespace />fm');
-
-	var urlTitleInput = form.one('#<portlet:namespace />urlTitle');
-
-	<c:if test="<%= kbArticle == null %>">
-		urlTitleInput.on(
+		urlTitleInput.addEventListener(
 			'input',
 			function(event) {
-				event.currentTarget.setAttribute('data-customUrl', urlTitleInput.val() != '');
+				event.currentTarget.dataset.customUrl = urlTitleInput.value !== '';
 			}
 		);
 	</c:if>
 
-	var publishButton = form.one('#<portlet:namespace />publishButton');
+	document.getElementById('<portlet:namespace />publishButton')
+		.addEventListener(
+			'click',
+			function() {
+				var workflowActionInput = document.getElementById('<portlet:namespace />workflowAction');
 
-	publishButton.on(
-		'click',
-		function() {
-			var workflowActionInput = form.one('#<portlet:namespace />workflowAction');
-
-			if (workflowActionInput) {
-				workflowActionInput.val('<%= WorkflowConstants.ACTION_PUBLISH %>');
-			}
-
-			<c:if test="<%= kbArticle == null %>">
-				var customUrl = urlTitleInput.getAttribute('data-customUrl');
-
-				if (customUrl === 'false') {
-					urlTitleInput.val('');
+				if (workflowActionInput) {
+					workflowActionInput.value = '<%= WorkflowConstants.ACTION_PUBLISH %>';
 				}
-			</c:if>
-		}
-	);
 
-	form.on(
-		'submit',
-		function() {
-			form.one('#<portlet:namespace />content').val(window.<portlet:namespace />contentEditor.getHTML());
+				<c:if test="<%= kbArticle == null %>">
+					var customUrl = urlTitleInput.dataset.customUrl;
 
-			form.one('#<portlet:namespace />title').val(window.<portlet:namespace />titleEditor.getText());
+					if (customUrl === 'false') {
+						urlTitleInput.value = '';
+					}
+				</c:if>
+			}
+		);
 
-			updateMultipleKBArticleAttachments();
-		}
-	);
+	var form = document.getElementById('<portlet:namespace />fm');
 
 	var updateMultipleKBArticleAttachments = function() {
-		var Lang = A.Lang;
-
-		var selectedFileNameContainer = A.one('#<portlet:namespace />selectedFileNameContainer');
-
-		var TPL_INPUT = '<input id="<portlet:namespace />selectedFileName{id}" name="<portlet:namespace />selectedFileName" type="hidden" value="{value}" />';
-
-		var values = A.all('input[name=<portlet:namespace />selectUploadedFile]:checked').val();
-
+		var selectedFileNameContainer = document.getElementById('<portlet:namespace />selectedFileNameContainer');
 		var buffer = [];
+		var filesChecked = form.querySelectorAll('input[name=<portlet:namespace />selectUploadedFile]:checked');
 
-		for (var i = 0; i < values.length; i++) {
-			buffer[i] = Lang.sub(
-				TPL_INPUT,
-				{
-					id: i,
-					value: values[i]
-				}
+		for (var i = 0; i < filesChecked.length; i++) {
+			buffer.push(
+				'<input id="<portlet:namespace />selectedFileName' + i + '" name="<portlet:namespace />selectedFileName" type="hidden" value="' + filesChecked[i].value + '" />'
 			);
 		}
 
-		selectedFileNameContainer.html(buffer.join(''));
+		selectedFileNameContainer.innerHTML = buffer.join('');
 	};
+
+	form.addEventListener(
+		'submit',
+		function() {
+			document.getElementById('<portlet:namespace />content').value = window.<portlet:namespace />contentEditor.getHTML();
+			document.getElementById('<portlet:namespace />title').value = window.<portlet:namespace />titleEditor.getText();
+			updateMultipleKBArticleAttachments();
+		}
+	);
 </aui:script>
 
 <%!

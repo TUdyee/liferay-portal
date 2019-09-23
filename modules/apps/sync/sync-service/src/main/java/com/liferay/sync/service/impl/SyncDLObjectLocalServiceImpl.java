@@ -17,6 +17,8 @@ package com.liferay.sync.service.impl;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
@@ -30,30 +32,38 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.sync.constants.SyncDLObjectConstants;
+import com.liferay.sync.internal.configuration.SyncServiceConfigurationValues;
 import com.liferay.sync.model.SyncDLObject;
+import com.liferay.sync.service.SyncDLFileVersionDiffLocalService;
 import com.liferay.sync.service.base.SyncDLObjectLocalServiceBaseImpl;
-import com.liferay.sync.service.configuration.SyncServiceConfigurationValues;
-import com.liferay.sync.util.SyncUtil;
+import com.liferay.sync.util.SyncHelper;
 
 import java.util.Date;
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Michael Young
  * @author Dennis Ju
  */
+@Component(
+	property = "model.class.name=com.liferay.sync.model.SyncDLObject",
+	service = AopService.class
+)
 public class SyncDLObjectLocalServiceImpl
 	extends SyncDLObjectLocalServiceBaseImpl {
 
 	/**
-	 * @deprecated As of 1.3.0, replaced by {@link #addSyncDLObject(long, long,
-	 *             String, long, long, long, String, String, String, String,
-	 *             String, String, String, String, long, long, String, String,
-	 *             String, Date, long, String, String, long, String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #addSyncDLObject(long, long, String, long, long, long,
+	 *             String, String, String, String, String, String, String,
+	 *             String, long, long, String, String, String, Date, long,
+	 *             String, String, long, String)}
 	 */
 	@Deprecated
 	@Override
@@ -229,7 +239,7 @@ public class SyncDLObjectLocalServiceImpl
 		}
 		else if (event.equals(SyncDLObjectConstants.EVENT_DELETE)) {
 			try {
-				syncDLFileVersionDiffLocalService.deleteSyncDLFileVersionDiffs(
+				_syncDLFileVersionDiffLocalService.deleteSyncDLFileVersionDiffs(
 					typePK);
 			}
 			catch (Exception e) {
@@ -286,49 +296,33 @@ public class SyncDLObjectLocalServiceImpl
 			getActionableDynamicQuery();
 
 		actionableDynamicQuery.setAddCriteriaMethod(
-			new ActionableDynamicQuery.AddCriteriaMethod() {
-
-				@Override
-				public void addCriteria(DynamicQuery dynamicQuery) {
-					dynamicQuery.add(
-						RestrictionsFactoryUtil.like(
-							"treePath",
-							StringUtil.quote(
-								searchTreePath, StringPool.PERCENT)));
-				}
-
-			});
+			dynamicQuery -> dynamicQuery.add(
+				RestrictionsFactoryUtil.like(
+					"treePath",
+					StringUtil.quote(searchTreePath, StringPool.PERCENT))));
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<SyncDLObject>() {
+			(SyncDLObject syncDLObject) -> {
+				syncDLObject.setUserId(parentSyncDLObject.getUserId());
+				syncDLObject.setUserName(parentSyncDLObject.getUserName());
+				syncDLObject.setModifiedTime(
+					parentSyncDLObject.getModifiedTime());
 
-				@Override
-				public void performAction(SyncDLObject syncDLObject)
-					throws PortalException {
+				String treePath = syncDLObject.getTreePath();
 
-					syncDLObject.setUserId(parentSyncDLObject.getUserId());
-					syncDLObject.setUserName(parentSyncDLObject.getUserName());
-					syncDLObject.setModifiedTime(
-						parentSyncDLObject.getModifiedTime());
+				String oldParentTreePath = treePath.substring(
+					0,
+					treePath.indexOf(searchTreePath) + searchTreePath.length());
 
-					String treePath = syncDLObject.getTreePath();
+				treePath = StringUtil.replaceFirst(
+					treePath, oldParentTreePath,
+					parentSyncDLObject.getTreePath());
 
-					String oldParentTreePath = treePath.substring(
-						0,
-						treePath.indexOf(searchTreePath) +
-							searchTreePath.length());
+				syncDLObject.setTreePath(treePath);
 
-					treePath = StringUtil.replaceFirst(
-						treePath, oldParentTreePath,
-						parentSyncDLObject.getTreePath());
+				syncDLObject.setLastPermissionChangeDate(
+					parentSyncDLObject.getLastPermissionChangeDate());
 
-					syncDLObject.setTreePath(treePath);
-
-					syncDLObject.setLastPermissionChangeDate(
-						parentSyncDLObject.getLastPermissionChangeDate());
-
-					syncDLObjectPersistence.update(syncDLObject);
-				}
-
+				syncDLObjectPersistence.update(syncDLObject);
 			});
 
 		actionableDynamicQuery.performActions();
@@ -342,65 +336,53 @@ public class SyncDLObjectLocalServiceImpl
 			getActionableDynamicQuery();
 
 		actionableDynamicQuery.setAddCriteriaMethod(
-			new ActionableDynamicQuery.AddCriteriaMethod() {
+			dynamicQuery -> {
+				dynamicQuery.add(
+					RestrictionsFactoryUtil.eq(
+						"event", SyncDLObjectConstants.EVENT_TRASH));
 
-				@Override
-				public void addCriteria(DynamicQuery dynamicQuery) {
-					dynamicQuery.add(
-						RestrictionsFactoryUtil.eq(
-							"event", SyncDLObjectConstants.EVENT_TRASH));
+				String treePath = parentSyncDLObject.getTreePath();
 
-					String treePath = parentSyncDLObject.getTreePath();
-
-					dynamicQuery.add(
-						RestrictionsFactoryUtil.like(
-							"treePath", treePath + StringPool.PERCENT));
-				}
-
+				dynamicQuery.add(
+					RestrictionsFactoryUtil.like(
+						"treePath", treePath + StringPool.PERCENT));
 			});
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<SyncDLObject>() {
+			(SyncDLObject syncDLObject) -> {
+				String type = syncDLObject.getType();
 
-				@Override
-				public void performAction(SyncDLObject syncDLObject)
-					throws PortalException {
+				if (type.equals(SyncDLObjectConstants.TYPE_FOLDER)) {
+					DLFolder dlFolder = dlFolderLocalService.getFolder(
+						syncDLObject.getTypePK());
 
-					String type = syncDLObject.getType();
-
-					if (type.equals(SyncDLObjectConstants.TYPE_FOLDER)) {
-						DLFolder dlFolder = dlFolderLocalService.getFolder(
+					if (dlFolder.isInTrash()) {
+						return;
+					}
+				}
+				else {
+					DLFileEntry dlFileEntry =
+						dlFileEntryLocalService.getDLFileEntry(
 							syncDLObject.getTypePK());
 
-						if (dlFolder.isInTrash()) {
-							return;
-						}
+					if (dlFileEntry.isInTrash()) {
+						return;
 					}
-					else {
-						DLFileEntry dlFileEntry =
-							dlFileEntryLocalService.getDLFileEntry(
-								syncDLObject.getTypePK());
-
-						if (dlFileEntry.isInTrash()) {
-							return;
-						}
-					}
-
-					syncDLObject.setUserId(parentSyncDLObject.getUserId());
-					syncDLObject.setUserName(parentSyncDLObject.getUserName());
-					syncDLObject.setModifiedTime(
-						parentSyncDLObject.getModifiedTime());
-					syncDLObject.setEvent(SyncDLObjectConstants.EVENT_RESTORE);
-
-					if (!type.equals(SyncDLObjectConstants.TYPE_FOLDER)) {
-						syncDLObject.setLanTokenKey(
-							SyncUtil.getLanTokenKey(
-								parentSyncDLObject.getModifiedTime(),
-								syncDLObject.getTypePK(), false));
-					}
-
-					syncDLObjectPersistence.update(syncDLObject);
 				}
 
+				syncDLObject.setUserId(parentSyncDLObject.getUserId());
+				syncDLObject.setUserName(parentSyncDLObject.getUserName());
+				syncDLObject.setModifiedTime(
+					parentSyncDLObject.getModifiedTime());
+				syncDLObject.setEvent(SyncDLObjectConstants.EVENT_RESTORE);
+
+				if (!type.equals(SyncDLObjectConstants.TYPE_FOLDER)) {
+					syncDLObject.setLanTokenKey(
+						_syncHelper.getLanTokenKey(
+							parentSyncDLObject.getModifiedTime(),
+							syncDLObject.getTypePK(), false));
+				}
+
+				syncDLObjectPersistence.update(syncDLObject);
 			});
 
 		actionableDynamicQuery.performActions();
@@ -414,36 +396,24 @@ public class SyncDLObjectLocalServiceImpl
 			getActionableDynamicQuery();
 
 		actionableDynamicQuery.setAddCriteriaMethod(
-			new ActionableDynamicQuery.AddCriteriaMethod() {
+			dynamicQuery -> {
+				dynamicQuery.add(
+					RestrictionsFactoryUtil.ne(
+						"event", SyncDLObjectConstants.EVENT_TRASH));
 
-				@Override
-				public void addCriteria(DynamicQuery dynamicQuery) {
-					dynamicQuery.add(
-						RestrictionsFactoryUtil.ne(
-							"event", SyncDLObjectConstants.EVENT_TRASH));
+				String treePath = parentSyncDLObject.getTreePath();
 
-					String treePath = parentSyncDLObject.getTreePath();
-
-					dynamicQuery.add(
-						RestrictionsFactoryUtil.like(
-							"treePath", treePath + StringPool.PERCENT));
-				}
-
+				dynamicQuery.add(
+					RestrictionsFactoryUtil.like(
+						"treePath", treePath + StringPool.PERCENT));
 			});
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<SyncDLObject>() {
+			(SyncDLObject syncDLObject) -> {
+				syncDLObject.setUserId(parentSyncDLObject.getUserId());
+				syncDLObject.setUserName(parentSyncDLObject.getUserName());
+				syncDLObject.setEvent(SyncDLObjectConstants.EVENT_TRASH);
 
-				@Override
-				public void performAction(SyncDLObject syncDLObject)
-					throws PortalException {
-
-					syncDLObject.setUserId(parentSyncDLObject.getUserId());
-					syncDLObject.setUserName(parentSyncDLObject.getUserName());
-					syncDLObject.setEvent(SyncDLObjectConstants.EVENT_TRASH);
-
-					syncDLObjectPersistence.update(syncDLObject);
-				}
-
+				syncDLObjectPersistence.update(syncDLObject);
 			});
 
 		actionableDynamicQuery.performActions();
@@ -463,5 +433,12 @@ public class SyncDLObjectLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SyncDLObjectLocalServiceImpl.class);
+
+	@Reference
+	private SyncDLFileVersionDiffLocalService
+		_syncDLFileVersionDiffLocalService;
+
+	@Reference
+	private SyncHelper _syncHelper;
 
 }

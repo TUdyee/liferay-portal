@@ -18,6 +18,9 @@ import com.google.inject.Injector;
 
 import com.liferay.opensocial.shindig.util.HttpServletRequestThreadLocal;
 import com.liferay.opensocial.shindig.util.ShindigUtil;
+import com.liferay.petra.encryptor.Encryptor;
+import com.liferay.petra.encryptor.EncryptorException;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -31,10 +34,7 @@ import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.util.Encryptor;
-import com.liferay.util.EncryptorException;
 
 import java.io.IOException;
 
@@ -65,10 +65,11 @@ public class ShindigFilter extends InjectedFilter {
 			FilterChain filterChain)
 		throws IOException, ServletException {
 
-		HttpServletRequest request = (HttpServletRequest)servletRequest;
+		HttpServletRequest httpServletRequest =
+			(HttpServletRequest)servletRequest;
 
 		if (injector == null) {
-			HttpSession session = request.getSession();
+			HttpSession session = httpServletRequest.getSession();
 
 			_init(session.getServletContext());
 		}
@@ -84,12 +85,15 @@ public class ShindigFilter extends InjectedFilter {
 
 		String serverName = servletRequest.getServerName();
 
-		String host = serverName.concat(StringPool.COLON).concat(
-			String.valueOf(servletRequest.getServerPort()));
+		String host = serverName.concat(
+			StringPool.COLON
+		).concat(
+			String.valueOf(servletRequest.getServerPort())
+		);
 
 		ShindigUtil.setHost(host);
 
-		HttpServletRequestThreadLocal.setHttpServletRequest(request);
+		HttpServletRequestThreadLocal.setHttpServletRequest(httpServletRequest);
 
 		try {
 			filterChain.doFilter(servletRequest, servletResponse);

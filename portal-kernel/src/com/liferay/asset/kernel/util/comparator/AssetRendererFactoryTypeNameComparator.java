@@ -25,8 +25,8 @@ import java.util.Comparator;
 import java.util.Locale;
 
 /**
- * @author Eduardo Garcia
- * @deprecated As of 7.0.0, replaced by {@link
+ * @author     Eduardo García
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.asset.util.comparator.AssetRendererFactoryTypeNameComparator}
  */
 @Deprecated

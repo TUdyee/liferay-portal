@@ -213,9 +213,8 @@ public class LiferayAlbumService implements AlbumService {
 
 		long albumIdLong = GetterUtil.getLong(albumId);
 
-		Folder folder = DLAppServiceUtil.getFolder(albumIdLong);
-
-		return toAlbum(folder, fields, securityToken);
+		return toAlbum(
+			DLAppServiceUtil.getFolder(albumIdLong), fields, securityToken);
 	}
 
 	protected RestfulCollection<Album> doGetAlbums(
@@ -360,8 +359,9 @@ public class LiferayAlbumService implements AlbumService {
 		return album;
 	}
 
-	private static final Album.Field[] _ALBUM_FIELDS =
-		{Album.Field.LOCATION, Album.Field.THUMBNAIL_URL};
+	private static final Album.Field[] _ALBUM_FIELDS = {
+		Album.Field.LOCATION, Album.Field.THUMBNAIL_URL
+	};
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LiferayAlbumService.class);

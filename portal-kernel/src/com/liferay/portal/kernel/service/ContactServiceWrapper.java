@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Provides a wrapper for {@link ContactService}.
@@ -23,39 +22,61 @@ import aQute.bnd.annotation.ProviderType;
  * @see ContactService
  * @generated
  */
-@ProviderType
-public class ContactServiceWrapper implements ContactService,
-	ServiceWrapper<ContactService> {
+public class ContactServiceWrapper
+	implements ContactService, ServiceWrapper<ContactService> {
+
 	public ContactServiceWrapper(ContactService contactService) {
 		_contactService = contactService;
+	}
+
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link ContactServiceUtil} to access the contact remote service. Add custom service methods to <code>com.liferay.portal.service.impl.ContactServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
+	@Override
+	public java.util.List<com.liferay.portal.kernel.model.Contact>
+			getCompanyContacts(long companyId, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _contactService.getCompanyContacts(companyId, start, end);
+	}
+
+	@Override
+	public int getCompanyContactsCount(long companyId) {
+		return _contactService.getCompanyContactsCount(companyId);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.model.Contact getContact(long contactId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _contactService.getContact(contactId);
 	}
 
 	@Override
 	public java.util.List<com.liferay.portal.kernel.model.Contact> getContacts(
-		long classNameId, long classPK, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.kernel.model.Contact> orderByComparator)
+			long classNameId, long classPK, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.portal.kernel.model.Contact> orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _contactService.getContacts(classNameId, classPK, start, end,
-			orderByComparator);
+
+		return _contactService.getContacts(
+			classNameId, classPK, start, end, orderByComparator);
 	}
 
 	@Override
 	public int getContactsCount(long classNameId, long classPK)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _contactService.getContactsCount(classNameId, classPK);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public java.lang.String getOSGiServiceIdentifier() {
 		return _contactService.getOSGiServiceIdentifier();
@@ -72,4 +93,5 @@ public class ContactServiceWrapper implements ContactService,
 	}
 
 	private ContactService _contactService;
+
 }

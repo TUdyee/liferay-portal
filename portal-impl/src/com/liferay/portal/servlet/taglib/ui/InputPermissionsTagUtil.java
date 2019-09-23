@@ -27,7 +27,7 @@ import javax.servlet.jsp.PageContext;
 
 /**
  * @author     Brian Chan
- * @deprecated As of 6.2.0, replaced by {@link
+ * @deprecated As of Newton (6.2.x), replaced by {@link
  *             com.liferay.taglib.ui.InputPermissionsTag}
  */
 @Deprecated
@@ -39,10 +39,10 @@ public class InputPermissionsTagUtil {
 		throws JspException {
 
 		try {
-			HttpServletRequest request =
+			HttpServletRequest httpServletRequest =
 				(HttpServletRequest)pageContext.getRequest();
 
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				"liferay-ui:input-permissions:formName", formName);
 
 			if (modelName != null) {
@@ -58,18 +58,18 @@ public class InputPermissionsTagUtil {
 					ResourceActionsUtil.getModelResourceGuestUnsupportedActions(
 						modelName);
 
-				request.setAttribute(
+				httpServletRequest.setAttribute(
 					"liferay-ui:input-permissions:groupDefaultActions",
 					groupDefaultActions);
-				request.setAttribute(
+				httpServletRequest.setAttribute(
 					"liferay-ui:input-permissions:guestDefaultActions",
 					guestDefaultActions);
-				request.setAttribute(
+				httpServletRequest.setAttribute(
 					"liferay-ui:input-permissions:guestUnsupportedActions",
 					guestUnsupportedActions);
-				request.setAttribute(
+				httpServletRequest.setAttribute(
 					"liferay-ui:input-permissions:modelName", modelName);
-				request.setAttribute(
+				httpServletRequest.setAttribute(
 					"liferay-ui:input-permissions:supportedActions",
 					supportedActions);
 			}

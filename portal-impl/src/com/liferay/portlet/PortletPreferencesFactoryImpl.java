@@ -14,8 +14,12 @@
 
 package com.liferay.portlet;
 
+import com.liferay.petra.encryptor.Encryptor;
+import com.liferay.petra.encryptor.EncryptorException;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.PortalCache;
-import com.liferay.portal.kernel.cache.SingleVMPoolUtil;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.key.CacheKeyGenerator;
 import com.liferay.portal.kernel.cache.key.CacheKeyGeneratorUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -23,6 +27,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -36,7 +41,6 @@ import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -53,7 +57,6 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
@@ -75,6 +78,7 @@ import javax.portlet.filter.PortletRequestWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -88,7 +92,6 @@ import javax.xml.stream.events.XMLEvent;
  * @author Minhchau Dang
  * @author Raymond Augé
  */
-@DoPrivileged
 public class PortletPreferencesFactoryImpl
 	implements PortletPreferencesFactory {
 
@@ -110,7 +113,9 @@ public class PortletPreferencesFactoryImpl
 				if (xmlEvent.isStartElement()) {
 					StartElement startElement = xmlEvent.asStartElement();
 
-					String elementName = startElement.getName().getLocalPart();
+					QName startElementName = startElement.getName();
+
+					String elementName = startElementName.getLocalPart();
 
 					if (elementName.equals("preference")) {
 						Preference preference = readPreference(xmlEventReader);
@@ -279,13 +284,31 @@ public class PortletPreferencesFactoryImpl
 	}
 
 	@Override
-	public PortalPreferences getPortalPreferences(HttpServletRequest request) {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public PortalPreferences getPortalPreferences(
+		HttpServletRequest httpServletRequest) {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		long userId = themeDisplay.getUserId();
+
+		String doAsUserId = themeDisplay.getDoAsUserId();
+
+		if (Validator.isNotNull(doAsUserId)) {
+			Company company = themeDisplay.getCompany();
+
+			try {
+				userId = GetterUtil.getLong(
+					Encryptor.decrypt(company.getKeyObj(), doAsUserId), userId);
+			}
+			catch (EncryptorException ee) {
+				_log.error("Unable to decrypt user ID", ee);
+			}
+		}
 
 		return getPortalPreferences(
-			request.getSession(), themeDisplay.getUserId(),
-			themeDisplay.isSignedIn());
+			httpServletRequest.getSession(), userId, themeDisplay.isSignedIn());
 	}
 
 	@Override
@@ -367,19 +390,17 @@ public class PortletPreferencesFactoryImpl
 	public PortalPreferences getPortalPreferences(
 		PortletRequest portletRequest) {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			portletRequest);
-
-		return getPortalPreferences(request);
+		return getPortalPreferences(
+			PortalUtil.getHttpServletRequest(portletRequest));
 	}
 
 	@Override
 	public PortletPreferences getPortletPreferences(
-			HttpServletRequest request, String portletId)
+			HttpServletRequest httpServletRequest, String portletId)
 		throws PortalException {
 
 		PortletPreferencesIds portletPreferencesIds = getPortletPreferencesIds(
-			request, portletId);
+			httpServletRequest, portletId);
 
 		return PortletPreferencesLocalServiceUtil.getPreferences(
 			portletPreferencesIds);
@@ -387,21 +408,23 @@ public class PortletPreferencesFactoryImpl
 
 	@Override
 	public PortletPreferencesIds getPortletPreferencesIds(
-			HttpServletRequest request, Layout layout, String portletId)
+			HttpServletRequest httpServletRequest, Layout layout,
+			String portletId)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		long siteGroupId = themeDisplay.getSiteGroupId();
 
-		long userId = PortalUtil.getUserId(request);
 		LayoutTypePortlet layoutTypePortlet =
 			themeDisplay.getLayoutTypePortlet();
 
 		boolean modeEditGuest = false;
 
-		String portletMode = ParamUtil.getString(request, "p_p_mode");
+		String portletMode = ParamUtil.getString(
+			httpServletRequest, "p_p_mode");
 
 		if (portletMode.equals(LiferayPortletMode.EDIT_GUEST.toString()) ||
 			((layoutTypePortlet != null) &&
@@ -411,18 +434,18 @@ public class PortletPreferencesFactoryImpl
 		}
 
 		return _getPortletPreferencesIds(
-			themeDisplay, siteGroupId, userId, layout, portletId,
-			modeEditGuest);
+			themeDisplay, siteGroupId, PortalUtil.getUserId(httpServletRequest),
+			layout, portletId, modeEditGuest);
 	}
 
 	@Override
 	public PortletPreferencesIds getPortletPreferencesIds(
-			HttpServletRequest request, String portletId)
+			HttpServletRequest httpServletRequest, String portletId)
 		throws PortalException {
 
-		Layout layout = (Layout)request.getAttribute(WebKeys.LAYOUT);
+		Layout layout = (Layout)httpServletRequest.getAttribute(WebKeys.LAYOUT);
 
-		return getPortletPreferencesIds(request, layout, portletId);
+		return getPortletPreferencesIds(httpServletRequest, layout, portletId);
 	}
 
 	@Override
@@ -476,18 +499,19 @@ public class PortletPreferencesFactoryImpl
 
 	@Override
 	public PortletPreferences getPortletSetup(
-		HttpServletRequest request, String portletId) {
+		HttpServletRequest httpServletRequest, String portletId) {
 
-		return getPortletSetup(request, portletId, null);
+		return getPortletSetup(httpServletRequest, portletId, null);
 	}
 
 	@Override
 	public PortletPreferences getPortletSetup(
-		HttpServletRequest request, String portletId,
+		HttpServletRequest httpServletRequest, String portletId,
 		String defaultPreferences) {
 
-		PortletRequest portletRequest = (PortletRequest)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
 
 		if (portletRequest instanceof ConfigurationPortletRequest) {
 			PortletRequestWrapper portletRequestWrapper =
@@ -496,8 +520,9 @@ public class PortletPreferencesFactoryImpl
 			return portletRequestWrapper.getPreferences();
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return getPortletSetup(
 			themeDisplay.getSiteGroupId(), themeDisplay.getLayout(), portletId,
@@ -525,9 +550,8 @@ public class PortletPreferencesFactoryImpl
 
 	@Override
 	public PortletPreferences getPortletSetup(PortletRequest portletRequest) {
-		String portletId = PortalUtil.getPortletId(portletRequest);
-
-		return getPortletSetup(portletRequest, portletId);
+		return getPortletSetup(
+			portletRequest, PortalUtil.getPortletId(portletRequest));
 	}
 
 	@Override
@@ -541,10 +565,8 @@ public class PortletPreferencesFactoryImpl
 			return portletRequestWrapper.getPreferences();
 		}
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			portletRequest);
-
-		return getPortletSetup(request, portletId);
+		return getPortletSetup(
+			PortalUtil.getHttpServletRequest(portletRequest), portletId);
 	}
 
 	@Override
@@ -575,9 +597,12 @@ public class PortletPreferencesFactoryImpl
 	}
 
 	@Override
-	public PortletPreferences getPreferences(HttpServletRequest request) {
-		PortletRequest portletRequest = (PortletRequest)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+	public PortletPreferences getPreferences(
+		HttpServletRequest httpServletRequest) {
+
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
 
 		PortletPreferences portletPreferences = null;
 
@@ -694,7 +719,9 @@ public class PortletPreferencesFactoryImpl
 			if (xmlEvent.isStartElement()) {
 				StartElement startElement = xmlEvent.asStartElement();
 
-				String elementName = startElement.getName().getLocalPart();
+				QName startElementName = startElement.getName();
+
+				String elementName = startElementName.getLocalPart();
 
 				if (elementName.equals("name")) {
 					name = StAXReaderUtil.read(xmlEventReader);
@@ -713,7 +740,9 @@ public class PortletPreferencesFactoryImpl
 			else if (xmlEvent.isEndElement()) {
 				EndElement endElement = xmlEvent.asEndElement();
 
-				String elementName = endElement.getName().getLocalPart();
+				QName endElementName = endElement.getName();
+
+				String elementName = endElementName.getLocalPart();
 
 				if (elementName.equals("preference")) {
 					break;
@@ -721,8 +750,7 @@ public class PortletPreferencesFactoryImpl
 			}
 		}
 
-		return new Preference(
-			name, values.toArray(new String[values.size()]), readOnly);
+		return new Preference(name, values.toArray(new String[0]), readOnly);
 	}
 
 	protected PortletPreferences getPortletSetup(
@@ -850,9 +878,6 @@ public class PortletPreferencesFactoryImpl
 			Layout layout, String portletId, boolean modeEditGuest)
 		throws PortalException {
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
 		String originalPortletId = portletId;
 
 		Portlet portlet = PortletLocalServiceUtil.getPortletById(
@@ -863,6 +888,9 @@ public class PortletPreferencesFactoryImpl
 		long plid = 0;
 
 		if (modeEditGuest) {
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+
 			boolean hasUpdateLayoutPermission = LayoutPermissionUtil.contains(
 				permissionChecker, layout, ActionKeys.UPDATE);
 
@@ -954,7 +982,8 @@ public class PortletPreferencesFactoryImpl
 
 	private Map<String, Preference> _defaultPreferencesMap;
 	private final PortalCache<String, Map<String, Preference>>
-		_preferencesMapPortalCache = SingleVMPoolUtil.getPortalCache(
+		_preferencesMapPortalCache = PortalCacheHelperUtil.getPortalCache(
+			PortalCacheManagerNames.SINGLE_VM,
 			PortletPreferencesFactoryImpl.class.getName());
 
 }

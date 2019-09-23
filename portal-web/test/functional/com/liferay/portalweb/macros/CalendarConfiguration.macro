@@ -1,96 +1,108 @@
-<definition>
-	<command name="disableGlobalTimeZone">
-		<execute function="Uncheck" locator1="CalendarConfiguration#USER_SETTINGS_GLOBAL_TIME_ZONE_CHECKBOX" />
-	</command>
+definition {
 
-	<command name="editNumberOfEventsDisplayed">
-		<execute macro="CalendarConfiguration#gotoDisplaySettings" />
+	macro disableGlobalTimeZone {
+		Uncheck(locator1 = "CalendarConfiguration#USER_SETTINGS_GLOBAL_TIME_ZONE_CHECKBOX");
+	}
 
-		<execute function="Select" locator1="CalendarConfiguration#EVENTS_DISPLAYED_MAX_DAYS" value1="${maxNumberOfEvents}" />
-	</command>
+	macro editNumberOfEventsDisplayed {
+		CalendarConfiguration.gotoDisplaySettings();
 
-	<command name="editTimeZonePacific">
-		<execute macro="CalendarConfiguration#disableGlobalTimeZone" />
+		Select(
+			locator1 = "CalendarConfiguration#EVENTS_DISPLAYED_MAX_DAYS",
+			value1 = "${maxNumberOfEvents}");
+	}
 
-		<if>
-			<condition function="IsTextNotEqual" locator1="CalendarConfiguration#USER_SETTINGS_TIME_ZONE_LOS_ANGELES_SELECT_OPTION" value1="(UTC -07:00) Pacific Daylight Time" />
-			<then>
-				<execute function="Select" locator1="CalendarConfiguration#USER_SETTINGS_TIME_ZONE_SELECT" value1="(UTC -08:00) Pacific Standard Time" />
-			</then>
-			<else>
-				<execute function="Select" locator1="CalendarConfiguration#USER_SETTINGS_TIME_ZONE_SELECT" value1="(UTC -07:00) Pacific Daylight Time" />
-			</else>
-		</if>
-	</command>
+	macro editTimeZonePacific {
+		CalendarConfiguration.disableGlobalTimeZone();
 
-	<command name="editTimeZoneUTC">
-		<execute macro="CalendarConfiguration#disableGlobalTimeZone" />
+		if (IsTextNotEqual(locator1 = "Select#LOS_ANGELES_TIME_ZONE", value1 = "(UTC -07:00) Pacific Daylight Time")) {
+			Select(
+				locator1 = "Select#TIME_ZONE",
+				value1 = "(UTC -08:00) Pacific Standard Time");
+		}
+		else {
+			Select(
+				locator1 = "Select#TIME_ZONE",
+				value1 = "(UTC -07:00) Pacific Daylight Time");
+		}
+	}
 
-		<execute function="Select" locator1="CalendarConfiguration#USER_SETTINGS_TIME_ZONE_SELECT" value1="(UTC) Coordinated Universal Time" />
-	</command>
+	macro editTimeZoneUTC {
+		CalendarConfiguration.disableGlobalTimeZone();
 
-	<command name="enableGlobalTimeZone">
-		<execute function="Check" locator1="CalendarConfiguration#USER_SETTINGS_GLOBAL_TIME_ZONE_CHECKBOX" />
-	</command>
+		Select(
+			locator1 = "Select#TIME_ZONE",
+			value1 = "(UTC) Coordinated Universal Time");
+	}
 
-	<command name="enableRSS">
-		<execute macro="CalendarConfiguration#gotoRSS" />
+	macro enableGlobalTimeZone {
+		Check(locator1 = "CalendarConfiguration#USER_SETTINGS_GLOBAL_TIME_ZONE_CHECKBOX");
+	}
 
-		<execute function="Click" locator1="CalendarConfiguration#RSS_ENABLE_RSS_SUBSCRIPTION_SWITCHER" />
-	</command>
+	macro enableRSS {
+		CalendarConfiguration.gotoRSS();
 
-	<command name="gotoDisplaySettings">
-		<execute function="AssertClick" locator1="CalendarConfiguration#NAVIGATION_DISPLAY_SETTINGS" value1="Display Settings" />
-	</command>
+		Click(locator1 = "CalendarConfiguration#RSS_ENABLE_RSS_SUBSCRIPTION_SWITCHER");
+	}
 
-	<command name="gotoRSS">
-		<execute function="AssertClick" locator1="CalendarConfiguration#NAVIGATION_USER_RSS" value1="RSS" />
-	</command>
+	macro gotoDisplaySettings {
+		AssertClick(
+			locator1 = "CalendarConfiguration#NAVIGATION_DISPLAY_SETTINGS",
+			value1 = "Display Settings");
+	}
 
-	<command name="save">
-		<execute function="AssertClick" locator1="CalendarConfiguration#SAVE_BUTTON" value1="Save" />
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+	macro gotoRSS {
+		AssertClick(
+			locator1 = "CalendarConfiguration#NAVIGATION_USER_RSS",
+			value1 = "RSS");
+	}
 
-	<command name="selectDefaultDuration">
-		<execute function="Select" locator1="CalendarConfiguration#USER_SETTINGS_DEFAULT_DURATION_SELECT" value1="${defaultDuration}" />
-	</command>
+	macro save {
+		PortletEntry.save();
+	}
 
-	<command name="selectDefaultView">
-		<execute function="Select" locator1="CalendarConfiguration#USER_SETTINGS_DEFAULT_VIEW_SELECT" value1="${defaultView}" />
-	</command>
+	macro selectDefaultDuration {
+		Select(
+			locator1 = "CalendarConfiguration#USER_SETTINGS_DEFAULT_DURATION_SELECT",
+			value1 = "${defaultDuration}");
+	}
 
-	<command name="selectTimeFormat">
-		<execute function="Select" locator1="CalendarConfiguration#USER_SETTINGS_TIME_FORMAT_SELECT" value1="${timeFormat}" />
-	</command>
+	macro selectDefaultView {
+		Select(
+			locator1 = "CalendarConfiguration#USER_SETTINGS_DEFAULT_VIEW_SELECT",
+			value1 = "${defaultView}");
+	}
 
-	<command name="selectWeekStartsOn">
-		<execute function="Select" locator1="CalendarConfiguration#USER_SETTINGS_WEEK_STARTS_ON_SELECT" value1="${weekStartDay}" />
-	</command>
+	macro selectTimeFormat {
+		Select(
+			locator1 = "CalendarConfiguration#USER_SETTINGS_TIME_FORMAT_SELECT",
+			value1 = "${timeFormat}");
+	}
 
-	<command name="tearDown">
-		<execute macro="CalendarNavigator#gotoConfiguration" />
+	macro selectWeekStartsOn {
+		Select(
+			locator1 = "CalendarConfiguration#USER_SETTINGS_WEEK_STARTS_ON_SELECT",
+			value1 = "${weekStartDay}");
+	}
 
-		<execute macro="CalendarConfiguration#selectDefaultDuration">
-			<var name="defaultDuration" value="60 Minutes" />
-		</execute>
+	macro tearDown {
+		CalendarNavigator.gotoConfiguration();
 
-		<execute macro="CalendarConfiguration#selectDefaultView">
-			<var name="defaultView" value="Week" />
-		</execute>
+		CalendarConfiguration.selectDefaultDuration(defaultDuration = "60 Minutes");
 
-		<execute macro="CalendarConfiguration#selectWeekStartsOn">
-			<var name="weekStartDay" value="Sunday" />
-		</execute>
+		CalendarConfiguration.selectDefaultView(defaultView = "Week");
 
-		<execute macro="CalendarConfiguration#save" />
+		CalendarConfiguration.selectWeekStartsOn(weekStartDay = "Sunday");
 
-		<execute macro="CalendarConfiguration#enableRSS" />
+		CalendarConfiguration.save();
 
-		<execute macro="CalendarConfiguration#save" />
-	</command>
+		CalendarConfiguration.enableRSS();
 
-	<command name="viewRSSOptionsDisabled">
-		<execute function="AssertElementNotPresent" locator1="CalendarConfiguration#RSS_SETTING_OPTIONS" />
-	</command>
-</definition>
+		CalendarConfiguration.save();
+	}
+
+	macro viewRSSOptionsDisabled {
+		AssertElementNotPresent(locator1 = "CalendarConfiguration#RSS_SETTING_OPTIONS");
+	}
+
+}

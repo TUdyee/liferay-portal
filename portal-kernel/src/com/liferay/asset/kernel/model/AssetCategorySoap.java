@@ -14,8 +14,6 @@
 
 package com.liferay.asset.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,15 +24,15 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portlet.asset.service.http.AssetCategoryServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portlet.asset.service.http.AssetCategoryServiceSoap
  * @generated
  */
-@ProviderType
 public class AssetCategorySoap implements Serializable {
+
 	public static AssetCategorySoap toSoapModel(AssetCategory model) {
 		AssetCategorySoap soapModel = new AssetCategorySoap();
 
 		soapModel.setUuid(model.getUuid());
+		soapModel.setExternalReferenceCode(model.getExternalReferenceCode());
 		soapModel.setCategoryId(model.getCategoryId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -82,7 +80,8 @@ public class AssetCategorySoap implements Serializable {
 	}
 
 	public static AssetCategorySoap[] toSoapModels(List<AssetCategory> models) {
-		List<AssetCategorySoap> soapModels = new ArrayList<AssetCategorySoap>(models.size());
+		List<AssetCategorySoap> soapModels = new ArrayList<AssetCategorySoap>(
+			models.size());
 
 		for (AssetCategory model : models) {
 			soapModels.add(toSoapModel(model));
@@ -108,6 +107,14 @@ public class AssetCategorySoap implements Serializable {
 
 	public void setUuid(String uuid) {
 		_uuid = uuid;
+	}
+
+	public String getExternalReferenceCode() {
+		return _externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		_externalReferenceCode = externalReferenceCode;
 	}
 
 	public long getCategoryId() {
@@ -231,6 +238,7 @@ public class AssetCategorySoap implements Serializable {
 	}
 
 	private String _uuid;
+	private String _externalReferenceCode;
 	private long _categoryId;
 	private long _groupId;
 	private long _companyId;
@@ -246,4 +254,5 @@ public class AssetCategorySoap implements Serializable {
 	private String _description;
 	private long _vocabularyId;
 	private Date _lastPublishDate;
+
 }

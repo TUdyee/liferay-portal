@@ -20,11 +20,9 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.expando.kernel.model.ExpandoBridge;
-import com.liferay.expando.kernel.model.ExpandoColumn;
-import com.liferay.expando.kernel.model.ExpandoColumnConstants;
-import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
-import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
-import com.liferay.expando.kernel.util.ExpandoBridgeIndexerUtil;
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.NoSuchRegionException;
@@ -42,7 +40,6 @@ import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.MultiValueFacet;
-import com.liferay.portal.kernel.search.facet.ScopeFacet;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
@@ -58,16 +55,14 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.RegionServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.registry.collections.ServiceTrackerCollections;
@@ -84,7 +79,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -143,15 +137,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		Indexer<?> indexer = (Indexer<?>)object;
 
 		return Objects.equals(getClassName(), indexer.getClassName());
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getSearchClassNames}
-	 */
-	@Deprecated
-	@Override
-	public String[] getClassNames() {
-		return getSearchClassNames();
 	}
 
 	@Override
@@ -224,7 +209,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			addSearchAssetCategoryIds(fullQueryBooleanFilter, searchContext);
 			addSearchAssetTagNames(fullQueryBooleanFilter, searchContext);
 			addSearchFolderId(fullQueryBooleanFilter, searchContext);
-			addSearchGroupId(fullQueryBooleanFilter, searchContext);
 			addSearchLayout(fullQueryBooleanFilter, searchContext);
 			addSearchUserId(fullQueryBooleanFilter, searchContext);
 
@@ -254,15 +238,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	@Override
 	public IndexerPostProcessor[] getIndexerPostProcessors() {
 		return _indexerPostProcessors;
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getClassName}
-	 */
-	@Deprecated
-	@Override
-	public String getPortletId() {
-		return StringPool.BLANK;
 	}
 
 	@Override
@@ -299,16 +274,17 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Search engine ID for " + clazz.getName() + " is " +
-					searchEngineId);
+				StringBundler.concat(
+					"Search engine ID for ", clazz.getName(), " is ",
+					searchEngineId));
 		}
 
 		return _searchEngineId;
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
-	 *             {@link com.liferay.portal.search.sort.SortFieldBuilder
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             com.liferay.portal.search.sort.SortFieldBuilder
 	 *             #getSortField}
 	 */
 	@Deprecated
@@ -324,8 +300,8 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
-	 *             {@link com.liferay.portal.search.sort.SortFieldBuilder
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             com.liferay.portal.search.sort.SortFieldBuilder
 	 *             #getSortField}
 	 */
 	@Deprecated
@@ -338,18 +314,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		}
 
 		return getSortField(orderByCol);
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getSummary(Document, String,
-	 *             PortletRequest, PortletResponse)}
-	 */
-	@Deprecated
-	@Override
-	public Summary getSummary(Document document, Locale locale, String snippet)
-		throws SearchException {
-
-		return getSummary(document, snippet, null, null);
 	}
 
 	@Override
@@ -407,12 +371,11 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 	@Override
 	public boolean isIndexerEnabled() {
-		String className = getClassName();
-
 		if (_indexerEnabled == null) {
 			String indexerEnabled = PropsUtil.get(
 				PropsKeys.INDEXER_ENABLED,
-				new com.liferay.portal.kernel.configuration.Filter(className));
+				new com.liferay.portal.kernel.configuration.Filter(
+					getClassName()));
 
 			_indexerEnabled = GetterUtil.getBoolean(indexerEnabled, true);
 
@@ -442,13 +405,12 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
-	 *             RelatedEntryIndexer.isVisibleRelatedEntry(long, int)}
-	 *
-	 * @param classPK
-	 * @param status
+	 * @param      classPK
+	 * @param      status
 	 * @return
-	 * @throws Exception
+	 * @throws     Exception
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             RelatedEntryIndexer.isVisibleRelatedEntry(long, int)}
 	 */
 	@Deprecated
 	@Override
@@ -465,7 +427,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #postProcessContextBooleanFilter(BooleanFilter,
 	 *             SearchContext)}
 	 */
@@ -482,9 +444,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			SearchContext searchContext)
 		throws Exception {
 
-		String keywords = searchContext.getKeywords();
-
-		if (Validator.isNull(keywords)) {
+		if (Validator.isNull(searchContext.getKeywords())) {
 			addSearchTerm(searchQuery, searchContext, Field.DESCRIPTION, false);
 			addSearchTerm(searchQuery, searchContext, Field.TITLE, false);
 			addSearchTerm(searchQuery, searchContext, Field.USER_NAME, false);
@@ -492,7 +452,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #postProcessSearchQuery(BooleanQuery, BooleanFilter,
 	 *             SearchContext)}
 	 */
@@ -513,7 +473,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		indexerPostProcessorsList.add(indexerPostProcessor);
 
 		_indexerPostProcessors = indexerPostProcessorsList.toArray(
-			new IndexerPostProcessor[indexerPostProcessorsList.size()]);
+			new IndexerPostProcessor[0]);
 	}
 
 	@Override
@@ -549,7 +509,10 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		}
 		catch (NoSuchModelException nsme) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to index " + className + " " + classPK, nsme);
+				_log.warn(
+					StringBundler.concat(
+						"Unable to index ", className, " ", classPK),
+					nsme);
 			}
 		}
 		catch (SearchException se) {
@@ -641,7 +604,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 				}
 
 				SearchResultPermissionFilter searchResultPermissionFilter =
-					new DefaultSearchResultPermissionFilter(
+					_searchResultPermissionFilterFactory.create(
 						this::doSearch, permissionChecker);
 
 				hits = searchResultPermissionFilter.search(searchContext);
@@ -729,16 +692,17 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		indexerPostProcessorsList.remove(indexerPostProcessor);
 
 		_indexerPostProcessors = indexerPostProcessorsList.toArray(
-			new IndexerPostProcessor[indexerPostProcessorsList.size()]);
+			new IndexerPostProcessor[0]);
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, no direct replacement. Logic now encapsulated in
-	 *             {@link com.liferay.portal.search.internal.contributor.
+	 * @param      document
+	 * @param      className
+	 * @param      classPK
+	 * @deprecated As of Judson (7.1.x), no direct replacement. Logic now
+	 *             encapsulated in {@link
+	 *             com.liferay.portal.search.internal.contributor.
 	 *             document.AssetDocumentContrbutor}
-	 * @param document
-	 * @param className
-	 * @param classPK
 	 */
 	@Deprecated
 	protected void addAssetFields(
@@ -838,13 +802,12 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 		if ((selectedFieldNames != null) && !selectedFieldNames.isEmpty()) {
 			queryConfig.setSelectedFieldNames(
-				selectedFieldNames.toArray(
-					new String[selectedFieldNames.size()]));
+				selectedFieldNames.toArray(new String[0]));
 		}
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	protected void addFacetClause(
@@ -879,8 +842,8 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		String[] selectedFieldNames = queryConfig.getSelectedFieldNames();
 
 		if (ArrayUtil.isEmpty(selectedFieldNames) ||
-			(selectedFieldNames.length == 1) &&
-			selectedFieldNames[0].equals(Field.ANY)) {
+			((selectedFieldNames.length == 1) &&
+			 selectedFieldNames[0].equals(Field.ANY))) {
 
 			return;
 		}
@@ -892,8 +855,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 		selectedFieldNameSet.addAll(facets.keySet());
 
-		selectedFieldNames = selectedFieldNameSet.toArray(
-			new String[selectedFieldNameSet.size()]);
+		selectedFieldNames = selectedFieldNameSet.toArray(new String[0]);
 
 		queryConfig.setSelectedFieldNames(selectedFieldNames);
 	}
@@ -902,7 +864,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		Document document, String field, Locale siteDefaultLocale,
 		Map<Locale, String> map) {
 
-		for (Entry<Locale, String> entry : map.entrySet()) {
+		for (Map.Entry<Locale, String> entry : map.entrySet()) {
 			Locale locale = entry.getKey();
 
 			if (locale.equals(siteDefaultLocale)) {
@@ -931,13 +893,13 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, no direct replacement. Logic not encapsulated in
-	 *             {@link com.liferay.portal.search.internal.contributor.
-	 *                  document.AssetCategoryDocumentContrbutor}
-	 *
-	 * @param document
-	 * @param field
-	 * @param assetCategories
+	 * @param      document
+	 * @param      field
+	 * @param      assetCategories
+	 * @deprecated As of Judson (7.1.x), no direct replacement. Logic not
+	 *             encapsulated in {@link
+	 *             com.liferay.portal.search.internal.contributor.
+	 *             document.AssetCategoryDocumentContrbutor}
 	 */
 	@Deprecated
 	protected void addSearchAssetCategoryTitles(
@@ -951,12 +913,13 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			Map<Locale, String> titleMap = assetCategory.getTitleMap();
 
 			for (Map.Entry<Locale, String> entry : titleMap.entrySet()) {
-				Locale locale = entry.getKey();
 				String title = entry.getValue();
 
 				if (Validator.isNull(title)) {
 					continue;
 				}
+
+				Locale locale = entry.getKey();
 
 				List<String> titles = assetCategoryTitles.get(locale);
 
@@ -974,16 +937,21 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 				assetCategoryTitles.entrySet()) {
 
 			Locale locale = entry.getKey();
+
 			List<String> titles = entry.getValue();
 
-			String[] titlesArray = titles.toArray(new String[titles.size()]);
+			String[] titlesArray = titles.toArray(new String[0]);
 
 			if (locale.equals(defaultLocale)) {
 				document.addText(field, titlesArray);
 			}
 
 			document.addText(
-				field.concat(StringPool.UNDERLINE).concat(locale.toString()),
+				field.concat(
+					StringPool.UNDERLINE
+				).concat(
+					locale.toString()
+				),
 				titlesArray);
 		}
 	}
@@ -1031,49 +999,10 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			String keywords)
 		throws Exception {
 
-		Map<String, Query> expandoQueries = new HashMap<>();
+		_expandoQueryContributor.contribute(
+			keywords, searchQuery, getSearchClassNames(), searchContext);
 
-		ExpandoBridge expandoBridge = ExpandoBridgeFactoryUtil.getExpandoBridge(
-			searchContext.getCompanyId(), getClassName(searchContext));
-
-		Set<String> attributeNames = SetUtil.fromEnumeration(
-			expandoBridge.getAttributeNames());
-
-		for (String attributeName : attributeNames) {
-			UnicodeProperties properties = expandoBridge.getAttributeProperties(
-				attributeName);
-
-			int indexType = GetterUtil.getInteger(
-				properties.getProperty(ExpandoColumnConstants.INDEX_TYPE));
-
-			if ((indexType != ExpandoColumnConstants.INDEX_TYPE_NONE) &&
-				Validator.isNotNull(keywords)) {
-
-				String fieldName = getExpandoFieldName(
-					searchContext, expandoBridge, attributeName);
-
-				boolean like = false;
-
-				if (indexType == ExpandoColumnConstants.INDEX_TYPE_TEXT) {
-					like = true;
-				}
-
-				if (searchContext.isAndSearch()) {
-					Query query = searchQuery.addRequiredTerm(
-						fieldName, keywords, like);
-
-					expandoQueries.put(attributeName, query);
-				}
-				else {
-					Query query = searchQuery.addTerm(
-						fieldName, keywords, like);
-
-					expandoQueries.put(attributeName, query);
-				}
-			}
-		}
-
-		return expandoQueries;
+		return new HashMap<>();
 	}
 
 	protected void addSearchFolderId(
@@ -1096,35 +1025,21 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		searchContext.addFacet(multiValueFacet);
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x)
+	 */
+	@Deprecated
 	protected void addSearchGroupId(
 			BooleanFilter queryBooleanFilter, SearchContext searchContext)
 		throws Exception {
-
-		Facet facet = new ScopeFacet(searchContext);
-
-		facet.setStatic(true);
-
-		searchContext.addFacet(facet);
 	}
 
 	protected Map<String, Query> addSearchKeywords(
 			BooleanQuery searchQuery, SearchContext searchContext)
 		throws Exception {
 
-		String keywords = searchContext.getKeywords();
-
-		if (Validator.isNull(keywords)) {
-			return Collections.emptyMap();
-		}
-
-		addSearchExpando(searchQuery, searchContext, keywords);
-
-		addSearchLocalizedTerm(
-			searchQuery, searchContext, Field.ASSET_CATEGORY_TITLES,
-			searchContext.isLike());
-
-		return searchQuery.addTerms(
-			Field.KEYWORDS, keywords, searchContext.isLike());
+		return addSearchExpando(
+			searchQuery, searchContext, searchContext.getKeywords());
 	}
 
 	protected void addSearchLayout(
@@ -1289,7 +1204,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void addTrashFields(
@@ -1311,17 +1226,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		Map<String, Facet> facets = searchContext.getFacets();
 
 		BooleanFilter facetBooleanFilter = new BooleanFilter();
-
-		for (Facet facet : facets.values()) {
-			BooleanClause<Filter> filterBooleanClause =
-				facet.getFacetFilterBooleanClause();
-
-			if (filterBooleanClause != null) {
-				facetBooleanFilter.add(
-					filterBooleanClause.getClause(),
-					filterBooleanClause.getBooleanClauseOccur());
-			}
-		}
 
 		addFacetClause(searchContext, facetBooleanFilter, facets.values());
 
@@ -1419,12 +1323,11 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	protected abstract Document doGetDocument(T object) throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
-	 *             {@link com.liferay.portal.search.contributor.sort.
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             com.liferay.portal.search.contributor.sort.
 	 *             SortFieldTranslator}
 	 */
 	@Deprecated
-
 	protected String doGetSortField(String orderByCol) {
 		return orderByCol;
 	}
@@ -1435,8 +1338,8 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, added strictly to support backwards
-	 *             compatibility of {@link
+	 * @deprecated As of Wilberforce (7.0.x), added strictly to support
+	 *             backwards compatibility of {@link
 	 *             Indexer#postProcessSearchQuery(BooleanQuery, SearchContext)}
 	 */
 	@Deprecated
@@ -1446,13 +1349,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		throws Exception {
 
 		indexer.postProcessSearchQuery(searchQuery, searchContext);
-
-		for (IndexerPostProcessor indexerPostProcessor :
-				indexer.getIndexerPostProcessors()) {
-
-			indexerPostProcessor.postProcessSearchQuery(
-				searchQuery, searchContext);
-		}
 	}
 
 	protected abstract void doReindex(String className, long classPK)
@@ -1477,9 +1373,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			fullQuery.setPreBooleanFilter(preBooleanFilter);
 		}
 
-		QueryConfig queryConfig = searchContext.getQueryConfig();
-
-		fullQuery.setQueryConfig(queryConfig);
+		fullQuery.setQueryConfig(searchContext.getQueryConfig());
 
 		return IndexSearcherHelperUtil.search(searchContext, fullQuery);
 	}
@@ -1564,28 +1458,11 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		SearchContext searchContext, ExpandoBridge expandoBridge,
 		String attributeName) {
 
-		ExpandoColumn expandoColumn =
-			ExpandoColumnLocalServiceUtil.getDefaultTableColumn(
-				expandoBridge.getCompanyId(), expandoBridge.getClassName(),
-				attributeName);
+		return null;
+	}
 
-		UnicodeProperties unicodeProperties =
-			expandoColumn.getTypeSettingsProperties();
-
-		int indexType = GetterUtil.getInteger(
-			unicodeProperties.getProperty(ExpandoColumnConstants.INDEX_TYPE));
-
-		String fieldName = ExpandoBridgeIndexerUtil.encodeFieldName(
-			attributeName, indexType);
-
-		if (expandoColumn.getType() ==
-				ExpandoColumnConstants.STRING_LOCALIZED) {
-
-			fieldName = Field.getLocalizedName(
-				searchContext.getLocale(), fieldName);
-		}
-
-		return fieldName;
+	protected List<ExpandoQueryContributor> getExpandoQueryContributors() {
+		return Collections.singletonList(_expandoQueryContributor);
 	}
 
 	protected Locale getLocale(PortletRequest portletRequest) {
@@ -1608,14 +1485,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		}
 
 		return countryNames;
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getClassName}
-	 */
-	@Deprecated
-	protected String getPortletId(SearchContext searchContext) {
-		return StringPool.BLANK;
 	}
 
 	protected Group getSiteGroup(long groupId) {
@@ -1713,9 +1582,9 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 		if (countryId > 0) {
 			try {
-				Country country = CountryServiceUtil.getCountry(countryId);
-
-				countries.addAll(getLocalizedCountryNames(country));
+				countries.addAll(
+					getLocalizedCountryNames(
+						CountryServiceUtil.getCountry(countryId)));
 			}
 			catch (NoSuchCountryException nsce) {
 				if (_log.isWarnEnabled()) {
@@ -1745,38 +1614,29 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		for (Address address : addresses) {
 			cities.add(StringUtil.toLowerCase(address.getCity()));
 			countries.addAll(getLocalizedCountryNames(address.getCountry()));
-			regions.add(StringUtil.toLowerCase(address.getRegion().getName()));
+
+			Region region = address.getRegion();
+
+			regions.add(StringUtil.toLowerCase(region.getName()));
+
 			streets.add(StringUtil.toLowerCase(address.getStreet1()));
 			streets.add(StringUtil.toLowerCase(address.getStreet2()));
 			streets.add(StringUtil.toLowerCase(address.getStreet3()));
 			zips.add(StringUtil.toLowerCase(address.getZip()));
 		}
 
-		document.addText("city", cities.toArray(new String[cities.size()]));
-		document.addText(
-			"country", countries.toArray(new String[countries.size()]));
-		document.addText("region", regions.toArray(new String[regions.size()]));
-		document.addText("street", streets.toArray(new String[streets.size()]));
-		document.addText("zip", zips.toArray(new String[zips.size()]));
+		document.addText("city", cities.toArray(new String[0]));
+		document.addText("country", countries.toArray(new String[0]));
+		document.addText("region", regions.toArray(new String[0]));
+		document.addText("street", streets.toArray(new String[0]));
+		document.addText("zip", zips.toArray(new String[0]));
 	}
 
 	protected Map<Locale, String> populateMap(
 		AssetEntry assetEntry, Map<Locale, String> map) {
 
-		String defaultValue = map.get(
-			LocaleUtil.fromLanguageId(assetEntry.getDefaultLanguageId()));
-
-		for (Locale availableLocale : LanguageUtil.getAvailableLocales(
-				assetEntry.getGroupId())) {
-
-			if (!map.containsKey(availableLocale) ||
-				Validator.isNull(map.get(availableLocale))) {
-
-				map.put(availableLocale, defaultValue);
-			}
-		}
-
-		return map;
+		return LocalizationUtil.populateLocalizationMap(
+			map, assetEntry.getDefaultLanguageId(), assetEntry.getGroupId());
 	}
 
 	protected void postProcessFullQuery(
@@ -1824,65 +1684,14 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		_stagingAware = stagingAware;
 	}
 
-	private void _addIndexerProvidedPreFilters(
-			BooleanFilter booleanFilter, Indexer<?> indexer,
-			SearchContext searchContext)
-		throws Exception {
-
-		indexer.postProcessContextBooleanFilter(booleanFilter, searchContext);
-
-		for (IndexerPostProcessor indexerPostProcessor :
-				indexer.getIndexerPostProcessors()) {
-
-			indexerPostProcessor.postProcessContextBooleanFilter(
-				booleanFilter, searchContext);
-		}
-	}
-
-	private void _addPermissionFilter(
-			BooleanFilter booleanFilter, String entryClassName,
-			Indexer<?> indexer, SearchContext searchContext)
-		throws Exception {
-
-		Filter filter = indexer.getFacetBooleanFilter(
-			entryClassName, searchContext);
-
-		if (filter != null) {
-			booleanFilter.add(filter, BooleanClauseOccur.MUST);
-
-			return;
-		}
-
-		if (searchContext.getUserId() == 0) {
-			return;
-		}
-
-		SearchPermissionChecker searchPermissionChecker =
-			SearchEngineHelperUtil.getSearchPermissionChecker();
-
-		searchPermissionChecker.getPermissionBooleanFilter(
-			searchContext.getCompanyId(), searchContext.getGroupIds(),
-			searchContext.getUserId(), entryClassName, booleanFilter,
-			searchContext);
-	}
-
 	private void _addPreFilters(
 			BooleanFilter queryBooleanFilter,
 			Map<String, Indexer<?>> entryClassNameIndexerMap,
 			SearchContext searchContext)
 		throws Exception {
 
-		for (Entry<String, Indexer<?>> entry :
-				entryClassNameIndexerMap.entrySet()) {
-
-			String entryClassName = entry.getKey();
-			Indexer<?> indexer = entry.getValue();
-
-			queryBooleanFilter.add(
-				_createPreFilterForEntryClassName(
-					entryClassName, indexer, searchContext),
-				BooleanClauseOccur.SHOULD);
-		}
+		_preFilterContributor.contribute(
+			queryBooleanFilter, entryClassNameIndexerMap, searchContext);
 	}
 
 	private void _addSearchTerms(
@@ -1901,51 +1710,11 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		}
 	}
 
-	private void _addStagingFilter(
-		BooleanFilter booleanFilter, Indexer<?> indexer,
-		SearchContext searchContext) {
-
-		if (!indexer.isStagingAware()) {
-			return;
-		}
-
-		if (!searchContext.isIncludeLiveGroups() &&
-			searchContext.isIncludeStagingGroups()) {
-
-			booleanFilter.addRequiredTerm(Field.STAGING_GROUP, true);
-		}
-		else if (searchContext.isIncludeLiveGroups() &&
-				 !searchContext.isIncludeStagingGroups()) {
-
-			booleanFilter.addRequiredTerm(Field.STAGING_GROUP, false);
-		}
-	}
-
-	private Filter _createPreFilterForEntryClassName(
-			String entryClassName, Indexer<?> indexer,
-			SearchContext searchContext)
-		throws Exception {
-
-		BooleanFilter booleanFilter = new BooleanFilter();
-
-		booleanFilter.addTerm(
-			Field.ENTRY_CLASS_NAME, entryClassName, BooleanClauseOccur.MUST);
-
-		_addStagingFilter(booleanFilter, indexer, searchContext);
-
-		_addPermissionFilter(
-			booleanFilter, entryClassName, indexer, searchContext);
-
-		_addIndexerProvidedPreFilters(booleanFilter, indexer, searchContext);
-
-		return booleanFilter;
-	}
-
 	private Map<String, Indexer<?>> _getEntryClassNameIndexerMap(
 		String[] entryClassNames, String searchEngineId) {
 
-		Map<String, Indexer<?>> entryClassNameIndexerMap = new LinkedHashMap<>(
-			entryClassNames.length);
+		Map<String, Indexer<?>> entryClassNameIndexerMap =
+			new LinkedHashMap<>();
 
 		for (String entryClassName : entryClassNames) {
 			Indexer<?> indexer = IndexerRegistryUtil.getIndexer(entryClassName);
@@ -1967,6 +1736,20 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	private static final long _DEFAULT_FOLDER_ID = 0L;
 
 	private static final Log _log = LogFactoryUtil.getLog(BaseIndexer.class);
+
+	private static volatile ExpandoQueryContributor _expandoQueryContributor =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			ExpandoQueryContributor.class, BaseIndexer.class,
+			"_expandoQueryContributor", false);
+	private static volatile PreFilterContributor _preFilterContributor =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			PreFilterContributor.class, BaseIndexer.class,
+			"_preFilterContributor", false);
+	private static volatile SearchResultPermissionFilterFactory
+		_searchResultPermissionFilterFactory =
+			ServiceProxyFactory.newServiceTrackedInstance(
+				SearchResultPermissionFilterFactory.class, BaseIndexer.class,
+				"_searchResultPermissionFilterFactory", false);
 
 	private boolean _commitImmediately;
 	private String[] _defaultSelectedFieldNames;

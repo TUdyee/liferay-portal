@@ -14,23 +14,27 @@
 
 package com.liferay.portal.kernel.util;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Locale;
 import java.util.ResourceBundle;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Carlos Sierra Andrés
  */
+@FunctionalInterface
 @ProviderType
 public interface ResourceBundleLoader {
 
 	public ResourceBundle loadResourceBundle(Locale locale);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #loadResourceBundle(Locale)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #loadResourceBundle(Locale)}
 	 */
 	@Deprecated
-	public ResourceBundle loadResourceBundle(String languageId);
+	public default ResourceBundle loadResourceBundle(String languageId) {
+		return loadResourceBundle(LocaleUtil.fromLanguageId(languageId));
+	}
 
 }

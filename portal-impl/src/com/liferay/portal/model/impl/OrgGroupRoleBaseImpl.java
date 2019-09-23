@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.OrgGroupRole;
 
 /**
@@ -30,12 +28,13 @@ import com.liferay.portal.kernel.model.OrgGroupRole;
  * @see OrgGroupRole
  * @generated
  */
-@ProviderType
-public abstract class OrgGroupRoleBaseImpl extends OrgGroupRoleModelImpl
-	implements OrgGroupRole {
-	/*
+public abstract class OrgGroupRoleBaseImpl
+	extends OrgGroupRoleModelImpl implements OrgGroupRole {
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a org group role model instance should use the {@link OrgGroupRole} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a org group role model instance should use the <code>OrgGroupRole</code> interface instead.
 	 */
+
 }

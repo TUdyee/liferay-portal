@@ -72,8 +72,9 @@ String kbArticleDisplayStyle = kbSectionPortletInstanceConfiguration.kbArticleDi
 						%>
 
 						<liferay-ui:icon
-							iconCssClass="icon-file-alt"
+							icon="document"
 							label="<%= true %>"
+							markupView="lexicon"
 							message="<%= HtmlUtil.escape(kbArticle.getTitle()) %>"
 							method="get"
 							url="<%= viewKBArticleURL.toString() %>"
@@ -101,7 +102,9 @@ String kbArticleDisplayStyle = kbSectionPortletInstanceConfiguration.kbArticleDi
 
 			<c:if test="<%= kbSectionPortletInstanceConfiguration.showKBArticlesPagination() && (total > searchContainer.getDelta()) %>">
 				<div class="taglib-search-iterator-page-iterator-bottom">
-					<liferay-ui:search-paginator searchContainer="<%= searchContainer %>" />
+					<liferay-ui:search-paginator
+						searchContainer="<%= searchContainer %>"
+					/>
 				</div>
 			</c:if>
 		</liferay-ui:search-container>
@@ -113,7 +116,7 @@ String kbArticleDisplayStyle = kbSectionPortletInstanceConfiguration.kbArticleDi
 		%>
 
 		<div class="alert alert-info">
-			<%= LanguageUtil.get(resourceBundle, "please-configure-the-list-of-available-sections-in-system-settings-collaboration-knowledge-base-to-enable-this-portlet") %>
+			<%= LanguageUtil.get(resourceBundle, "please-configure-the-list-of-available-sections-in-system-settings-collaboration-knowledge-base-to-enable-this-widget") %>
 		</div>
 	</c:otherwise>
 </c:choose>

@@ -16,6 +16,7 @@ package com.liferay.gradle.plugins.patcher;
 
 import com.liferay.gradle.util.FileUtil;
 import com.liferay.gradle.util.GradleUtil;
+import com.liferay.gradle.util.OSDetector;
 import com.liferay.gradle.util.Validator;
 import com.liferay.gradle.util.copy.ReplaceLeadingPathAction;
 
@@ -42,6 +43,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvableDependencies;
@@ -71,6 +73,27 @@ public class PatchTask extends DefaultTask {
 	public static final String PATCHED_SRC_DIR_MAPPING_DEFAULT_EXTENSION = "*";
 
 	public PatchTask() {
+		_originalLibConfigurationName = new Callable<String>() {
+
+			@Override
+			public String call() throws Exception {
+				Project project = getProject();
+
+				ConfigurationContainer configurationContainer =
+					project.getConfigurations();
+
+				Configuration configuration = configurationContainer.findByName(
+					"compileClasspath");
+
+				if (configuration != null) {
+					return configuration.getName();
+				}
+
+				return JavaPlugin.COMPILE_CONFIGURATION_NAME;
+			}
+
+		};
+
 		_originalLibFile = new Callable<File>() {
 
 			@Override
@@ -214,9 +237,8 @@ public class PatchTask extends DefaultTask {
 		if (!_patchFiles.isEmpty()) {
 			return project.files(_patchFiles);
 		}
-		else {
-			return project.fileTree(_patchesDir);
-		}
+
+		return project.fileTree(_patchesDir);
 	}
 
 	public boolean isCopyOriginalLibClasses() {
@@ -241,10 +263,14 @@ public class PatchTask extends DefaultTask {
 					public void execute(ExecSpec execSpec) {
 						execSpec.args(getArgs());
 
-						execSpec.args(
-							"--input=" +
-								FileUtil.relativize(
-									patchFile, srcTemporaryDir));
+						if (OSDetector.isWindows()) {
+							execSpec.args("--binary");
+						}
+
+						String relativizePath = FileUtil.relativize(
+							patchFile, srcTemporaryDir);
+
+						execSpec.args("--input=" + relativizePath);
 
 						execSpec.setExecutable("patch");
 						execSpec.setIgnoreExitValue(true);
@@ -552,20 +578,19 @@ public class PatchTask extends DefaultTask {
 	private static final String _BASE_URL =
 		"http://repo.maven.apache.org/maven2/";
 
-	private static final Map<String, Object> _fixCrLfArgs = new HashMap<>();
-
-	static {
-		_fixCrLfArgs.put(
-			"eof", FixCrLfFilter.AddAsisRemove.newInstance("remove"));
-		_fixCrLfArgs.put("eol", FixCrLfFilter.CrLf.newInstance("lf"));
-		_fixCrLfArgs.put("fixlast", false);
-	}
+	private static final Map<String, Object> _fixCrLfArgs =
+		new HashMap<String, Object>() {
+			{
+				put("eof", FixCrLfFilter.AddAsisRemove.newInstance("remove"));
+				put("eol", FixCrLfFilter.CrLf.newInstance("lf"));
+				put("fixlast", false);
+			}
+		};
 
 	private final List<Object> _args = new ArrayList<>();
 	private boolean _copyOriginalLibClasses = true;
 	private final List<Object> _fileNames = new ArrayList<>();
-	private Object _originalLibConfigurationName =
-		JavaPlugin.COMPILE_CONFIGURATION_NAME;
+	private Object _originalLibConfigurationName;
 	private Object _originalLibFile;
 	private Object _originalLibModuleName;
 	private Object _originalLibSrcBaseUrl;

@@ -14,10 +14,8 @@
 
 package com.liferay.exportimport.kernel.staging;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.portal.kernel.util.AutoResetThreadLocal;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.lang.HashUtil;
 
 import java.lang.reflect.Method;
 
@@ -30,7 +28,6 @@ import java.util.Set;
  * @author Raymond Augé
  * @author Shuyang Zhou
  */
-@ProviderType
 public class MergeLayoutPrototypesThreadLocal {
 
 	public static void clearMergeComplete() {
@@ -42,8 +39,8 @@ public class MergeLayoutPrototypesThreadLocal {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #isMergeComplete(String,
-	 *             Object...)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #isMergeComplete(String, Object...)}
 	 */
 	@Deprecated
 	public static boolean isMergeComplete(Method method, Object[] arguments) {
@@ -63,8 +60,8 @@ public class MergeLayoutPrototypesThreadLocal {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #setMergeComplete(String,
-	 *             Object...)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #setMergeComplete(String, Object...)}
 	 */
 	@Deprecated
 	public static void setMergeComplete(Method method, Object[] arguments) {
@@ -82,11 +79,11 @@ public class MergeLayoutPrototypesThreadLocal {
 	}
 
 	private static final ThreadLocal<Boolean> _inProgress =
-		new AutoResetThreadLocal<>(
+		new CentralizedThreadLocal<>(
 			MergeLayoutPrototypesThreadLocal.class + "._inProgress",
 			() -> Boolean.FALSE);
 	private static final ThreadLocal<Set<MethodKey>> _mergeComplete =
-		new AutoResetThreadLocal<>(
+		new CentralizedThreadLocal<>(
 			MergeLayoutPrototypesThreadLocal.class + "._mergeComplete",
 			HashSet::new);
 

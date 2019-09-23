@@ -1,66 +1,79 @@
-<definition>
-	<command name="downloadReportEntryFile">
-		<var name="key_reportsFileName" value="${reportsFileName}" />
+definition {
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" value1="${reportsFileName}" />
+	macro downloadReportEntryFile {
+		var key_reportsFileName = "${reportsFileName}";
 
-		<execute function="Click" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_ACTIONS" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
+			value1 = "${reportsFileName}");
 
-		<execute function="AssertClick" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DOWNLOAD" value1="Download" />
+		LexiconEntry.openEntryMenu(rowEntry = "${reportsFileName}");
 
-		<execute function="Pause" locator1="2000" />
+		AssertClick(
+			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DOWNLOAD",
+			value1 = "Download");
 
-		<if>
-			<equals arg1="${reportFormat}" arg2="pdf" />
-			<then>
-				<if>
-					<equals arg1="${reportsFileName}" arg2="reports_admin_template_source_sample_list_type.pdf" />
-					<then>
-						<execute function="SikuliAssertElementPresent" locator1="ReportsAdmin#REPORT_PDF_LIST_TYPE_PNG" />
-					</then>
-					<else>
-						<execute function="SikuliAssertElementPresent" locator1="ReportsAdmin#REPORT_PDF_CLASS_NAME_PNG" />
-					</else>
-				</if>
-			</then>
-		</if>
-	</command>
+		Pause(locator1 = "2000");
 
-	<command name="viewReportEntry">
-		<var name="key_reportsDefinitionName" value="${reportsDefinitionName}" />
+		if ("${reportFormat}" == "pdf") {
+			if ("${reportsFileName}" == "reports_admin_template_source_sample_list_type.pdf") {
+				SikuliAssertElementPresent(locator1 = "ReportsAdmin#REPORT_PDF_LIST_TYPE_PNG");
+			}
+			else {
+				SikuliAssertElementPresent(locator1 = "ReportsAdmin#REPORT_PDF_CLASS_NAME_PNG");
+			}
+		}
+	}
 
-		<execute function="AssertClick" locator1="ReportsAdmin#REPORTS_ENTRY_TABLE_DEFINITION_NAME" value1="${reportsDefinitionName}" />
-	</command>
+	macro viewReportEntry {
+		var key_reportsDefinitionName = "${reportsDefinitionName}";
 
-	<command name="viewReportEntryFields">
-		<var name="key_reportsDefinitionName" value="${reportsDefinitionName}" />
+		AssertClick(
+			locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_DEFINITION_NAME",
+			value1 = "${reportsDefinitionName}");
+	}
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#DEFINITION_NAME_FIELD" value1="Definition Name ${reportsDefinitionName}" />
+	macro viewReportEntryFields {
+		var key_reportsDefinitionName = "${reportsDefinitionName}";
 
-		<var name="key_reportsDefinitionDescription" value="${reportsDefinitionDescription}" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#DEFINITION_NAME_FIELD",
+			value1 = "Definition Name ${reportsDefinitionName}");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#DESCRIPTION_FIELD" value1="Description ${reportsDefinitionDescription}" />
+		var key_reportsDefinitionDescription = "${reportsDefinitionDescription}";
 
-		<var name="key_dataSource" value="${dataSource}" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#DESCRIPTION_FIELD",
+			value1 = "Description ${reportsDefinitionDescription}");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#DATA_SOURCE_NAME_FIELD" value1="Data Source Name ${dataSource}" />
+		var key_dataSource = "${dataSource}";
 
-		<if>
-			<isset var="reportParameters" />
-			<then>
-				<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#REPORT_PARAMETERS_FIELD" value1="Report Parameters [${reportParameterse}]" />
-			</then>
-			<else>
-				<execute function="AssertTextEquals" locator1="Panel#ENTRY_REPORT_PARAMETERS" value1="Report Parameters" />
-			</else>
-		</if>
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#DATA_SOURCE_NAME_FIELD",
+			value1 = "Data Source Name ${dataSource}");
 
-		<var name="key_userName" value="${userName}" />
+		if (isSet(reportParameters)) {
+			AssertTextEquals(
+				locator1 = "ReportsAdminViewReportEntry#REPORT_PARAMETERS_FIELD",
+				value1 = "Report Parameters [${reportParameterse}]");
+		}
+		else {
+			AssertTextEquals(
+				locator1 = "Panel#ENTRY_REPORT_PARAMETERS",
+				value1 = "Report Parameters");
+		}
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#REQUESTED_BY_FIELD" value1="Requested By ${userName}" />
+		var key_userName = "${userName}";
 
-		<var name="key_reportsFileName" value="${reportsFileName}" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#REQUESTED_BY_FIELD",
+			value1 = "Requested By ${userName}");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" value1="${reportsFileName}" />
-	</command>
-</definition>
+		var key_reportsFileName = "${reportsFileName}";
+
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
+			value1 = "${reportsFileName}");
+	}
+
+}

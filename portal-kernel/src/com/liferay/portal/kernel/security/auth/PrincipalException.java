@@ -162,7 +162,7 @@ public class PrincipalException extends PortalException {
 			long userId, String resourceName, long resourceId,
 			String... actionIds) {
 
-			this (userId, resourceName, resourceId, null, actionIds);
+			this(userId, resourceName, resourceId, null, actionIds);
 		}
 
 		public MustHavePermission(
@@ -172,7 +172,8 @@ public class PrincipalException extends PortalException {
 			super(
 				String.format(
 					"User %s must have %s permission for %s %s", userId,
-					StringUtil.merge(actionIds, ","), resourceName, resourceId),
+					StringUtil.merge(actionIds, ","), resourceName,
+					(resourceId == 0) ? "" : resourceId),
 				cause);
 
 			this.userId = userId;
@@ -226,6 +227,30 @@ public class PrincipalException extends PortalException {
 
 	}
 
+	public static class MustHaveValidCSRFToken extends PrincipalException {
+
+		public MustHaveValidCSRFToken(long userId, String origin) {
+			this(userId, origin, null);
+		}
+
+		public MustHaveValidCSRFToken(
+			long userId, String origin, Throwable cause) {
+
+			super(
+				String.format(
+					"User %s did not provide a valid CSRF token for %s", userId,
+					origin),
+				cause);
+
+			this.origin = origin;
+			this.userId = userId;
+		}
+
+		public final String origin;
+		public final long userId;
+
+	}
+
 	private static final Class<?>[] _NESTED_CLASSES = {
 		PrincipalException.class, PrincipalException.MustBeAuthenticated.class,
 		PrincipalException.MustBeCompanyAdmin.class,
@@ -233,7 +258,8 @@ public class PrincipalException extends PortalException {
 		PrincipalException.MustBeInvokedUsingPost.class,
 		PrincipalException.MustBeOmniadmin.class,
 		PrincipalException.MustBePortletStrutsPath.class,
-		PrincipalException.MustHavePermission.class
+		PrincipalException.MustHavePermission.class,
+		PrincipalException.MustHaveValidCSRFToken.class
 	};
 
 }

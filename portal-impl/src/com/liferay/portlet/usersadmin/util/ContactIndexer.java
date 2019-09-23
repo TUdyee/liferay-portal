@@ -14,7 +14,6 @@
 
 package com.liferay.portlet.usersadmin.util;
 
-import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -31,7 +30,6 @@ import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.service.ContactLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -43,11 +41,12 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
 /**
- * @author Raymond Augé
- * @author Zsigmond Rab
- * @author Hugo Huijser
+ * @author     Raymond Augé
+ * @author     Zsigmond Rab
+ * @author     Hugo Huijser
+ * @deprecated As of Judson (7.1.x)
  */
-@OSGiBeanProperties
+@Deprecated
 public class ContactIndexer extends BaseIndexer<Contact> {
 
 	public static final String CLASS_NAME = Contact.class.getName();
@@ -140,9 +139,8 @@ public class ContactIndexer extends BaseIndexer<Contact> {
 		else if (orderByCol.equals("last-name")) {
 			return "lastName";
 		}
-		else {
-			return orderByCol;
-		}
+
+		return orderByCol;
 	}
 
 	@Override
@@ -155,18 +153,14 @@ public class ContactIndexer extends BaseIndexer<Contact> {
 
 	@Override
 	protected void doReindex(Contact contact) throws Exception {
-		Document document = getDocument(contact);
-
 		IndexWriterHelperUtil.updateDocument(
-			getSearchEngineId(), contact.getCompanyId(), document,
+			getSearchEngineId(), contact.getCompanyId(), getDocument(contact),
 			isCommitImmediately());
 	}
 
 	@Override
 	protected void doReindex(String className, long classPK) throws Exception {
-		Contact contact = ContactLocalServiceUtil.getContact(classPK);
-
-		doReindex(contact);
+		doReindex(ContactLocalServiceUtil.getContact(classPK));
 	}
 
 	@Override
@@ -182,25 +176,18 @@ public class ContactIndexer extends BaseIndexer<Contact> {
 
 		indexableActionableDynamicQuery.setCompanyId(companyId);
 		indexableActionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<Contact>() {
-
-				@Override
-				public void performAction(Contact contact) {
-					try {
-						Document document = getDocument(contact);
-
-						indexableActionableDynamicQuery.addDocuments(document);
-					}
-					catch (PortalException pe) {
-						if (_log.isWarnEnabled()) {
-							_log.warn(
-								"Unable to index contact " +
-									contact.getContactId(),
-								pe);
-						}
+			(Contact contact) -> {
+				try {
+					indexableActionableDynamicQuery.addDocuments(
+						getDocument(contact));
+				}
+				catch (PortalException pe) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to index contact " + contact.getContactId(),
+							pe);
 					}
 				}
-
 			});
 		indexableActionableDynamicQuery.setSearchEngineId(getSearchEngineId());
 

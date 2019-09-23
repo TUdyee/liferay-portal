@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Provides a wrapper for {@link UserGroupGroupRoleService}.
@@ -23,50 +22,62 @@ import aQute.bnd.annotation.ProviderType;
  * @see UserGroupGroupRoleService
  * @generated
  */
-@ProviderType
 public class UserGroupGroupRoleServiceWrapper
 	implements UserGroupGroupRoleService,
-		ServiceWrapper<UserGroupGroupRoleService> {
+			   ServiceWrapper<UserGroupGroupRoleService> {
+
 	public UserGroupGroupRoleServiceWrapper(
 		UserGroupGroupRoleService userGroupGroupRoleService) {
+
 		_userGroupGroupRoleService = userGroupGroupRoleService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link UserGroupGroupRoleServiceUtil} to access the user group group role remote service. Add custom service methods to <code>com.liferay.portal.service.impl.UserGroupGroupRoleServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
-	public void addUserGroupGroupRoles(long userGroupId, long groupId,
-		long[] roleIds)
+	public void addUserGroupGroupRoles(
+			long userGroupId, long groupId, long[] roleIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_userGroupGroupRoleService.addUserGroupGroupRoles(userGroupId, groupId,
-			roleIds);
+
+		_userGroupGroupRoleService.addUserGroupGroupRoles(
+			userGroupId, groupId, roleIds);
 	}
 
 	@Override
-	public void addUserGroupGroupRoles(long[] userGroupIds, long groupId,
-		long roleId) throws com.liferay.portal.kernel.exception.PortalException {
-		_userGroupGroupRoleService.addUserGroupGroupRoles(userGroupIds,
-			groupId, roleId);
-	}
-
-	@Override
-	public void deleteUserGroupGroupRoles(long userGroupId, long groupId,
-		long[] roleIds)
+	public void addUserGroupGroupRoles(
+			long[] userGroupIds, long groupId, long roleId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_userGroupGroupRoleService.deleteUserGroupGroupRoles(userGroupId,
-			groupId, roleIds);
+
+		_userGroupGroupRoleService.addUserGroupGroupRoles(
+			userGroupIds, groupId, roleId);
 	}
 
 	@Override
-	public void deleteUserGroupGroupRoles(long[] userGroupIds, long groupId,
-		long roleId) throws com.liferay.portal.kernel.exception.PortalException {
-		_userGroupGroupRoleService.deleteUserGroupGroupRoles(userGroupIds,
-			groupId, roleId);
+	public void deleteUserGroupGroupRoles(
+			long userGroupId, long groupId, long[] roleIds)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_userGroupGroupRoleService.deleteUserGroupGroupRoles(
+			userGroupId, groupId, roleIds);
+	}
+
+	@Override
+	public void deleteUserGroupGroupRoles(
+			long[] userGroupIds, long groupId, long roleId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_userGroupGroupRoleService.deleteUserGroupGroupRoles(
+			userGroupIds, groupId, roleId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public java.lang.String getOSGiServiceIdentifier() {
 		return _userGroupGroupRoleService.getOSGiServiceIdentifier();
@@ -80,8 +91,10 @@ public class UserGroupGroupRoleServiceWrapper
 	@Override
 	public void setWrappedService(
 		UserGroupGroupRoleService userGroupGroupRoleService) {
+
 		_userGroupGroupRoleService = userGroupGroupRoleService;
 	}
 
 	private UserGroupGroupRoleService _userGroupGroupRoleService;
+
 }

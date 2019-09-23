@@ -1,300 +1,291 @@
-<definition component-name="portal-calendar">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="custom.properties" value="default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles" />
-	<property name="testray.main.component.name" value="Calendar" />
+@component-name = "portal-calendar"
+definition {
 
-	<var name="pageName" value="Calendar Page" />
-	<var name="portletName" value="Calendar" />
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property testray.main.component.name = "Calendar";
+	var pageName = "Calendar Page";
+	var portletName = "Calendar";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			panel = "Site Administration",
+			portlet = "Pages");
 
-		<execute macro="Portlet#addPG">
-			<var name="pageName" value="Calendar Page" />
-			<var name="portletName" value="Calendar" />
-		</execute>
-	</set-up>
+		SitePages.addPublicPage(
+			pageName = "Calendar Page",
+			sitePageType = "Widget Page");
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		SitePages.configurePage(
+			columnName = "1 Column",
+			pageName = "Calendar Page",
+			privacy = "Public Pages",
+			sitePageType = "Widget Page");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="Navigator#gotoPage">
-					<var name="pageName" value="Calendar Page" />
-				</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-				<if>
-					<condition function="IsElementPresent" locator1="Calendar#SCHEDULER_EVENT_GENERIC" />
-					<then>
-						<execute macro="CalendarEvent#tearDown" />
-					</then>
-				</if>
+		Portlet.addPG(
+			pageName = "Calendar Page",
+			portletName = "Calendar");
+	}
 
-				<execute macro="Calendar#tearDown" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-				<execute macro="CalendarConfiguration#tearDown" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			Navigator.gotoPage(pageName = "Calendar Page");
 
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
+			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
+				CalendarEvent.tearDown();
+			}
 
-	<command name="AddCalendarToCurrentSiteCalendars" priority="4">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+			Calendar.tearDown();
 
-		<execute macro="Calendar#add">
-			<var name="calendarName" value="Site Calendar Name" />
-			<var name="calendarType" value="Current Site Calendars" />
-			<var name="site" value="${siteName}" />
-		</execute>
+			CalendarConfiguration.tearDown();
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+			Page.tearDownCP();
+		}
+	}
 
-		<execute macro="Calendar#view">
-			<var name="calendarName" value="Site Calendar Name" />
-			<var name="calendarType" value="Current Site Calendars" />
-			<var name="site" value="${siteName}" />
-		</execute>
-	</command>
+	@priority = "4"
+	test AddCalendarToCurrentSiteCalendars {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-	<command name="AddCalendarToMyCalendars" priority="4">
-		<execute macro="Calendar#add">
-			<var name="calendarName" value="My Calendar Name" />
-			<var name="calendarType" value="My Calendars" />
-			<var name="user" value="Test Test" />
-		</execute>
+		Calendar.add(
+			calendarName = "Site Calendar Name",
+			calendarType = "Current Site Calendars",
+			site = "${siteName}");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Calendar#view">
-			<var name="calendarName" value="My Calendar Name" />
-			<var name="calendarType" value="My Calendars" />
-			<var name="user" value="Test Test" />
-		</execute>
-	</command>
+		Calendar.view(
+			calendarName = "Site Calendar Name",
+			calendarType = "Current Site Calendars",
+			site = "${siteName}");
+	}
 
-	<command name="AddUserCalendarToOtherCalendars" priority="4">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+	@priority = "4"
+	test AddCalendarToMyCalendars {
+		Calendar.add(
+			calendarName = "My Calendar Name",
+			calendarType = "My Calendars",
+			user = "Test Test");
 
-		<execute macro="User#addCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Calendar.view(
+			calendarName = "My Calendar Name",
+			calendarType = "My Calendars",
+			user = "Test Test");
+	}
 
-		<execute macro="Calendar#add">
-			<var name="calendarName" value="userfn userln" />
-			<var name="calendarType" value="Other Calendars" />
-		</execute>
+	@priority = "4"
+	test AddUserCalendarToOtherCalendars {
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
 
-		<execute macro="Calendar#view">
-			<var name="calendarName" value="userfn userln" />
-			<var name="calendarType" value="Other Calendars" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Calendar#viewOtherCalendarMenulist">
-			<var name="calendarName" value="userfn userln" />
-			<var name="color" value="668CD9" />
-			<var name="pageName" value="Calendar Page" />
-		</execute>
-	</command>
+		Calendar.add(
+			calendarName = "userfn userln",
+			calendarType = "Other Calendars");
 
-	<command name="ViewUserCanAddSiteCalendarsWithCalendarPermissions" priority="3">
-		<description message="This is a use case for LPS-56229." />
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		Calendar.view(
+			calendarName = "userfn userln",
+			calendarType = "Other Calendars");
 
-		<execute macro="RoleNavigator#gotoRoleType">
-			<var name="roleType" value="Site" />
-		</execute>
+		Calendar.viewOtherCalendarMenulist(
+			calendarName = "userfn userln",
+			color = "668CD9",
+			pageName = "Calendar Page");
+	}
 
-		<execute macro="Role#add">
-			<var name="roleTitle" value="Calendar Site Role Name" />
-		</execute>
+	@description = "This is a use case for LPS-45062."
+	@priority = "5"
+	test ResizeAddedEventsViaEventBlock {
+		property portal.release = "false";
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		CalendarNavigator.gotoView(viewType = "Day");
 
-		<execute macro="Role#definePermissionCP">
-			<var name="permissionDefinitionKey" value="SITE_ADMIN_APPLICATIONS_CALENDAR_MANAGE_EVENTS_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Manage Events" />
-			<var name="roleTitle" value="Calendar Site Role Name" />
-			<var name="roleType" value="Site" />
-		</execute>
+		CalendarNavigator.gotoPreviousDay();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		CalendarEvent.addViaDayView(
+			eventBlock = "true",
+			eventTitle = "Calendar Event Title1");
 
-		<execute macro="Role#definePermissionCP">
-			<var name="permissionDefinitionKey" value="SITE_ADMIN_PAGES_SITE_PAGES_RESOURCE_PERMISSIONS_PAGE_UPDATE_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Update" />
-			<var name="roleTitle" value="Authenticated" />
-			<var name="roleUser" value="User" />
-		</execute>
+		Alert.viewSuccessMessage();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="User#addCP">
-			<var name="userEmailAddress" value="usersn@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		CalendarNavigator.gotoPreviousDay();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+		CalendarEvent.resizeViaEventBlock();
 
-		<execute macro="User#editPasswordCP">
-			<var name="userEmailAddress" value="usersn@liferay.com" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		Alert.viewSuccessMessage();
 
-		<for list="Site A,Site B,Site C" param="siteName">
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="Sites" />
-				<var name="panel" value="Control Panel" />
-				<var name="portlet" value="Sites" />
-			</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-			<execute macro="Site#addBlankCP">
-				<var name="siteName" value="${siteName}" />
-			</execute>
+		CalendarNavigator.gotoAddEvent();
 
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="Users" />
-				<var name="panel" value="Control Panel" />
-				<var name="portlet" value="Users and Organizations" />
-			</execute>
+		CalendarEvent.editTitle(eventTitle = "Calendar Event Title2");
 
-			<execute macro="User#editUserSiteCP">
-				<var name="siteName" value="${siteName}" />
-				<var name="userScreenName" value="usersn" />
-			</execute>
-		</for>
+		CalendarEvent.setTimes(
+			endDateTime = "06:00 AM",
+			startDateTime = "03:00 AM");
 
-		<execute macro="ProductMenu#gotoSite">
-			<var name="site" value="Site A" />
-		</execute>
+		CalendarEvent.publish();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Members" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Site Memberships" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Site#assignSiteRoleCP">
-			<var name="resourceName" value="userfn userln" />
-			<var name="roleTitle" value="Calendar Site Role Name" />
-		</execute>
+		ScrollWebElementIntoView(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		CalendarEvent.resizeViaEventBlock();
 
-		<execute macro="ProductMenu#gotoSite">
-			<var name="site" value="Site C" />
-		</execute>
+		Alert.viewSuccessMessage();
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Members" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Site Memberships" />
-		</execute>
+	@description = "This is a use case for LPS-56229."
+	@priority = "3"
+	test ViewUserCanAddSiteCalendarsWithCalendarPermissions {
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="Site#assignSiteRoleCP">
-			<var name="resourceName" value="userfn userln" />
-			<var name="roleTitle" value="Calendar Site Role Name" />
-		</execute>
+		RoleNavigator.gotoRoleType(roleType = "Site");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Role.add(roleTitle = "Calendar Site Role Name");
 
-		<execute macro="User#logoutAndLoginPG">
-			<var name="userLoginEmailAddress" value="usersn@liferay.com" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="UserBar#gotoDashboard" />
+		Role.definePermissionCP(
+			permissionDefinitionKey = "SITE_ADMIN_APPLICATIONS_CALENDAR_MANAGE_EVENTS_CHECKBOX",
+			permissionDefinitionValue = "Manage Events",
+			roleTitle = "Calendar Site Role Name",
+			roleType = "Site");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Calendar" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="User#logoutAndLoginPG">
-			<var name="userLoginEmailAddress" value="usersn@liferay.com" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		Role.definePermissionCP(
+			permissionDefinitionKey = "SITE_ADMIN_PAGES_SITE_PAGES_RESOURCE_PERMISSIONS_PAGE_UPDATE_CHECKBOX",
+			permissionDefinitionValue = "Update",
+			roleTitle = "Authenticated",
+			roleUser = "User");
 
-		<execute macro="UserBar#gotoDashboard" />
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute macro="Calendar#searchOtherCalendars">
-			<var name="searchValue" value="site" />
-		</execute>
+		User.addCP(
+			userEmailAddress = "usersn@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
 
-		<for list="Site A,Site B,Site C" param="calendarName">
-			<execute macro="Calendar#viewOtherCalendarsSearchResult">
-				<var name="calendarName" value="${calendarName}" />
-			</execute>
-		</for>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute macro="CalendarNavigator#gotoAddEvent" />
+		User.editPasswordCP(
+			userEmailAddress = "usersn@liferay.com",
+			userScreenName = "usersn");
 
-		<execute macro="CalendarEvent#viewAvailableCalendars">
-			<var name="availableCalendarList" value="userfn userln,Site A,Site C" />
-		</execute>
+		for (var siteName : list "Site A,Site B,Site C") {
+			ProductMenu.gotoPortlet(
+				category = "Sites",
+				panel = "Control Panel",
+				portlet = "Sites");
 
-		<execute macro="CalendarEvent#viewUnavailableCalendarsNotPresent">
-			<var name="unavailableCalendarList" value="Site B,Liferay" />
-		</execute>
-	</command>
-</definition>
+			Site.addBlankCP(siteName = "${siteName}");
+
+			ProductMenu.gotoPortlet(
+				category = "Users",
+				panel = "Control Panel",
+				portlet = "Users and Organizations");
+
+			User.editUserSiteCP(
+				siteName = "${siteName}",
+				userScreenName = "usersn");
+		}
+
+		SitePages.openPagesAdmin(siteURLKey = "Site A");
+
+		ProductMenu.gotoPortlet(
+			category = "People",
+			panel = "Site Administration",
+			portlet = "Memberships");
+
+		Site.assignSiteRoleCP(
+			resourceName = "userfn userln",
+			roleTitle = "Calendar Site Role Name");
+
+		Navigator.gotoPage(pageName = "Calendar Page");
+
+		SitePages.openPagesAdmin(siteURLKey = "Site C");
+
+		ProductMenu.gotoPortlet(
+			category = "People",
+			panel = "Site Administration",
+			portlet = "Memberships");
+
+		Site.assignSiteRoleCP(
+			resourceName = "userfn userln",
+			roleTitle = "Calendar Site Role Name");
+
+		Navigator.gotoPage(pageName = "Calendar Page");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "usersn@liferay.com",
+			userScreenName = "usersn");
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Dashboard");
+
+		Portlet.addPG(portletName = "Calendar");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "usersn@liferay.com",
+			userScreenName = "usersn");
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Dashboard");
+
+		Calendar.searchOtherCalendars(searchValue = "site");
+
+		for (var calendarName : list "Site A,Site B,Site C") {
+			Calendar.viewOtherCalendarsSearchResult(calendarName = "${calendarName}");
+		}
+
+		CalendarNavigator.gotoAddEvent();
+
+		CalendarEvent.viewAvailableCalendars(availableCalendarList = "userfn userln,Site A,Site C");
+
+		CalendarEvent.viewUnavailableCalendarsNotPresent(unavailableCalendarList = "Site B,Liferay");
+	}
+
+}

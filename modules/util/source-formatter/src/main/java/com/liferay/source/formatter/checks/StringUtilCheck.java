@@ -14,8 +14,8 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 
@@ -33,7 +33,7 @@ public class StringUtilCheck extends BaseFileCheck {
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws Exception {
+		throws ReflectiveOperationException {
 
 		if (!absolutePath.contains("poshi")) {
 			_checkReplaceCalls(fileName, content);
@@ -43,7 +43,7 @@ public class StringUtilCheck extends BaseFileCheck {
 	}
 
 	private void _checkReplaceCalls(String fileName, String content)
-		throws Exception {
+		throws ReflectiveOperationException {
 
 		Matcher matcher = _stringUtilReplacePattern.matcher(content);
 
@@ -91,14 +91,14 @@ public class StringUtilCheck extends BaseFileCheck {
 			sb.append("(String, char, String) instead");
 
 			addMessage(
-				fileName, sb.toString(),
-				getLineCount(content, matcher.start()));
+				fileName, sb.toString(), "string_methods.markdown",
+				getLineNumber(content, matcher.start()));
 		}
 	}
 
-	private final Pattern _singleLengthStringPattern = Pattern.compile(
+	private static final Pattern _singleLengthStringPattern = Pattern.compile(
 		"^(\".\"|StringPool\\.([A-Z_]+))$");
-	private final Pattern _stringUtilReplacePattern = Pattern.compile(
+	private static final Pattern _stringUtilReplacePattern = Pattern.compile(
 		"StringUtil\\.(replace(First|Last)?)\\((.*?)\\);\n", Pattern.DOTALL);
 
 }

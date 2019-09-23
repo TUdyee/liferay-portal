@@ -27,13 +27,15 @@ import java.net.URLEncoder;
 
 import java.nio.charset.StandardCharsets;
 
+import java.util.Date;
+
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alejandro Tardín
  */
-@Component(immediate = true)
+@Component(immediate = true, service = AMImageURLFactory.class)
 public class AMImageURLFactoryImpl implements AMImageURLFactory {
 
 	@Override
@@ -41,10 +43,12 @@ public class AMImageURLFactoryImpl implements AMImageURLFactory {
 		FileVersion fileVersion,
 		AMImageConfigurationEntry amImageConfigurationEntry) {
 
+		Date modifiedDate = fileVersion.getModifiedDate();
+
 		String relativeURI = String.format(
-			"image/%d/%s/%s", fileVersion.getFileEntryId(),
+			"image/%d/%s/%s?t=%d", fileVersion.getFileEntryId(),
 			amImageConfigurationEntry.getUUID(),
-			_encode(fileVersion.getFileName()));
+			_encode(fileVersion.getFileName()), modifiedDate.getTime());
 
 		return _amURIResolver.resolveURI(URI.create(relativeURI));
 	}
@@ -62,11 +66,6 @@ public class AMImageURLFactoryImpl implements AMImageURLFactory {
 		return _amURIResolver.resolveURI(URI.create(relativeURI));
 	}
 
-	@Reference(unbind = "-")
-	protected void setAMURIResolver(AMURIResolver amURIResolver) {
-		_amURIResolver = amURIResolver;
-	}
-
 	private String _encode(String s) {
 		try {
 			return URLEncoder.encode(s, StandardCharsets.UTF_8.name());
@@ -76,6 +75,7 @@ public class AMImageURLFactoryImpl implements AMImageURLFactory {
 		}
 	}
 
+	@Reference
 	private AMURIResolver _amURIResolver;
 
 }

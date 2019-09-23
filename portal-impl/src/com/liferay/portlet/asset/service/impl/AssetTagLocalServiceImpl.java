@@ -15,13 +15,16 @@
 package com.liferay.portlet.asset.service.impl;
 
 import com.liferay.asset.kernel.exception.AssetTagException;
+import com.liferay.asset.kernel.exception.AssetTagNameException;
 import com.liferay.asset.kernel.exception.DuplicateTagException;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
@@ -42,8 +45,8 @@ import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.asset.service.base.AssetTagLocalServiceBaseImpl;
 import com.liferay.portlet.asset.util.AssetUtil;
 import com.liferay.portlet.asset.util.comparator.AssetTagNameComparator;
@@ -87,7 +90,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 
 		// Tag
 
-		User user = userPersistence.findByPrimaryKey(userId);
+		User user = userLocalService.getUser(userId);
 
 		long tagId = counterLocalService.increment();
 
@@ -101,20 +104,16 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 
 		name = StringUtil.toLowerCase(StringUtil.trim(name));
 
+		validate(name);
+
 		if (hasTag(groupId, name)) {
 			throw new DuplicateTagException(
 				"A tag with the name " + name + " already exists");
 		}
 
-		validate(name);
-
 		tag.setName(name);
 
 		assetTagPersistence.update(tag);
-
-		// Resources
-
-		resourceLocalService.addModelResources(tag, serviceContext);
 
 		return tag;
 	}
@@ -178,9 +177,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	public List<AssetTag> checkTags(long userId, long groupId, String[] names)
 		throws PortalException {
 
-		Group group = groupPersistence.findByPrimaryKey(groupId);
-
-		return checkTags(userId, group, names);
+		return checkTags(userId, groupLocalService.getGroup(groupId), names);
 	}
 
 	/**
@@ -201,8 +198,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		tag.setAssetCount(Math.max(0, tag.getAssetCount() - 1));
 
 		assetTagPersistence.update(tag);
-
-		assetTagStatsLocalService.updateTagStats(tagId, classNameId);
 
 		return tag;
 	}
@@ -239,10 +234,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		// Tag
 
 		assetTagPersistence.remove(tag);
-
-		// Stats
-
-		assetTagStatsLocalService.deleteTagStatsByTagId(tag.getTagId());
 
 		// Indexer
 
@@ -301,9 +292,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		List<AssetTag> groupsTags = new ArrayList<>();
 
 		for (long groupId : groupIds) {
-			List<AssetTag> groupTags = getGroupTags(groupId);
-
-			groupsTags.addAll(groupTags);
+			groupsTags.addAll(getGroupTags(groupId));
 		}
 
 		return groupsTags;
@@ -349,11 +338,10 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		long groupId, String socialActivityCounterName, int startOffset,
 		int endOffset) {
 
-		int startPeriod = SocialCounterPeriodUtil.getStartPeriod(startOffset);
-		int endPeriod = SocialCounterPeriodUtil.getEndPeriod(endOffset);
-
 		return getSocialActivityCounterPeriodTags(
-			groupId, socialActivityCounterName, startPeriod, endPeriod);
+			groupId, socialActivityCounterName,
+			SocialCounterPeriodUtil.getStartPeriod(startOffset),
+			SocialCounterPeriodUtil.getEndPeriod(endOffset));
 	}
 
 	@Override
@@ -361,9 +349,8 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		long groupId, String socialActivityCounterName, int startPeriod,
 		int endPeriod) {
 
-		int offset = SocialCounterPeriodUtil.getOffset(endPeriod);
-
-		int periodLength = SocialCounterPeriodUtil.getPeriodLength(offset);
+		int periodLength = SocialCounterPeriodUtil.getPeriodLength(
+			SocialCounterPeriodUtil.getOffset(endPeriod));
 
 		return assetTagFinder.findByG_N_S_E(
 			groupId, socialActivityCounterName, startPeriod, endPeriod,
@@ -414,7 +401,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 			tagIds.add(tag.getTagId());
 		}
 
-		return ArrayUtil.toArray(tagIds.toArray(new Long[tagIds.size()]));
+		return ArrayUtil.toArray(tagIds.toArray(new Long[0]));
 	}
 
 	/**
@@ -438,7 +425,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 			tagIds.add(tag.getTagId());
 		}
 
-		return ArrayUtil.toArray(tagIds.toArray(new Long[tagIds.size()]));
+		return ArrayUtil.toArray(tagIds.toArray(new Long[0]));
 	}
 
 	/**
@@ -457,6 +444,25 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		}
 
 		return tagsIds;
+	}
+
+	/**
+	 * Returns the primary keys of the asset tags with the names.
+	 *
+	 * @param  name the name of the asset tags
+	 * @return the primary keys of the asset tags with the names
+	 */
+	@Override
+	public long[] getTagIds(String name) {
+		List<AssetTag> tags = assetTagPersistence.findByName(name);
+
+		List<Long> tagIds = new ArrayList<>(tags.size());
+
+		for (AssetTag tag : tags) {
+			tagIds.add(tag.getTagId());
+		}
+
+		return ArrayUtil.toArray(tagIds.toArray(new Long[0]));
 	}
 
 	/**
@@ -547,14 +553,18 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	@Override
 	@ThreadLocalCachable
 	public List<AssetTag> getTags(String className, long classPK) {
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		return getTags(classNameId, classPK);
+		return getTags(
+			classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
 	public int getTagsSize(long groupId, long classNameId, String name) {
 		return assetTagFinder.countByG_C_N(groupId, classNameId, name);
+	}
+
+	@Override
+	public int getTagsSize(long groupId, String name) {
+		return assetTagFinder.countByG_N(groupId, name);
 	}
 
 	/**
@@ -595,8 +605,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		tag.setAssetCount(tag.getAssetCount() + 1);
 
 		assetTagPersistence.update(tag);
-
-		assetTagStatsLocalService.updateTagStats(tagId, classNameId);
 
 		return tag;
 	}
@@ -689,7 +697,9 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 				"A tag with the name " + name + " already exists");
 		}
 
-		if (!tag.getName().equals(name)) {
+		String tagName = tag.getName();
+
+		if (!tagName.equals(name)) {
 			AssetTag existingAssetTag = fetchTag(tag.getGroupId(), name);
 
 			if ((existingAssetTag != null) &&
@@ -803,11 +813,25 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	}
 
 	protected void validate(String name) throws PortalException {
+		if (Validator.isNull(name)) {
+			throw new AssetTagNameException(
+				"Tag name cannot be an empty string");
+		}
+
 		if (!AssetUtil.isValidWord(name)) {
 			throw new AssetTagException(
 				StringUtil.merge(
 					AssetUtil.INVALID_CHARACTERS, StringPool.SPACE),
 				AssetTagException.INVALID_CHARACTER);
+		}
+
+		int maxLength = ModelHintsUtil.getMaxLength(
+			AssetTag.class.getName(), "name");
+
+		if (name.length() > maxLength) {
+			throw new AssetTagException(
+				"Tag name has more than " + maxLength + " characters",
+				AssetTagException.MAX_LENGTH);
 		}
 	}
 

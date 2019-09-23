@@ -14,18 +14,11 @@
 
 package com.liferay.ratings.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
-import com.liferay.portal.kernel.service.ServiceContext;
-
-import java.io.Serializable;
+import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <p>
@@ -36,21 +29,12 @@ import java.util.Objects;
  * @see RatingsStats
  * @generated
  */
-@ProviderType
-public class RatingsStatsWrapper implements RatingsStats,
-	ModelWrapper<RatingsStats> {
+public class RatingsStatsWrapper
+	extends BaseModelWrapper<RatingsStats>
+	implements RatingsStats, ModelWrapper<RatingsStats> {
+
 	public RatingsStatsWrapper(RatingsStats ratingsStats) {
-		_ratingsStats = ratingsStats;
-	}
-
-	@Override
-	public Class<?> getModelClass() {
-		return RatingsStats.class;
-	}
-
-	@Override
-	public String getModelClassName() {
-		return RatingsStats.class.getName();
+		super(ratingsStats);
 	}
 
 	@Override
@@ -113,320 +97,194 @@ public class RatingsStatsWrapper implements RatingsStats,
 		}
 	}
 
-	@Override
-	public java.lang.Object clone() {
-		return new RatingsStatsWrapper((RatingsStats)_ratingsStats.clone());
-	}
-
-	@Override
-	public int compareTo(RatingsStats ratingsStats) {
-		return _ratingsStats.compareTo(ratingsStats);
-	}
-
 	/**
-	* Returns the average score of this ratings stats.
-	*
-	* @return the average score of this ratings stats
-	*/
+	 * Returns the average score of this ratings stats.
+	 *
+	 * @return the average score of this ratings stats
+	 */
 	@Override
 	public double getAverageScore() {
-		return _ratingsStats.getAverageScore();
+		return model.getAverageScore();
 	}
 
 	/**
-	* Returns the fully qualified class name of this ratings stats.
-	*
-	* @return the fully qualified class name of this ratings stats
-	*/
+	 * Returns the fully qualified class name of this ratings stats.
+	 *
+	 * @return the fully qualified class name of this ratings stats
+	 */
 	@Override
-	public java.lang.String getClassName() {
-		return _ratingsStats.getClassName();
+	public String getClassName() {
+		return model.getClassName();
 	}
 
 	/**
-	* Returns the class name ID of this ratings stats.
-	*
-	* @return the class name ID of this ratings stats
-	*/
+	 * Returns the class name ID of this ratings stats.
+	 *
+	 * @return the class name ID of this ratings stats
+	 */
 	@Override
 	public long getClassNameId() {
-		return _ratingsStats.getClassNameId();
+		return model.getClassNameId();
 	}
 
 	/**
-	* Returns the class pk of this ratings stats.
-	*
-	* @return the class pk of this ratings stats
-	*/
+	 * Returns the class pk of this ratings stats.
+	 *
+	 * @return the class pk of this ratings stats
+	 */
 	@Override
 	public long getClassPK() {
-		return _ratingsStats.getClassPK();
+		return model.getClassPK();
 	}
 
 	/**
-	* Returns the company ID of this ratings stats.
-	*
-	* @return the company ID of this ratings stats
-	*/
+	 * Returns the company ID of this ratings stats.
+	 *
+	 * @return the company ID of this ratings stats
+	 */
 	@Override
 	public long getCompanyId() {
-		return _ratingsStats.getCompanyId();
-	}
-
-	@Override
-	public ExpandoBridge getExpandoBridge() {
-		return _ratingsStats.getExpandoBridge();
+		return model.getCompanyId();
 	}
 
 	/**
-	* Returns the primary key of this ratings stats.
-	*
-	* @return the primary key of this ratings stats
-	*/
+	 * Returns the primary key of this ratings stats.
+	 *
+	 * @return the primary key of this ratings stats
+	 */
 	@Override
 	public long getPrimaryKey() {
-		return _ratingsStats.getPrimaryKey();
-	}
-
-	@Override
-	public Serializable getPrimaryKeyObj() {
-		return _ratingsStats.getPrimaryKeyObj();
+		return model.getPrimaryKey();
 	}
 
 	/**
-	* Returns the stats ID of this ratings stats.
-	*
-	* @return the stats ID of this ratings stats
-	*/
+	 * Returns the stats ID of this ratings stats.
+	 *
+	 * @return the stats ID of this ratings stats
+	 */
 	@Override
 	public long getStatsId() {
-		return _ratingsStats.getStatsId();
+		return model.getStatsId();
 	}
 
 	/**
-	* Returns the total entries of this ratings stats.
-	*
-	* @return the total entries of this ratings stats
-	*/
+	 * Returns the total entries of this ratings stats.
+	 *
+	 * @return the total entries of this ratings stats
+	 */
 	@Override
 	public int getTotalEntries() {
-		return _ratingsStats.getTotalEntries();
+		return model.getTotalEntries();
 	}
 
 	/**
-	* Returns the total score of this ratings stats.
-	*
-	* @return the total score of this ratings stats
-	*/
+	 * Returns the total score of this ratings stats.
+	 *
+	 * @return the total score of this ratings stats
+	 */
 	@Override
 	public double getTotalScore() {
-		return _ratingsStats.getTotalScore();
+		return model.getTotalScore();
 	}
 
-	@Override
-	public int hashCode() {
-		return _ratingsStats.hashCode();
-	}
-
-	@Override
-	public boolean isCachedModel() {
-		return _ratingsStats.isCachedModel();
-	}
-
-	@Override
-	public boolean isEscapedModel() {
-		return _ratingsStats.isEscapedModel();
-	}
-
-	@Override
-	public boolean isNew() {
-		return _ratingsStats.isNew();
-	}
-
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this class directly. All methods that expect a ratings stats model instance should use the <code>RatingsStats</code> interface instead.
+	 */
 	@Override
 	public void persist() {
-		_ratingsStats.persist();
+		model.persist();
 	}
 
 	/**
-	* Sets the average score of this ratings stats.
-	*
-	* @param averageScore the average score of this ratings stats
-	*/
+	 * Sets the average score of this ratings stats.
+	 *
+	 * @param averageScore the average score of this ratings stats
+	 */
 	@Override
 	public void setAverageScore(double averageScore) {
-		_ratingsStats.setAverageScore(averageScore);
+		model.setAverageScore(averageScore);
 	}
 
 	@Override
-	public void setCachedModel(boolean cachedModel) {
-		_ratingsStats.setCachedModel(cachedModel);
-	}
-
-	@Override
-	public void setClassName(java.lang.String className) {
-		_ratingsStats.setClassName(className);
+	public void setClassName(String className) {
+		model.setClassName(className);
 	}
 
 	/**
-	* Sets the class name ID of this ratings stats.
-	*
-	* @param classNameId the class name ID of this ratings stats
-	*/
+	 * Sets the class name ID of this ratings stats.
+	 *
+	 * @param classNameId the class name ID of this ratings stats
+	 */
 	@Override
 	public void setClassNameId(long classNameId) {
-		_ratingsStats.setClassNameId(classNameId);
+		model.setClassNameId(classNameId);
 	}
 
 	/**
-	* Sets the class pk of this ratings stats.
-	*
-	* @param classPK the class pk of this ratings stats
-	*/
+	 * Sets the class pk of this ratings stats.
+	 *
+	 * @param classPK the class pk of this ratings stats
+	 */
 	@Override
 	public void setClassPK(long classPK) {
-		_ratingsStats.setClassPK(classPK);
+		model.setClassPK(classPK);
 	}
 
 	/**
-	* Sets the company ID of this ratings stats.
-	*
-	* @param companyId the company ID of this ratings stats
-	*/
+	 * Sets the company ID of this ratings stats.
+	 *
+	 * @param companyId the company ID of this ratings stats
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
-		_ratingsStats.setCompanyId(companyId);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(
-		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
-		_ratingsStats.setExpandoBridgeAttributes(baseModel);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ExpandoBridge expandoBridge) {
-		_ratingsStats.setExpandoBridgeAttributes(expandoBridge);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ServiceContext serviceContext) {
-		_ratingsStats.setExpandoBridgeAttributes(serviceContext);
-	}
-
-	@Override
-	public void setNew(boolean n) {
-		_ratingsStats.setNew(n);
+		model.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the primary key of this ratings stats.
-	*
-	* @param primaryKey the primary key of this ratings stats
-	*/
+	 * Sets the primary key of this ratings stats.
+	 *
+	 * @param primaryKey the primary key of this ratings stats
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
-		_ratingsStats.setPrimaryKey(primaryKey);
-	}
-
-	@Override
-	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
-		_ratingsStats.setPrimaryKeyObj(primaryKeyObj);
+		model.setPrimaryKey(primaryKey);
 	}
 
 	/**
-	* Sets the stats ID of this ratings stats.
-	*
-	* @param statsId the stats ID of this ratings stats
-	*/
+	 * Sets the stats ID of this ratings stats.
+	 *
+	 * @param statsId the stats ID of this ratings stats
+	 */
 	@Override
 	public void setStatsId(long statsId) {
-		_ratingsStats.setStatsId(statsId);
+		model.setStatsId(statsId);
 	}
 
 	/**
-	* Sets the total entries of this ratings stats.
-	*
-	* @param totalEntries the total entries of this ratings stats
-	*/
+	 * Sets the total entries of this ratings stats.
+	 *
+	 * @param totalEntries the total entries of this ratings stats
+	 */
 	@Override
 	public void setTotalEntries(int totalEntries) {
-		_ratingsStats.setTotalEntries(totalEntries);
+		model.setTotalEntries(totalEntries);
 	}
 
 	/**
-	* Sets the total score of this ratings stats.
-	*
-	* @param totalScore the total score of this ratings stats
-	*/
+	 * Sets the total score of this ratings stats.
+	 *
+	 * @param totalScore the total score of this ratings stats
+	 */
 	@Override
 	public void setTotalScore(double totalScore) {
-		_ratingsStats.setTotalScore(totalScore);
+		model.setTotalScore(totalScore);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.CacheModel<RatingsStats> toCacheModel() {
-		return _ratingsStats.toCacheModel();
+	protected RatingsStatsWrapper wrap(RatingsStats ratingsStats) {
+		return new RatingsStatsWrapper(ratingsStats);
 	}
 
-	@Override
-	public RatingsStats toEscapedModel() {
-		return new RatingsStatsWrapper(_ratingsStats.toEscapedModel());
-	}
-
-	@Override
-	public java.lang.String toString() {
-		return _ratingsStats.toString();
-	}
-
-	@Override
-	public RatingsStats toUnescapedModel() {
-		return new RatingsStatsWrapper(_ratingsStats.toUnescapedModel());
-	}
-
-	@Override
-	public java.lang.String toXmlString() {
-		return _ratingsStats.toXmlString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-
-		if (!(obj instanceof RatingsStatsWrapper)) {
-			return false;
-		}
-
-		RatingsStatsWrapper ratingsStatsWrapper = (RatingsStatsWrapper)obj;
-
-		if (Objects.equals(_ratingsStats, ratingsStatsWrapper._ratingsStats)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
-	public RatingsStats getWrappedModel() {
-		return _ratingsStats;
-	}
-
-	@Override
-	public boolean isEntityCacheEnabled() {
-		return _ratingsStats.isEntityCacheEnabled();
-	}
-
-	@Override
-	public boolean isFinderCacheEnabled() {
-		return _ratingsStats.isFinderCacheEnabled();
-	}
-
-	@Override
-	public void resetOriginalValues() {
-		_ratingsStats.resetOriginalValues();
-	}
-
-	private final RatingsStats _ratingsStats;
 }

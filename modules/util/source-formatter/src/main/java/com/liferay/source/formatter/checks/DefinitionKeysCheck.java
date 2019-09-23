@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -77,7 +77,7 @@ public abstract class DefinitionKeysCheck extends BaseFileCheck {
 		return content;
 	}
 
-	private final Pattern _definitionPattern = Pattern.compile(
+	private static final Pattern _definitionPattern = Pattern.compile(
 		"^([A-Za-z-]+?)[:=](\n|[\\s\\S]*?)(?=(\n[A-Za-z-]+?[:=])|\\Z)",
 		Pattern.MULTILINE);
 

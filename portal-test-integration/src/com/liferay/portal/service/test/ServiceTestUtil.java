@@ -14,8 +14,10 @@
 
 package com.liferay.portal.service.test;
 
+import com.liferay.petra.executor.PortalExecutorManager;
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.concurrent.ThreadPoolExecutor;
-import com.liferay.portal.kernel.executor.PortalExecutorManager;
 import com.liferay.portal.kernel.executor.PortalExecutorManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -45,7 +47,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.ReflectionUtil;
 import com.liferay.portal.model.impl.PortletImpl;
 import com.liferay.portal.repository.liferayrepository.LiferayRepository;
 import com.liferay.portal.tools.DBUpgrader;
@@ -65,11 +66,12 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.osgi.framework.Constants;
+import java.util.function.Function;
 
 /**
  * @author Brian Wing Shun Chan
@@ -83,6 +85,10 @@ public class ServiceTestUtil {
 
 	public static final int THREAD_COUNT = 10;
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void initMainServletServices() {
 
 		// Upgrade
@@ -156,6 +162,10 @@ public class ServiceTestUtil {
 		}
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void initServices() {
 
 		// Thread locals
@@ -172,6 +182,10 @@ public class ServiceTestUtil {
 		}
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void initStaticServices() {
 
 		// Indexers
@@ -219,7 +233,7 @@ public class ServiceTestUtil {
 
 		HashMap<String, Object> messageBusProperties = new HashMap<>();
 
-		messageBusProperties.put(Constants.SERVICE_RANKING, Integer.MAX_VALUE);
+		messageBusProperties.put("service.ranking", Integer.MAX_VALUE);
 
 		registry.registerService(
 			MessageBus.class, _messageBusWrapper, messageBusProperties);
@@ -232,18 +246,11 @@ public class ServiceTestUtil {
 			new HashMap<>();
 
 		portalExecutorManagerProperties.put(
-			Constants.SERVICE_RANKING, Integer.MAX_VALUE);
+			"service.ranking", Integer.MAX_VALUE);
 
 		registry.registerService(
 			PortalExecutorManager.class, _portalExecutorManagerWrapper,
 			portalExecutorManagerProperties);
-
-		if (PortalExecutorManagerUtil.getPortalExecutorManager() !=
-				_portalExecutorManagerWrapper) {
-
-			throw new IllegalStateException(
-				"PortalExecutorManager should be set");
-		}
 
 		// Class names
 
@@ -277,10 +284,18 @@ public class ServiceTestUtil {
 		}
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public static Date newDate() throws Exception {
 		return new Date();
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public static Date newDate(int month, int day, int year) throws Exception {
 		Calendar calendar = new GregorianCalendar();
 
@@ -325,8 +340,9 @@ public class ServiceTestUtil {
 		Registry registry = RegistryUtil.getRegistry();
 
 		return registry.getFilter(
-			"(&(destination.name=" + destinationName + ")(objectClass=" +
-				Destination.class.getName() + "))");
+			StringBundler.concat(
+				"(&(destination.name=", destinationName, ")(objectClass=",
+				Destination.class.getName(), "))"));
 	}
 
 	private static void _replaceWithSynchronousDestination(String name) {
@@ -340,18 +356,18 @@ public class ServiceTestUtil {
 
 		messageBus.replace(baseDestination, false);
 
-		ThreadPoolExecutor threadPoolExecutor =
+		ExecutorService executorService =
 			PortalExecutorManagerUtil.getPortalExecutor(
-				oldDestination.getName(), false);
+				oldDestination.getName());
 
-		if (threadPoolExecutor == null) {
+		if (executorService == null) {
 			return;
 		}
 
-		threadPoolExecutor.shutdown();
+		executorService.shutdown();
 
 		try {
-			if (!threadPoolExecutor.awaitTermination(
+			if (!executorService.awaitTermination(
 					TestPropsValues.CI_TEST_TIMEOUT_TIME,
 					TimeUnit.MILLISECONDS)) {
 
@@ -383,14 +399,13 @@ public class ServiceTestUtil {
 		(MessageBus)ProxyUtil.newProxyInstance(
 			MessageBus.class.getClassLoader(),
 			new Class<?>[] {MessageBus.class},
-
 			new InvocationHandler() {
 
 				@Override
 				public Object invoke(Object proxy, Method method, Object[] args)
 					throws Throwable {
 
-					if ("shutdown".equals(method.getName()) &&
+					if (Objects.equals(method.getName(), "shutdown") &&
 						(args.length == 1)) {
 
 						args[0] = Boolean.FALSE;
@@ -408,51 +423,59 @@ public class ServiceTestUtil {
 		(PortalExecutorManager)ProxyUtil.newProxyInstance(
 			PortalExecutorManager.class.getClassLoader(),
 			new Class<?>[] {PortalExecutorManager.class},
-			new InvocationHandler() {
+			new PortalExecutorManagerInvocationHandler());
 
-				@Override
-				public Object invoke(Object proxy, Method method, Object[] args)
-					throws Throwable {
+	private static class PortalExecutorManagerInvocationHandler
+		implements InvocationHandler {
 
-					if (!"shutdown".equals(method.getName()) ||
-						(args.length != 1)) {
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args)
+			throws Throwable {
 
-						return method.invoke(_portalExecutorManager, args);
+			if (!Objects.equals(method.getName(), "shutdown") ||
+				(args.length != 1)) {
+
+				return method.invoke(_portalExecutorManager, args);
+			}
+
+			Map<String, ThreadPoolExecutor> threadPoolExecutors =
+				ReflectionTestUtil.getFieldValue(
+					_portalExecutorManager, "_executorServices");
+
+			for (Map.Entry<String, ThreadPoolExecutor> entry :
+					threadPoolExecutors.entrySet()) {
+
+				ThreadPoolExecutor threadPoolExecutor = entry.getValue();
+
+				threadPoolExecutor.shutdown();
+
+				try {
+					if (!threadPoolExecutor.awaitTermination(
+							TestPropsValues.CI_TEST_TIMEOUT_TIME,
+							TimeUnit.MILLISECONDS)) {
+
+						throw new TimeoutException(
+							"Thread pool executor " + entry.getKey() +
+								" termination waiting timeout");
 					}
-
-					Map<String, ThreadPoolExecutor> threadPoolExecutors =
-						ReflectionTestUtil.getFieldValue(
-							_portalExecutorManager, "_threadPoolExecutors");
-
-					for (Map.Entry<String, ThreadPoolExecutor> entry :
-							threadPoolExecutors.entrySet()) {
-
-						ThreadPoolExecutor threadPoolExecutor =
-							entry.getValue();
-
-						threadPoolExecutor.shutdown();
-
-						try {
-							if (!threadPoolExecutor.awaitTermination(
-									TestPropsValues.CI_TEST_TIMEOUT_TIME,
-									TimeUnit.MILLISECONDS)) {
-
-								throw new TimeoutException(
-									"Thread pool executor " + entry.getKey() +
-										" termination waiting timeout");
-							}
-						}
-						catch (InterruptedException ie) {
-							ReflectionUtil.throwException(ie);
-						}
-					}
-
-					return null;
 				}
+				catch (InterruptedException ie) {
+					ReflectionUtil.throwException(ie);
+				}
+			}
 
-				private final PortalExecutorManager _portalExecutorManager =
-					PortalExecutorManagerUtil.getPortalExecutorManager();
+			return null;
+		}
 
-			});
+		private PortalExecutorManagerInvocationHandler() {
+			Registry registry = RegistryUtil.getRegistry();
+
+			_portalExecutorManager = registry.callService(
+				PortalExecutorManager.class, Function.identity());
+		}
+
+		private final PortalExecutorManager _portalExecutorManager;
+
+	}
 
 }

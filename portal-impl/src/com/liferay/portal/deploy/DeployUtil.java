@@ -14,16 +14,15 @@
 
 package com.liferay.portal.deploy;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StreamUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -45,7 +44,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -108,8 +106,7 @@ public class DeployUtil {
 	}
 
 	public static String getAutoDeployDestDir() throws Exception {
-		String destDir = PrefsPropsUtil.getString(
-			PropsKeys.AUTO_DEPLOY_DEST_DIR, PropsValues.AUTO_DEPLOY_DEST_DIR);
+		String destDir = PropsValues.AUTO_DEPLOY_DEST_DIR;
 
 		if (Validator.isNull(destDir)) {
 			destDir = getAutoDeployServerDestDir();
@@ -126,9 +123,7 @@ public class DeployUtil {
 		String serverId = GetterUtil.getString(ServerDetector.getServerId());
 
 		if (serverId.equals(ServerDetector.TOMCAT_ID)) {
-			destDir = PrefsPropsUtil.getString(
-				PropsKeys.AUTO_DEPLOY_TOMCAT_DEST_DIR,
-				PropsValues.AUTO_DEPLOY_TOMCAT_DEST_DIR);
+			destDir = PropsValues.AUTO_DEPLOY_TOMCAT_DEST_DIR;
 		}
 		else {
 			destDir = PrefsPropsUtil.getString(
@@ -136,9 +131,7 @@ public class DeployUtil {
 		}
 
 		if (Validator.isNull(destDir)) {
-			destDir = PrefsPropsUtil.getString(
-				PropsKeys.AUTO_DEPLOY_DEFAULT_DEST_DIR,
-				PropsValues.AUTO_DEPLOY_DEFAULT_DEST_DIR);
+			destDir = PropsValues.AUTO_DEPLOY_DEFAULT_DEST_DIR;
 		}
 
 		destDir = StringUtil.replace(
@@ -154,36 +147,12 @@ public class DeployUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getResourcePath(Set,
-	 *             String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #getResourcePath(Set, String)}
 	 */
 	@Deprecated
 	public static String getResourcePath(String resource) throws Exception {
 		return _instance._getResourcePath(new HashSet<>(), resource);
-	}
-
-	public static void redeployJetty(String context) throws Exception {
-		String contextsDirName = _getJettyHome() + "/contexts";
-
-		if (_isPortalContext(context)) {
-			throw new UnsupportedOperationException(
-				"This method is meant for redeploying plugins, not the portal");
-		}
-
-		File contextXml = new File(contextsDirName, context + ".xml");
-
-		if (contextXml.exists()) {
-			FileUtils.touch(contextXml);
-		}
-		else {
-			Map<String, String> filterMap = new HashMap<>();
-
-			filterMap.put("context", context);
-
-			copyDependencyXml(
-				"jetty-context-configure.xml", contextXml.getParent(),
-				contextXml.getName(), filterMap, true);
-		}
 	}
 
 	public static void redeployTomcat(String context) throws Exception {
@@ -208,9 +177,7 @@ public class DeployUtil {
 			return;
 		}
 
-		if (!appServerType.equals(ServerDetector.GLASSFISH_ID) &&
-			!appServerType.equals(ServerDetector.JBOSS_ID) &&
-			!appServerType.equals(ServerDetector.JETTY_ID) &&
+		if (!appServerType.equals(ServerDetector.JBOSS_ID) &&
 			!appServerType.equals(ServerDetector.TOMCAT_ID) &&
 			!appServerType.equals(ServerDetector.WEBLOGIC_ID) &&
 			!appServerType.equals(ServerDetector.WILDFLY_ID)) {
@@ -255,11 +222,6 @@ public class DeployUtil {
 			DeleteTask.deleteDirectory(deployDir);
 		}
 
-		if (appServerType.equals(ServerDetector.JETTY_ID)) {
-			FileUtil.delete(
-				_getJettyHome() + "/contexts/" + deployDir.getName() + ".xml");
-		}
-
 		if (appServerType.equals(ServerDetector.JBOSS_ID) ||
 			appServerType.equals(ServerDetector.WILDFLY_ID)) {
 
@@ -281,16 +243,6 @@ public class DeployUtil {
 		if (undeployInterval > 0) {
 			Thread.sleep(undeployInterval);
 		}
-	}
-
-	private static String _getJettyHome() {
-		String jettyHome = System.getProperty("jetty.home");
-
-		if (jettyHome == null) {
-			jettyHome = PortalUtil.getGlobalLibDir() + "../../..";
-		}
-
-		return jettyHome;
 	}
 
 	private static boolean _isPortalContext(String context) {

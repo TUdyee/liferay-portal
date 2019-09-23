@@ -28,7 +28,6 @@ import com.liferay.registry.ServiceTrackerCustomizer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -60,14 +59,14 @@ public class LayoutTypeControllerTracker {
 	public static String[] getTypes() {
 		Set<String> types = _layoutTypeControllers.keySet();
 
-		return types.toArray(new String[types.size()]);
+		return types.toArray(new String[0]);
 	}
 
 	private static void _registerDefaults(Registry registry) {
-		Set<Entry<String, LayoutTypeController>> entries =
+		Set<Map.Entry<String, LayoutTypeController>> entries =
 			_defaultLayoutTypeControllers.entrySet();
 
-		for (Entry<String, LayoutTypeController> entry : entries) {
+		for (Map.Entry<String, LayoutTypeController> entry : entries) {
 			Map<String, Object> properties = new HashMap<>();
 
 			properties.put("layout.type", entry.getKey());

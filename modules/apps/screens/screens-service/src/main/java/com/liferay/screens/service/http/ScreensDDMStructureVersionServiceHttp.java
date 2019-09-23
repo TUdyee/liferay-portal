@@ -14,23 +14,21 @@
 
 package com.liferay.screens.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.service.http.TunnelUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
-
 import com.liferay.screens.service.ScreensDDMStructureVersionServiceUtil;
 
 /**
  * Provides the HTTP utility for the
- * {@link ScreensDDMStructureVersionServiceUtil} service utility. The
+ * <code>ScreensDDMStructureVersionServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -49,22 +47,23 @@ import com.liferay.screens.service.ScreensDDMStructureVersionServiceUtil;
  *
  * @author José Manuel Navarro
  * @see ScreensDDMStructureVersionServiceSoap
- * @see HttpPrincipal
- * @see ScreensDDMStructureVersionServiceUtil
  * @generated
  */
-@ProviderType
 public class ScreensDDMStructureVersionServiceHttp {
-	public static com.liferay.portal.kernel.json.JSONObject getDDMStructureVersion(
-		HttpPrincipal httpPrincipal, long structureId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(ScreensDDMStructureVersionServiceUtil.class,
-					"getDDMStructureVersion",
-					_getDDMStructureVersionParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					structureId);
+	public static com.liferay.portal.kernel.json.JSONObject
+			getDDMStructureVersion(
+				HttpPrincipal httpPrincipal, long structureId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				ScreensDDMStructureVersionServiceUtil.class,
+				"getDDMStructureVersion",
+				_getDDMStructureVersionParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, structureId);
 
 			Object returnObj = null;
 
@@ -72,11 +71,15 @@ public class ScreensDDMStructureVersionServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.portal.kernel.json.JSONObject)returnObj;
@@ -88,8 +91,10 @@ public class ScreensDDMStructureVersionServiceHttp {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ScreensDDMStructureVersionServiceHttp.class);
-	private static final Class<?>[] _getDDMStructureVersionParameterTypes0 = new Class[] {
-			long.class
-		};
+	private static Log _log = LogFactoryUtil.getLog(
+		ScreensDDMStructureVersionServiceHttp.class);
+
+	private static final Class<?>[] _getDDMStructureVersionParameterTypes0 =
+		new Class[] {long.class};
+
 }

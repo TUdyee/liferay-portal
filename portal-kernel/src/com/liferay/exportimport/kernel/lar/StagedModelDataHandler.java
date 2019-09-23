@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Daniel Kocsis
  * @author Zsolt Berentey
  */
@@ -143,7 +143,7 @@ public interface StagedModelDataHandler<T extends StagedModel> {
 		PortletDataContext portletDataContext, T stagedModel);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #importMissingReference(PortletDataContext, Element)}
 	 */
 	@Deprecated
@@ -152,7 +152,7 @@ public interface StagedModelDataHandler<T extends StagedModel> {
 		throws PortletDataException;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #importMissingReference(PortletDataContext, String, long,
 	 *             long)}
 	 */

@@ -60,7 +60,6 @@ public class SocialRequestLocalServiceImpl
 		throws PortalException {
 
 		User user = userPersistence.findByPrimaryKey(userId);
-		long classNameId = classNameLocalService.getClassNameId(className);
 		User receiverUser = userPersistence.findByPrimaryKey(receiverUserId);
 		long now = System.currentTimeMillis();
 
@@ -70,6 +69,8 @@ public class SocialRequestLocalServiceImpl
 
 			throw new RequestUserIdException();
 		}
+
+		long classNameId = classNameLocalService.getClassNameId(className);
 
 		SocialRequest request = socialRequestPersistence.fetchByU_C_C_T_R(
 			userId, classNameId, classPK, type, receiverUserId);
@@ -334,16 +335,15 @@ public class SocialRequestLocalServiceImpl
 	public boolean hasRequest(
 		long userId, String className, long classPK, int type, int status) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
+		int count = socialRequestPersistence.countByU_C_C_T_S(
+			userId, classNameLocalService.getClassNameId(className), classPK,
+			type, status);
 
-		if (socialRequestPersistence.countByU_C_C_T_S(
-				userId, classNameId, classPK, type, status) <= 0) {
-
+		if (count <= 0) {
 			return false;
 		}
-		else {
-			return true;
-		}
+
+		return true;
 	}
 
 	/**
@@ -366,17 +366,15 @@ public class SocialRequestLocalServiceImpl
 		long userId, String className, long classPK, int type,
 		long receiverUserId, int status) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		SocialRequest socialRequest = socialRequestPersistence.fetchByU_C_C_T_R(
-			userId, classNameId, classPK, type, receiverUserId);
+			userId, classNameLocalService.getClassNameId(className), classPK,
+			type, receiverUserId);
 
 		if ((socialRequest == null) || (socialRequest.getStatus() != status)) {
 			return false;
 		}
-		else {
-			return true;
-		}
+
+		return true;
 	}
 
 	/**

@@ -15,7 +15,6 @@
 package com.liferay.taglib.ui;
 
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
-import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.taglib.util.IncludeTag;
 
 import java.util.LinkedHashMap;
@@ -27,12 +26,20 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class UserGroupSearchContainerResultsTag<R> extends IncludeTag {
 
+	public DisplayTerms getSearchTerms() {
+		return _searchTerms;
+	}
+
+	public LinkedHashMap<String, Object> getUserGroupParams() {
+		return _userGroupParams;
+	}
+
 	public void setSearchTerms(DisplayTerms searchTerms) {
 		_searchTerms = searchTerms;
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setUseIndexer(boolean useIndexer) {
@@ -46,6 +53,8 @@ public class UserGroupSearchContainerResultsTag<R> extends IncludeTag {
 
 	@Override
 	protected void cleanUp() {
+		super.cleanUp();
+
 		_searchTerms = null;
 		_userGroupParams = null;
 	}
@@ -56,22 +65,19 @@ public class UserGroupSearchContainerResultsTag<R> extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		SearchContainerTag<R> searchContainerTag =
 			(SearchContainerTag<R>)findAncestorWithClass(
 				this, SearchContainerTag.class);
 
-		SearchContainer<R> searchContainer =
-			searchContainerTag.getSearchContainer();
-
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:user-group-search-container-results:searchContainer",
-			searchContainer);
+			searchContainerTag.getSearchContainer());
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:user-group-search-container-results:searchTerms",
 			_searchTerms);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:user-group-search-container-results:userGroupParams",
 			_userGroupParams);
 	}

@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -122,18 +123,18 @@ public class PortletCategoryUtil {
 		for (PortletCategory curPortletCategory :
 				portletCategory.getCategories()) {
 
-			Set<String> portletIds = new HashSet<>();
-
 			if (curPortletCategory.isHidden()) {
 				continue;
 			}
+
+			Set<String> portletIds = new HashSet<>();
 
 			for (String portletId : curPortletCategory.getPortletIds()) {
 				Portlet portlet = PortletLocalServiceUtil.getPortletById(
 					companyId, portletId);
 
 				if (portlet != null) {
-					if (portlet.isSystem()) {
+					if (portlet.isSystem() || !portlet.isInclude()) {
 					}
 					else if (!portlet.isActive() ||
 							 portlet.isUndeployedPortlet()) {
@@ -171,9 +172,10 @@ public class PortletCategoryUtil {
 
 			curRelevantPortletCategory.setPortletIds(portletIds);
 
-			if (!curRelevantPortletCategory.getCategories().isEmpty() ||
-				!portletIds.isEmpty()) {
+			Collection<PortletCategory> categories =
+				curRelevantPortletCategory.getCategories();
 
+			if (!categories.isEmpty() || !portletIds.isEmpty()) {
 				relevantPortletCategory.addCategory(curRelevantPortletCategory);
 			}
 		}

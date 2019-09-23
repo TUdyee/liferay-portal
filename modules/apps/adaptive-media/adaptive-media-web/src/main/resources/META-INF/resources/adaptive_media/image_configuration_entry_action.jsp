@@ -49,7 +49,13 @@ if (optimizeImageSingleBackgroundTasks != null) {
 String entryUuid = String.valueOf(amImageConfigurationEntry.getUUID());
 %>
 
-<liferay-ui:icon-menu direction="left-side" icon="<%= StringPool.BLANK %>" markupView="lexicon" message="<%= StringPool.BLANK %>" showWhenSingleIcon="<%= true %>">
+<liferay-ui:icon-menu
+	direction="left-side"
+	icon="<%= StringPool.BLANK %>"
+	markupView="lexicon"
+	message="actions"
+	showWhenSingleIcon="<%= true %>"
+>
 	<liferay-portlet:renderURL var="editImageConfigurationEntryURL">
 		<portlet:param name="mvcRenderCommandName" value="/adaptive_media/edit_image_configuration_entry" />
 		<portlet:param name="redirect" value="<%= currentURL %>" />
@@ -139,14 +145,14 @@ String entryUuid = String.valueOf(amImageConfigurationEntry.getUUID());
 	</c:choose>
 </liferay-ui:icon-menu>
 
-<aui:script require="adaptive-media-web/adaptive_media/js/AdaptiveMediaOptionsHandler.es">
-	var component = Liferay.component(
-		'<portlet:namespace />OptionsHandler<%= entryUuid %>',
-		new adaptiveMediaWebAdaptive_mediaJsAdaptiveMediaOptionsHandlerEs.default(
-			{
-				namespace: '<portlet:namespace />',
-				uuid: '<%= entryUuid %>'
-			}
-		)
-	);
-</aui:script>
+<%
+Map<String, Object> context = new HashMap<>();
+
+context.put("uuid", entryUuid);
+%>
+
+<liferay-frontend:component
+	componentId='<%= liferayPortletResponse.getNamespace() + "OptionsHandler" + entryUuid %>'
+	context="<%= context %>"
+	module="adaptive_media/js/AdaptiveMediaOptionsHandler.es"
+/>

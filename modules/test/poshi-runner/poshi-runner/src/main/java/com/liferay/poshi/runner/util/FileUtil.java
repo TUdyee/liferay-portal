@@ -17,8 +17,10 @@ package com.liferay.poshi.runner.util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
@@ -28,7 +30,9 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
@@ -55,6 +59,27 @@ public class FileUtil {
 		copyDirectory(new File(sourceDirName), new File(destinationDirName));
 	}
 
+	public static File copyFileFromResource(
+			String resourceName, String targetFilePath)
+		throws IOException {
+
+		ClassLoader classLoader = FileUtil.class.getClassLoader();
+
+		try (InputStream inputStream = classLoader.getResourceAsStream(
+				resourceName)) {
+
+			File file = new File(targetFilePath);
+
+			file.mkdirs();
+
+			Files.copy(
+				inputStream, file.toPath(),
+				StandardCopyOption.REPLACE_EXISTING);
+
+			return file;
+		}
+	}
+
 	public static boolean exists(File file) {
 		return file.exists();
 	}
@@ -63,6 +88,35 @@ public class FileUtil {
 		File file = new File(fileName);
 
 		return exists(file);
+	}
+
+	public static String fixFilePath(String filePath) {
+		if (OSDetector.isWindows()) {
+			return StringUtil.replace(filePath, "/", "\\");
+		}
+
+		return filePath;
+	}
+
+	public static String getCanonicalPath(String filePath) {
+		try {
+			File file = new File(filePath);
+
+			return file.getCanonicalPath();
+		}
+		catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+
+		return filePath;
+	}
+
+	public static String getFileName(String filePath) {
+		Path path = Paths.get(filePath);
+
+		Path fileName = path.getFileName();
+
+		return fileName.toString();
 	}
 
 	public static List<URL> getIncludedResourceURLs(
@@ -128,8 +182,14 @@ public class FileUtil {
 		return File.separator;
 	}
 
+	public static URL getURL(File file) throws MalformedURLException {
+		URI uri = file.toURI();
+
+		return uri.toURL();
+	}
+
 	public static String read(File file) throws IOException {
-		return FileUtils.readFileToString(file);
+		return read(getURL(file));
 	}
 
 	public static String read(String fileName) throws IOException {
@@ -149,6 +209,10 @@ public class FileUtil {
 		while ((line = bufferedReader.readLine()) != null) {
 			sb.append(line);
 			sb.append("\n");
+		}
+
+		if (sb.length() != 0) {
+			sb.setLength(sb.length() - 1);
 		}
 
 		return sb.toString();

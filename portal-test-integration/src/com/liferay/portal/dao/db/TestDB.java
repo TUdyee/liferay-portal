@@ -14,8 +14,8 @@
 
 package com.liferay.portal.dao.db;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBType;
-import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.IOException;
 
@@ -44,6 +44,11 @@ public class TestDB extends BaseDB {
 	@Override
 	protected String getServerName() {
 		return StringPool.BLANK;
+	}
+
+	@Override
+	protected int[] getSQLTypes() {
+		return new int[10];
 	}
 
 	@Override

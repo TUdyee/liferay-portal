@@ -14,16 +14,19 @@
 
 package com.liferay.portal.tools.deploy;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Plugin;
-import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.tools.ToolDependencies;
+
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author     Brian Wing Shun Chan
- * @deprecated As of 6.2.0
+ * @deprecated As of Judson (7.1.x)
  */
 @Deprecated
 public class ExtDeployer extends BaseDeployer {
@@ -43,7 +46,13 @@ public class ExtDeployer extends BaseDeployer {
 			}
 		}
 
-		StreamUtil.cleanUp(new ExtDeployer(wars, jars));
+		try (ExtDeployer extDeployer = new ExtDeployer(wars, jars)) {
+		}
+		catch (IOException ioe) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(ioe, ioe);
+			}
+		}
 	}
 
 	public ExtDeployer() {
@@ -57,5 +66,7 @@ public class ExtDeployer extends BaseDeployer {
 	public String getPluginType() {
 		return Plugin.TYPE_EXT;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(ExtDeployer.class);
 
 }

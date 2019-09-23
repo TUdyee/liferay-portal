@@ -1,0 +1,10 @@
+@import 'variables';
+
+.app-builder-root {
+	@import 'components';
+	@import 'pages';
+}
+
+body.open .app-builder-upper-toolbar {
+	width: calc(100% - #{$productMenuWidth});
+}

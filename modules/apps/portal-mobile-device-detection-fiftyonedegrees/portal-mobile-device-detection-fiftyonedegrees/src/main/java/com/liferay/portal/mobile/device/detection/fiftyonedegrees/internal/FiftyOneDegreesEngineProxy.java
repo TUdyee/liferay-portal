@@ -41,7 +41,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Brian Greenwald
@@ -49,7 +48,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(
 	configurationPid = "com.liferay.portal.mobile.device.detection.fiftyonedegrees.configuration.FiftyOneDegreesConfiguration",
-	immediate = true, service = FiftyOneDegreesEngineProxy.class
+	service = FiftyOneDegreesEngineProxy.class
 )
 public class FiftyOneDegreesEngineProxy {
 
@@ -57,8 +56,8 @@ public class FiftyOneDegreesEngineProxy {
 		return _provider.dataSet;
 	}
 
-	public Device getDevice(HttpServletRequest request) {
-		String userAgent = request.getHeader("User-Agent");
+	public Device getDevice(HttpServletRequest httpServletRequest) {
+		String userAgent = httpServletRequest.getHeader("User-Agent");
 
 		try {
 			Match match = _provider.match(userAgent);
@@ -111,7 +110,7 @@ public class FiftyOneDegreesEngineProxy {
 	private static final Log _log = LogFactoryUtil.getLog(
 		FiftyOneDegreesEngineProxy.class);
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
+	@Reference
 	private DataFileProvider _dataFileProvider;
 
 	private Dataset _dataset;

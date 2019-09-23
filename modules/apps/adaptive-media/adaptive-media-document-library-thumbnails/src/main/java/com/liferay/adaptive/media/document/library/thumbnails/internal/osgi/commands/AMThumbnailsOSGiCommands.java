@@ -22,6 +22,7 @@ import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.ImageBag;
 import com.liferay.portal.kernel.image.ImageToolUtil;
@@ -34,7 +35,6 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.awt.image.RenderedImage;
@@ -84,7 +84,7 @@ public class AMThumbnailsOSGiCommands {
 					// See LPS-70788
 
 					String actualFileName = StringUtil.replace(
-						fileName, "//", StringPool.SLASH);
+						fileName, StringPool.DOUBLE_SLASH, StringPool.SLASH);
 
 					for (ThumbnailConfiguration thumbnailConfiguration :
 							_getThumbnailConfigurations()) {
@@ -104,7 +104,7 @@ public class AMThumbnailsOSGiCommands {
 				total += companyTotal;
 			}
 			catch (Exception e) {
-				_log.error(e);
+				_log.error(e, e);
 			}
 		}
 
@@ -141,7 +141,7 @@ public class AMThumbnailsOSGiCommands {
 				}
 			}
 			catch (Exception e) {
-				_log.error(e);
+				_log.error(e, e);
 			}
 		}
 	}
@@ -187,7 +187,7 @@ public class AMThumbnailsOSGiCommands {
 				}
 			}
 			catch (PortalException pe) {
-				_log.error(pe);
+				_log.error(pe, pe);
 			}
 		}
 	}
@@ -214,9 +214,7 @@ public class AMThumbnailsOSGiCommands {
 		);
 	}
 
-	private FileVersion _getFileVersion(long fileVersionId)
-		throws PortalException {
-
+	private FileVersion _getFileVersion(long fileVersionId) {
 		try {
 			if (fileVersionId == 0) {
 				return null;
@@ -232,7 +230,7 @@ public class AMThumbnailsOSGiCommands {
 			return fileVersion;
 		}
 		catch (PortalException pe) {
-			_log.error(pe);
+			_log.error(pe, pe);
 
 			return null;
 		}
@@ -321,11 +319,11 @@ public class AMThumbnailsOSGiCommands {
 
 			_amImageEntryLocalService.addAMImageEntry(
 				amImageConfigurationEntry, fileVersion,
-				renderedImage.getWidth(), renderedImage.getHeight(),
+				renderedImage.getHeight(), renderedImage.getWidth(),
 				new UnsyncByteArrayInputStream(bytes), bytes.length);
 		}
 		catch (IOException | PortalException e) {
-			_log.error(e);
+			_log.error(e, e);
 		}
 	}
 

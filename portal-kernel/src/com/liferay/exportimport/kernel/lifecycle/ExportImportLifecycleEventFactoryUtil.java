@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.lifecycle;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 import java.io.Serializable;
@@ -23,11 +21,10 @@ import java.io.Serializable;
 /**
  * @author Daniel Kocsis
  */
-@ProviderType
 public class ExportImportLifecycleEventFactoryUtil {
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	public static ExportImportLifecycleEvent create(

@@ -27,24 +27,21 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.powermock.api.mockito.PowerMockito;
-
 /**
  * @author Sergio González
  */
-public class AMBlogsItemSelectorViewReturnTypeProviderTest
-	extends PowerMockito {
+public class AMBlogsItemSelectorViewReturnTypeProviderTest {
 
 	@Test
 	public void testAddAMImageURLItemSelectorReturnTypeWithEmptyList()
 		throws Exception {
 
-		List<ItemSelectorReturnType> supportedItemSelectorReturnTypes =
-			new ArrayList<>();
-
 		ItemSelectorViewReturnTypeProvider
 			amBlogsItemSelectorViewReturnTypeProvider =
 				new AMBlogsItemSelectorViewReturnTypeProvider();
+
+		List<ItemSelectorReturnType> supportedItemSelectorReturnTypes =
+			new ArrayList<>();
 
 		List<ItemSelectorReturnType> itemSelectorReturnTypes =
 			amBlogsItemSelectorViewReturnTypeProvider.
@@ -66,16 +63,16 @@ public class AMBlogsItemSelectorViewReturnTypeProviderTest
 	public void testAddAMImageURLItemSelectorReturnTypeWithNonemptyList()
 		throws Exception {
 
+		ItemSelectorViewReturnTypeProvider
+			amBlogsItemSelectorViewReturnTypeProvider =
+				new AMBlogsItemSelectorViewReturnTypeProvider();
+
 		List<ItemSelectorReturnType> supportedItemSelectorReturnTypes =
 			new ArrayList<>();
 
 		supportedItemSelectorReturnTypes.add(
 			new FileEntryItemSelectorReturnType());
 		supportedItemSelectorReturnTypes.add(new URLItemSelectorReturnType());
-
-		ItemSelectorViewReturnTypeProvider
-			amBlogsItemSelectorViewReturnTypeProvider =
-				new AMBlogsItemSelectorViewReturnTypeProvider();
 
 		List<ItemSelectorReturnType> itemSelectorReturnTypes =
 			amBlogsItemSelectorViewReturnTypeProvider.

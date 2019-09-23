@@ -16,6 +16,8 @@ package com.liferay.portal.repository.capabilities;
 
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -34,8 +36,6 @@ import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -49,7 +49,7 @@ import java.util.List;
 
 /**
  * @author     Iván Zaera
- * @deprecated As of 7.0.0, replaced by {@link
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.document.library.internal.capabilities.TemporaryFileEntriesCapabilityImpl}
  */
 @Deprecated
@@ -326,10 +326,13 @@ public class TemporaryFileEntriesCapabilityImpl
 			Folder mountFolder = _documentRepository.getFolder(
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
-			while ((folder.getFolderId() != mountFolder.getFolderId()) &&
-				   (_documentRepository.getFileEntriesCount(
-					   folder.getFolderId(),
-					   WorkflowConstants.STATUS_ANY) == 0)) {
+			while (folder.getFolderId() != mountFolder.getFolderId()) {
+				int count = _documentRepository.getFileEntriesCount(
+					folder.getFolderId(), WorkflowConstants.STATUS_ANY);
+
+				if (count != 0) {
+					break;
+				}
 
 				long folderId = folder.getFolderId();
 

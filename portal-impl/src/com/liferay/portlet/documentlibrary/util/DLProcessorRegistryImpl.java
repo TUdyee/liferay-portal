@@ -18,16 +18,15 @@ import com.liferay.document.library.kernel.util.DLProcessor;
 import com.liferay.document.library.kernel.util.DLProcessorRegistry;
 import com.liferay.document.library.kernel.util.DLProcessorThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.InstanceFactory;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.UnsafeConsumer;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsValues;
@@ -46,16 +45,15 @@ import java.util.List;
 
 /**
  * @author     Mika Koivisto
- * @deprecated As of 7.0.0, replaced by {@link
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.document.library.internal.util.
  *             DLProcessorRegistryImpl}
  */
 @Deprecated
-@DoPrivileged
 public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 
 	public void afterPropertiesSet() throws Exception {
-		ClassLoader classLoader = ClassLoaderUtil.getPortalClassLoader();
+		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
 
 		for (String dlProcessorClassName : _DL_FILE_ENTRY_PROCESSORS) {
 			DLProcessor dlProcessor = (DLProcessor)InstanceFactory.newInstance(

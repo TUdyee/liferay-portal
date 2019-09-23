@@ -14,12 +14,12 @@
 
 package com.liferay.taglib.aui;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.aui.base.BaseATag;
@@ -97,9 +97,7 @@ public class ATag extends BaseATag {
 		String iconCssClass = getIconCssClass();
 		String label = getLabel();
 		String lang = getLang();
-		Boolean localizeLabel = getLocalizeLabel();
 		String onClick = getOnClick();
-		String target = getTarget();
 		String title = getTitle();
 
 		if (Validator.isNotNull(href)) {
@@ -108,6 +106,8 @@ public class ATag extends BaseATag {
 			jspWriter.write("href=\"");
 			jspWriter.write(HtmlUtil.escapeAttribute(href));
 			jspWriter.write("\" ");
+
+			String target = getTarget();
 
 			if (Validator.isNotNull(target)) {
 				jspWriter.write("target=\"");
@@ -172,11 +172,11 @@ public class ATag extends BaseATag {
 		jspWriter.write(">");
 
 		if (Validator.isNotNull(label)) {
-			if (localizeLabel) {
-				ResourceBundle resourceBundle =
-					TagResourceBundleUtil.getResourceBundle(pageContext);
-
-				jspWriter.write(LanguageUtil.get(resourceBundle, label));
+			if (getLocalizeLabel()) {
+				jspWriter.write(
+					LanguageUtil.get(
+						TagResourceBundleUtil.getResourceBundle(pageContext),
+						label));
 			}
 			else {
 				jspWriter.write(label);
@@ -193,18 +193,21 @@ public class ATag extends BaseATag {
 	}
 
 	private String _getNamespace() {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+		PortletResponse portletResponse =
+			(PortletResponse)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		if (portletResponse == null) {
 			return StringPool.BLANK;
 		}
 
 		if (GetterUtil.getBoolean(
-				(String)request.getAttribute("aui:form:useNamespace"), true)) {
+				(String)httpServletRequest.getAttribute(
+					"aui:form:useNamespace"),
+				true)) {
 
 			return portletResponse.getNamespace();
 		}

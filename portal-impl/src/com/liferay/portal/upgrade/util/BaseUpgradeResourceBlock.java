@@ -14,13 +14,13 @@
 
 package com.liferay.portal.upgrade.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.lang.reflect.Field;
 
@@ -264,8 +264,8 @@ public abstract class BaseUpgradeResourceBlock extends UpgradeProcess {
 		sb.append("(ResourceBlock.resourceBlockId = ");
 		sb.append(tableName);
 		sb.append(".resourceBlockId) inner join ResourceBlockPermission on ");
-		sb.append("(ResourceBlockPermission.resourceBlockId = ResourceBlock");
-		sb.append(".resourceBlockId) where ResourceBlock.name = ?");
+		sb.append("(ResourceBlockPermission.resourceBlockId = ResourceBlock.");
+		sb.append("resourceBlockId) where ResourceBlock.name = ?");
 
 		try (PreparedStatement selectPS = connection.prepareStatement(
 				SQLTransformer.transform(sb.toString()))) {

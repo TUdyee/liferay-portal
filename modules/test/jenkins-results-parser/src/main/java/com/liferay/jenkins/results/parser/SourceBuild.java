@@ -40,6 +40,11 @@ public class SourceBuild extends BaseBuild {
 	}
 
 	@Override
+	public void addTimelineData(BaseBuild.TimelineData timelineData) {
+		timelineData.addTimelineData(this);
+	}
+
+	@Override
 	public void findDownstreamBuilds() {
 	}
 
@@ -63,11 +68,13 @@ public class SourceBuild extends BaseBuild {
 		return null;
 	}
 
+	// Skip JavaParser
+
 	private static final FailureMessageGenerator[] _FAILURE_MESSAGE_GENERATORS =
 		{
 			new RebaseFailureMessageGenerator(),
 			new SourceFormatFailureMessageGenerator(),
-
+			//
 			new GenericFailureMessageGenerator()
 		};
 

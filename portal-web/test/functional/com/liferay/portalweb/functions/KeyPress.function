@@ -1,45 +1,48 @@
-<definition default="keyPress">
-	<command name="keyDown">
-		<execute function="WaitForSPARefresh" />
+@default = "keyPress"
+definition {
 
-		<execute selenium="mouseOver" />
+	function keyDown {
+		WaitForSPARefresh();
 
-		<execute selenium="keyDown" />
+		selenium.mouseOver();
 
-		<execute selenium="assertJavaScriptErrors" />
+		selenium.keyDown();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
+		selenium.assertJavaScriptErrors();
 
-	<command name="keyPress">
-		<execute function="WaitForSPARefresh" />
+		selenium.assertLiferayErrors();
+	}
 
-		<execute selenium="mouseOver" />
+	function keyPress {
+		WaitForSPARefresh();
 
-		<execute selenium="keyPress" />
+		selenium.mouseOver();
 
-		<execute selenium="assertJavaScriptErrors" />
+		selenium.keyPress();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
+		selenium.assertJavaScriptErrors();
 
-	<command name="keyPressNoError">
-		<execute function="WaitForSPARefresh" />
+		selenium.assertLiferayErrors();
+	}
 
-		<execute selenium="mouseOver" />
+	function keyPressNoError {
+		WaitForSPARefresh();
 
-		<execute selenium="keyPress" />
-	</command>
+		selenium.mouseOver();
 
-	<command name="keyUp">
-		<execute function="WaitForSPARefresh" />
+		selenium.keyPress();
+	}
 
-		<execute selenium="mouseOver" />
+	function keyUp {
+		WaitForSPARefresh();
 
-		<execute selenium="keyUp" />
+		selenium.mouseOver();
 
-		<execute selenium="assertJavaScriptErrors" />
+		selenium.keyUp();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
-</definition>
+		selenium.assertJavaScriptErrors();
+
+		selenium.assertLiferayErrors();
+	}
+
+}

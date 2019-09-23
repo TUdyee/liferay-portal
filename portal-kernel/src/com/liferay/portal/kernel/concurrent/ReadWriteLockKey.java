@@ -22,9 +22,9 @@ import java.util.Objects;
  * immutable and properly implement the equals and hashCode methods.
  * </p>
  *
- * @author Shuyang Zhou
- * @see    ReadWriteLockRegistry
- * @deprecated As of 7.0.0, with no direct replacement
+ * @author     Shuyang Zhou
+ * @see        ReadWriteLockRegistry
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
 @Deprecated
 public class ReadWriteLockKey<T> {

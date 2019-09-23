@@ -20,45 +20,16 @@ import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import java.io.Serializable;
 
 /**
- * @author Brian Wing Shun Chan
- * @author Michael Young
+ * @author     Brian Wing Shun Chan
+ * @author     Michael Young
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
+@Deprecated
 @OSGiBeanProperties(service = SingleVMPoolUtil.class)
 public class SingleVMPoolUtil {
 
 	public static void clear() {
 		_singleVMPool.clear();
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getPortalCache(String)}
-	 */
-	@Deprecated
-	public static <K extends Serializable, V> PortalCache<K, V> getCache(
-		String portalCacheName) {
-
-		return getPortalCache(portalCacheName);
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getPortalCache(String,
-	 *             boolean)}
-	 */
-	@Deprecated
-	public static <K extends Serializable, V> PortalCache<K, V> getCache(
-		String portalCacheName, boolean blocking) {
-
-		return getPortalCache(portalCacheName, blocking);
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getPortalCacheManager()}
-	 */
-	@Deprecated
-	public static <K extends Serializable, V> PortalCacheManager<K, V>
-		getCacheManager() {
-
-		return getPortalCacheManager();
 	}
 
 	public static <K extends Serializable, V> PortalCache<K, V> getPortalCache(
@@ -78,14 +49,6 @@ public class SingleVMPoolUtil {
 		getPortalCacheManager() {
 
 		return (PortalCacheManager<K, V>)_singleVMPool.getPortalCacheManager();
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #removePortalCache(String)}
-	 */
-	@Deprecated
-	public static void removeCache(String portalCacheName) {
-		removePortalCache(portalCacheName);
 	}
 
 	public static void removePortalCache(String portalCacheName) {

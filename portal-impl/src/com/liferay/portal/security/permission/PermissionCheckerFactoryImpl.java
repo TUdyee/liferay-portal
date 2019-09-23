@@ -15,19 +15,20 @@
 package com.liferay.portal.security.permission;
 
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.contributor.RoleContributor;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.registry.collections.ServiceTrackerCollections;
+import com.liferay.registry.collections.ServiceTrackerList;
 
 /**
  * @author Charles May
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
  */
-@DoPrivileged
-@OSGiBeanProperties(property = {"service.ranking:Integer=-1"})
+@OSGiBeanProperties(property = "service.ranking:Integer=-1")
 public class PermissionCheckerFactoryImpl implements PermissionCheckerFactory {
 
 	public PermissionCheckerFactoryImpl() throws Exception {
@@ -38,15 +39,26 @@ public class PermissionCheckerFactoryImpl implements PermissionCheckerFactory {
 		_permissionChecker = clazz.newInstance();
 	}
 
+	public void afterPropertiesSet() {
+		_roleContributors = ServiceTrackerCollections.openList(
+			RoleContributor.class);
+	}
+
 	@Override
-	public PermissionChecker create(User user) throws Exception {
+	public PermissionChecker create(User user) {
 		PermissionChecker permissionChecker = _permissionChecker.clone();
 
-		permissionChecker.init(user);
+		permissionChecker.init(
+			user, _roleContributors.toArray(new RoleContributor[0]));
 
 		return permissionChecker;
 	}
 
+	public void destroy() {
+		_roleContributors.close();
+	}
+
 	private final PermissionChecker _permissionChecker;
+	private ServiceTrackerList<RoleContributor> _roleContributors;
 
 }

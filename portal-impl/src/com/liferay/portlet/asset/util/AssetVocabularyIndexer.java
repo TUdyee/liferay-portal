@@ -16,7 +16,6 @@ package com.liferay.portlet.asset.util;
 
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalServiceUtil;
-import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -44,8 +43,8 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
 /**
- * @author     Istvan Andras Dezsi
- * @deprecated As of 7.0.0, moved to {@link
+ * @author     István András Dézsi
+ * @deprecated As of Judson (7.1.x), moved to {@link
  *             com.liferay.asset.categories.internal.search.AssetVocabularyIndexer}
  */
 @Deprecated
@@ -72,11 +71,10 @@ public class AssetVocabularyIndexer extends BaseIndexer<AssetVocabulary> {
 			long entryClassPK, String actionId)
 		throws Exception {
 
-		AssetVocabulary vocabulary =
-			AssetVocabularyLocalServiceUtil.getVocabulary(entryClassPK);
-
 		return AssetVocabularyPermission.contains(
-			permissionChecker, vocabulary, ActionKeys.VIEW);
+			permissionChecker,
+			AssetVocabularyLocalServiceUtil.getVocabulary(entryClassPK),
+			ActionKeys.VIEW);
 	}
 
 	@Override
@@ -124,6 +122,7 @@ public class AssetVocabularyIndexer extends BaseIndexer<AssetVocabulary> {
 			assetVocabulary.getDescriptionMap());
 
 		document.addText(Field.NAME, assetVocabulary.getName());
+
 		addLocalizedField(
 			document, Field.TITLE, siteDefaultLocale,
 			assetVocabulary.getTitleMap());
@@ -145,19 +144,14 @@ public class AssetVocabularyIndexer extends BaseIndexer<AssetVocabulary> {
 
 	@Override
 	protected void doReindex(AssetVocabulary assetVocabulary) throws Exception {
-		Document document = getDocument(assetVocabulary);
-
 		IndexWriterHelperUtil.updateDocument(
-			getSearchEngineId(), assetVocabulary.getCompanyId(), document,
-			isCommitImmediately());
+			getSearchEngineId(), assetVocabulary.getCompanyId(),
+			getDocument(assetVocabulary), isCommitImmediately());
 	}
 
 	@Override
 	protected void doReindex(String className, long classPK) throws Exception {
-		AssetVocabulary vocabulary =
-			AssetVocabularyLocalServiceUtil.getVocabulary(classPK);
-
-		doReindex(vocabulary);
+		doReindex(AssetVocabularyLocalServiceUtil.getVocabulary(classPK));
 	}
 
 	@Override
@@ -176,25 +170,19 @@ public class AssetVocabularyIndexer extends BaseIndexer<AssetVocabulary> {
 
 		indexableActionableDynamicQuery.setCompanyId(companyId);
 		indexableActionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<AssetVocabulary>() {
-
-				@Override
-				public void performAction(AssetVocabulary assetVocabulary) {
-					try {
-						Document document = getDocument(assetVocabulary);
-
-						indexableActionableDynamicQuery.addDocuments(document);
-					}
-					catch (PortalException pe) {
-						if (_log.isWarnEnabled()) {
-							_log.warn(
-								"Unable to index asset vocabulary " +
-									assetVocabulary.getVocabularyId(),
-								pe);
-						}
+			(AssetVocabulary assetVocabulary) -> {
+				try {
+					indexableActionableDynamicQuery.addDocuments(
+						getDocument(assetVocabulary));
+				}
+				catch (PortalException pe) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to index asset vocabulary " +
+								assetVocabulary.getVocabularyId(),
+							pe);
 					}
 				}
-
 			});
 		indexableActionableDynamicQuery.setSearchEngineId(getSearchEngineId());
 

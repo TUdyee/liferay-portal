@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.wedeploy.auth.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,37 +23,46 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see WeDeployAuthAppService
  * @generated
  */
-@ProviderType
-public class WeDeployAuthAppServiceWrapper implements WeDeployAuthAppService,
-	ServiceWrapper<WeDeployAuthAppService> {
+public class WeDeployAuthAppServiceWrapper
+	implements WeDeployAuthAppService, ServiceWrapper<WeDeployAuthAppService> {
+
 	public WeDeployAuthAppServiceWrapper(
 		WeDeployAuthAppService weDeployAuthAppService) {
+
 		_weDeployAuthAppService = weDeployAuthAppService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link WeDeployAuthAppServiceUtil} to access the we deploy auth app remote service. Add custom service methods to <code>com.liferay.portal.security.wedeploy.auth.service.impl.WeDeployAuthAppServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
-	public com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp addWeDeployAuthApp(
-		java.lang.String name, java.lang.String redirectURI,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp
+			addWeDeployAuthApp(
+				String name, String redirectURI,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _weDeployAuthAppService.addWeDeployAuthApp(name, redirectURI,
-			serviceContext);
+
+		return _weDeployAuthAppService.addWeDeployAuthApp(
+			name, redirectURI, serviceContext);
 	}
 
 	@Override
-	public com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp deleteWeDeployAuthApp(
-		long weDeployAuthAppId)
+	public com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp
+			deleteWeDeployAuthApp(long weDeployAuthAppId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _weDeployAuthAppService.deleteWeDeployAuthApp(weDeployAuthAppId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _weDeployAuthAppService.getOSGiServiceIdentifier();
 	}
 
@@ -65,9 +72,12 @@ public class WeDeployAuthAppServiceWrapper implements WeDeployAuthAppService,
 	}
 
 	@Override
-	public void setWrappedService(WeDeployAuthAppService weDeployAuthAppService) {
+	public void setWrappedService(
+		WeDeployAuthAppService weDeployAuthAppService) {
+
 		_weDeployAuthAppService = weDeployAuthAppService;
 	}
 
 	private WeDeployAuthAppService _weDeployAuthAppService;
+
 }

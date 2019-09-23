@@ -14,12 +14,19 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.dom4j.Node;
 
 /**
  * @author Kenji Heigel
  */
-public class IsSetPoshiElement extends BasePoshiElement {
+public class IsSetPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(Element element) {
@@ -32,24 +39,27 @@ public class IsSetPoshiElement extends BasePoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String readableSyntax) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
-		if (_isElementType(parentPoshiElement, readableSyntax)) {
-			return new IsSetPoshiElement(readableSyntax);
+		if (_isElementType(parentPoshiElement, poshiScript)) {
+			return new IsSetPoshiElement(parentPoshiElement, poshiScript);
 		}
 
 		return null;
 	}
 
 	@Override
-	public void parseReadableSyntax(String readableSyntax) {
-		String issetContent = getParentheticalContent(readableSyntax);
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
+		String issetContent = getParentheticalContent(poshiScript);
 
 		addAttribute("var", issetContent);
 	}
 
 	@Override
-	public String toReadableSyntax() {
+	public String toPoshiScript() {
 		return "isSet(" + attributeValue("var") + ")";
 	}
 
@@ -60,27 +70,38 @@ public class IsSetPoshiElement extends BasePoshiElement {
 		super(_ELEMENT_NAME, element);
 	}
 
-	protected IsSetPoshiElement(String readableSyntax) {
-		super(_ELEMENT_NAME, readableSyntax);
+	protected IsSetPoshiElement(List<Attribute> attributes, List<Node> nodes) {
+		super(_ELEMENT_NAME, attributes, nodes);
+	}
+
+	protected IsSetPoshiElement(
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
+
+		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
 
 	@Override
 	protected String getBlockName() {
-		return "isSet";
+		return _POSHI_SCRIPT_KEYWORD;
+	}
+
+	@Override
+	protected Pattern getConditionPattern() {
+		return _conditionPattern;
 	}
 
 	private boolean _isElementType(
-		PoshiElement parentPoshiElement, String readableSyntax) {
+		PoshiElement parentPoshiElement, String poshiScript) {
 
-		if ((parentPoshiElement instanceof IfPoshiElement) &&
-			readableSyntax.startsWith("isSet(")) {
-
-			return true;
-		}
-
-		return false;
+		return isConditionElementType(parentPoshiElement, poshiScript);
 	}
 
 	private static final String _ELEMENT_NAME = "isset";
+
+	private static final String _POSHI_SCRIPT_KEYWORD = "isSet";
+
+	private static final Pattern _conditionPattern = Pattern.compile(
+		"^" + _POSHI_SCRIPT_KEYWORD + "\\([\\w]*\\)$");
 
 }

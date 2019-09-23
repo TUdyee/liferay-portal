@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -25,11 +23,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.service.http.GroupServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portal.service.http.GroupServiceSoap
  * @generated
  */
-@ProviderType
 public class GroupSoap implements Serializable {
+
 	public static GroupSoap toSoapModel(Group model) {
 		GroupSoap soapModel = new GroupSoap();
 
@@ -48,13 +45,14 @@ public class GroupSoap implements Serializable {
 		soapModel.setDescription(model.getDescription());
 		soapModel.setType(model.getType());
 		soapModel.setTypeSettings(model.getTypeSettings());
-		soapModel.setManualMembership(model.getManualMembership());
+		soapModel.setManualMembership(model.isManualMembership());
 		soapModel.setMembershipRestriction(model.getMembershipRestriction());
 		soapModel.setFriendlyURL(model.getFriendlyURL());
-		soapModel.setSite(model.getSite());
-		soapModel.setRemoteStagingGroupCount(model.getRemoteStagingGroupCount());
-		soapModel.setInheritContent(model.getInheritContent());
-		soapModel.setActive(model.getActive());
+		soapModel.setSite(model.isSite());
+		soapModel.setRemoteStagingGroupCount(
+			model.getRemoteStagingGroupCount());
+		soapModel.setInheritContent(model.isInheritContent());
+		soapModel.setActive(model.isActive());
 
 		return soapModel;
 	}
@@ -321,4 +319,5 @@ public class GroupSoap implements Serializable {
 	private int _remoteStagingGroupCount;
 	private boolean _inheritContent;
 	private boolean _active;
+
 }

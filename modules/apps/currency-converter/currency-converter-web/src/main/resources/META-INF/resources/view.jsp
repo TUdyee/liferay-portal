@@ -33,12 +33,9 @@ CurrencyConverter currencyConverter = CurrencyConverterUtil.getCurrencyConverter
 
 double number = ParamUtil.getDouble(request, "number", 1.0);
 
-String chartId = ParamUtil.getString(request, "chartId", "3m");
+String chartId = ParamUtil.getString(request, "chartId", "90");
 
 NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
-
-decimalFormat.setMaximumFractionDigits(2);
-decimalFormat.setMinimumFractionDigits(2);
 %>
 
 <portlet:renderURL var="convertURL" windowState="<%= WindowState.MAXIMIZED.toString() %>" />
@@ -96,13 +93,15 @@ decimalFormat.setMinimumFractionDigits(2);
 								</th>
 
 								<%
+								decimalFormat.setMaximumFractionDigits(4);
+
 								for (int i = 0; i < symbols.length; i++) {
 									String symbol = symbols[i];
 								%>
 
 									<th>
-										<liferay-ui:message key='<%= "currency." + symbol %>' /><br />
-										(<%= symbol %>)
+										<liferay-ui:message key='<%= "currency." + HtmlUtil.escape(symbol) %>' /><br />
+										(<%= HtmlUtil.escape(symbol) %>)
 									</th>
 
 								<%
@@ -121,7 +120,7 @@ decimalFormat.setMinimumFractionDigits(2);
 
 								<tr>
 									<td>
-										<%= symbol %>
+										<%= HtmlUtil.escape(symbol) %>
 									</td>
 
 									<%
@@ -135,7 +134,7 @@ decimalFormat.setMinimumFractionDigits(2);
 
 											<td>
 												<c:if test="<%= i != j %>">
-													<%= currencyConverter.getRate() %>
+													<%= decimalFormat.format(currencyConverter.getRate()) %>
 												</c:if>
 
 												<c:if test="<%= i == j %>">
@@ -169,11 +168,17 @@ decimalFormat.setMinimumFractionDigits(2);
 				<tbody>
 					<tr>
 						<td class="col-md-4 currency-data">
-							<span class="currency-header"><%= currencyConverter.getFromSymbol() %></span>
+							<span class="currency-header"><%= HtmlUtil.escape(currencyConverter.getFromSymbol()) %></span>
 							<%= number %>
 						</td>
 						<td class="col-md-4 currency-data">
-							<span class="currency-header"><%= currencyConverter.getToSymbol() %></span>
+
+							<%
+							decimalFormat.setMaximumFractionDigits(2);
+							decimalFormat.setMinimumFractionDigits(2);
+							%>
+
+							<span class="currency-header"><%= HtmlUtil.escape(currencyConverter.getToSymbol()) %></span>
 							<%= decimalFormat.format(number * currencyConverter.getRate()) %>
 						</td>
 						<td class="col-md-4 currency-data">
@@ -188,13 +193,13 @@ decimalFormat.setMinimumFractionDigits(2);
 							%>
 
 							<c:choose>
-								<c:when test='<%= chartId.equals("3m") %>'>
+								<c:when test='<%= chartId.equals("90") %>'>
 									3<liferay-ui:message key="month-abbreviation" />,
 								</c:when>
 								<c:otherwise>
 
 									<%
-									portletURL.setParameter("chartId", "3m");
+									portletURL.setParameter("chartId", "90");
 									%>
 
 									<aui:a href="<%= portletURL.toString() %>">3<liferay-ui:message key="month-abbreviation" /></aui:a>,
@@ -202,13 +207,13 @@ decimalFormat.setMinimumFractionDigits(2);
 							</c:choose>
 
 							<c:choose>
-								<c:when test='<%= chartId.equals("1y") %>'>
+								<c:when test='<%= chartId.equals("365") %>'>
 									1<liferay-ui:message key="year-abbreviation" />,
 								</c:when>
 								<c:otherwise>
 
 									<%
-									portletURL.setParameter("chartId", "1y");
+									portletURL.setParameter("chartId", "365");
 									%>
 
 									<aui:a href="<%= portletURL.toString() %>">1<liferay-ui:message key="year-abbreviation" /></aui:a>,
@@ -216,13 +221,13 @@ decimalFormat.setMinimumFractionDigits(2);
 							</c:choose>
 
 							<c:choose>
-								<c:when test='<%= chartId.equals("2y") %>'>
+								<c:when test='<%= chartId.equals("730") %>'>
 									2<liferay-ui:message key="year-abbreviation" />
 								</c:when>
 								<c:otherwise>
 
 									<%
-									portletURL.setParameter("chartId", "2y");
+									portletURL.setParameter("chartId", "730");
 									%>
 
 									<aui:a href="<%= portletURL.toString() %>">2<liferay-ui:message key="year-abbreviation" /></aui:a>
@@ -234,7 +239,7 @@ decimalFormat.setMinimumFractionDigits(2);
 			</table>
 
 			<div class="conversion-graph">
-				<img class="currency-graph" height="288" src="http://ichart.yahoo.com/z?s=<%= currencyConverter.getSymbol() %>=X&t=<%= HtmlUtil.escape(chartId) %>?" width="512" />
+				<img class="currency-graph" height="420" src="http://www.indexmundi.com/xrates/image.aspx?c1=<%= HtmlUtil.escapeAttribute(HtmlUtil.escapeURL(from)) %>&c2=<%= HtmlUtil.escapeAttribute(HtmlUtil.escapeURL(to)) %>&days=<%= HtmlUtil.escape(chartId) %>" width="512" />
 			</div>
 		</c:otherwise>
 	</c:choose>

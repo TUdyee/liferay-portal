@@ -17,6 +17,7 @@ package com.liferay.gradle.plugins.test.integration.tasks;
 import com.liferay.gradle.plugins.test.integration.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.test.integration.internal.util.StringUtil;
 import com.liferay.gradle.util.FileUtil;
+import com.liferay.gradle.util.OSDetector;
 import com.liferay.gradle.util.Validator;
 import com.liferay.gradle.util.copy.ExcludeExistingFileAction;
 import com.liferay.gradle.util.copy.StripPathSegmentsAction;
@@ -63,8 +64,7 @@ import org.w3c.dom.NodeList;
  * @author Andrea Di Giorgi
  */
 public class SetUpTestableTomcatTask
-	extends DefaultTask
-	implements JmxRemotePortSpec, ManagerSpec, ModuleFrameworkBaseDirSpec {
+	extends DefaultTask implements ManagerSpec, ModuleFrameworkBaseDirSpec {
 
 	public SetUpTestableTomcatTask() {
 		_zipUrl = new Callable<String>() {
@@ -139,12 +139,6 @@ public class SetUpTestableTomcatTask
 
 	@Input
 	@Override
-	public int getJmxRemotePort() {
-		return GradleUtil.toInteger(_jmxRemotePort);
-	}
-
-	@Input
-	@Override
 	public String getManagerPassword() {
 		return GradleUtil.toString(_managerPassword);
 	}
@@ -169,16 +163,6 @@ public class SetUpTestableTomcatTask
 	@Input
 	public boolean isDebugLogging() {
 		return _debugLogging;
-	}
-
-	@Input
-	public boolean isJmxRemoteAuthenticate() {
-		return _jmxRemoteAuthenticate;
-	}
-
-	@Input
-	public boolean isJmxRemoteSsl() {
-		return _jmxRemoteSsl;
 	}
 
 	@Input
@@ -210,19 +194,6 @@ public class SetUpTestableTomcatTask
 		_jaCoCoAgentFile = jaCoCoAgentFile;
 	}
 
-	public void setJmxRemoteAuthenticate(boolean jmxRemoteAuthenticate) {
-		_jmxRemoteAuthenticate = jmxRemoteAuthenticate;
-	}
-
-	@Override
-	public void setJmxRemotePort(Object jmxRemotePort) {
-		_jmxRemotePort = jmxRemotePort;
-	}
-
-	public void setJmxRemoteSsl(boolean jmxRemoteSsl) {
-		_jmxRemoteSsl = jmxRemoteSsl;
-	}
-
 	@Override
 	public void setManagerPassword(Object managerPassword) {
 		_managerPassword = managerPassword;
@@ -244,6 +215,7 @@ public class SetUpTestableTomcatTask
 
 	@TaskAction
 	public void setUpTestableTomcat() throws Exception {
+		_setUpFilePermissions();
 		_setUpLogging();
 		_setUpManager();
 		_setUpOsgiModules();
@@ -277,20 +249,6 @@ public class SetUpTestableTomcatTask
 				StandardOpenOption.APPEND, StandardOpenOption.WRITE));
 	}
 
-	private String _getJmxOptions() {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("-Dcom.sun.management.jmxremote ");
-		sb.append("-Dcom.sun.management.jmxremote.authenticate=");
-		sb.append(isJmxRemoteAuthenticate());
-		sb.append(" -Dcom.sun.management.jmxremote.port=");
-		sb.append(getJmxRemotePort());
-		sb.append(" -Dcom.sun.management.jmxremote.ssl=");
-		sb.append(isJmxRemoteSsl());
-
-		return sb.toString();
-	}
-
 	private void _setUpAspectJ() throws IOException {
 		String aspectJAgent = getAspectJAgent();
 
@@ -314,6 +272,26 @@ public class SetUpTestableTomcatTask
 				}
 
 				printWriter.println("\"");
+			}
+		}
+	}
+
+	private void _setUpFilePermissions() {
+		if (OSDetector.isWindows()) {
+			return;
+		}
+
+		File binDir = getBinDir();
+
+		for (File file : binDir.listFiles()) {
+			if (!file.isFile()) {
+				continue;
+			}
+
+			String fileName = file.getName();
+
+			if (fileName.endsWith(".sh")) {
+				file.setExecutable(true);
 			}
 		}
 	}
@@ -349,44 +327,6 @@ public class SetUpTestableTomcatTask
 					"    CATALINA_OPTS=\"${CATALINA_OPTS} ${JACOCO_OPTS}\"");
 				printWriter.println("    shift");
 				printWriter.println("fi");
-			}
-		}
-	}
-
-	private void _setUpJmx() throws IOException {
-		String jmxOptions = _getJmxOptions();
-
-		if (!_contains("bin/setenv.bat", jmxOptions)) {
-			try (PrintWriter printWriter = _getAppendPrintWriter(
-					"bin/setenv.bat")) {
-
-				printWriter.println();
-
-				printWriter.print("set \"JMX_OPTS=");
-				printWriter.print(jmxOptions);
-				printWriter.println('\"');
-
-				printWriter.println();
-
-				printWriter.println(
-					"set \"CATALINA_OPTS=%CATALINA_OPTS% %JMX_OPTS%\"");
-			}
-		}
-
-		if (!_contains("bin/setenv.sh", jmxOptions)) {
-			try (PrintWriter printWriter = _getAppendPrintWriter(
-					"bin/setenv.sh")) {
-
-				printWriter.println();
-
-				printWriter.print("JMX_OPTS=\"");
-				printWriter.print(jmxOptions);
-				printWriter.println('\"');
-
-				printWriter.println();
-
-				printWriter.println(
-					"CATALINA_OPTS=\"${CATALINA_OPTS} ${JMX_OPTS}\"");
 			}
 		}
 	}
@@ -566,7 +506,6 @@ public class SetUpTestableTomcatTask
 		_setUpJaCoCo();
 
 		_setUpAspectJ();
-		_setUpJmx();
 		_setUpJpda();
 	}
 
@@ -581,9 +520,6 @@ public class SetUpTestableTomcatTask
 	private Object _dir;
 	private Object _jaCoCoAgentConfiguration;
 	private Object _jaCoCoAgentFile;
-	private boolean _jmxRemoteAuthenticate;
-	private Object _jmxRemotePort;
-	private boolean _jmxRemoteSsl;
 	private Object _managerPassword;
 	private Object _managerUserName;
 	private Object _moduleFrameworkBaseDir;

@@ -14,7 +14,10 @@
 
 package com.liferay.portal.osgi.web.wab.extender.internal.adapter;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.osgi.web.servlet.JSPServletFactory;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.FilterDefinition;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.ListenerDefinition;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.ServletDefinition;
@@ -34,19 +37,16 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.FilterRegistration;
-import javax.servlet.Registration.Dynamic;
+import javax.servlet.Registration;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
-
-import org.apache.felix.utils.log.Logger;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -58,25 +58,27 @@ public class ModifiableServletContextAdapter
 	implements InvocationHandler, ModifiableServletContext {
 
 	public static ServletContext createInstance(
-		ServletContext servletContext, BundleContext bundleContext,
-		WebXMLDefinition webXMLDefinition, Logger logger) {
+		BundleContext bundleContext, ServletContext servletContext,
+		JSPServletFactory jspServletFactory,
+		WebXMLDefinition webXMLDefinition) {
 
 		return (ServletContext)Proxy.newProxyInstance(
 			ModifiableServletContextAdapter.class.getClassLoader(), _INTERFACES,
 			new ModifiableServletContextAdapter(
-				servletContext, bundleContext, webXMLDefinition, logger));
+				servletContext, bundleContext, jspServletFactory,
+				webXMLDefinition));
 	}
 
 	public static ServletContext createInstance(
-		ServletContext servletContext, Map<String, Object> attributes,
+		BundleContext bundleContext, ServletContext servletContext,
+		JSPServletFactory jspServletFactory, WebXMLDefinition webXMLDefinition,
 		List<ListenerDefinition> listenerDefinitions,
 		Map<String, FilterRegistrationImpl> filterRegistrationImpls,
 		Map<String, ServletRegistrationImpl> servletRegistrationImpls,
-		BundleContext bundleContext, WebXMLDefinition webXMLDefinition,
-		Logger logger) {
+		Map<String, Object> attributes) {
 
 		ServletContext newServletContext = createInstance(
-			servletContext, bundleContext, webXMLDefinition, logger);
+			bundleContext, servletContext, jspServletFactory, webXMLDefinition);
 
 		Set<String> attributeNames = attributes.keySet();
 
@@ -101,12 +103,11 @@ public class ModifiableServletContextAdapter
 			Map<String, FilterRegistrationImpl> newFilterRegistrationImpls =
 				modifiableServletContext.getFilterRegistrationImpls();
 
-			for (String filterName : filterRegistrationImpls.keySet()) {
-				FilterRegistrationImpl filterRegistrationImpl =
-					filterRegistrationImpls.get(filterName);
+			for (Map.Entry<String, FilterRegistrationImpl> entry :
+					filterRegistrationImpls.entrySet()) {
 
 				newFilterRegistrationImpls.put(
-					filterName, filterRegistrationImpl);
+					entry.getKey(), entry.getValue());
 			}
 		}
 
@@ -114,12 +115,11 @@ public class ModifiableServletContextAdapter
 			Map<String, ServletRegistrationImpl> newServletRegistrationImpls =
 				modifiableServletContext.getServletRegistrationImpls();
 
-			for (String servletName : servletRegistrationImpls.keySet()) {
-				ServletRegistrationImpl servletRegistrationImpl =
-					servletRegistrationImpls.get(servletName);
+			for (Map.Entry<String, ServletRegistrationImpl> entry :
+					servletRegistrationImpls.entrySet()) {
 
 				newServletRegistrationImpls.put(
-					servletName, servletRegistrationImpl);
+					entry.getKey(), entry.getValue());
 			}
 		}
 
@@ -128,12 +128,13 @@ public class ModifiableServletContextAdapter
 
 	public ModifiableServletContextAdapter(
 		ServletContext servletContext, BundleContext bundleContext,
-		WebXMLDefinition webXMLDefinition, Logger logger) {
+		JSPServletFactory jspServletFactory,
+		WebXMLDefinition webXMLDefinition) {
 
 		_servletContext = servletContext;
 		_bundleContext = bundleContext;
+		_jspServletFactory = jspServletFactory;
 		_webXMLDefinition = webXMLDefinition;
-		_logger = logger;
 
 		_bundle = _bundleContext.getBundle();
 	}
@@ -202,8 +203,7 @@ public class ModifiableServletContextAdapter
 			_eventListeners.put(eventListenerClass, null);
 		}
 		catch (Exception e) {
-			_logger.log(
-				Logger.LOG_ERROR,
+			_log.error(
 				"Bundle " + _bundle + " is unable to load filter " + className);
 
 			throw new IllegalArgumentException(e);
@@ -214,13 +214,15 @@ public class ModifiableServletContextAdapter
 		_eventListeners.put(t.getClass(), t);
 	}
 
-	public Dynamic addServlet(
+	public Registration.Dynamic addServlet(
 		String servletName, Class<? extends Servlet> servletClass) {
 
 		return addServlet(servletName, servletClass.getName());
 	}
 
-	public Dynamic addServlet(String servletName, Servlet servlet) {
+	public Registration.Dynamic addServlet(
+		String servletName, Servlet servlet) {
+
 		ServletRegistrationImpl servletRegistrationImpl =
 			getServletRegistrationImpl(servletName);
 
@@ -240,7 +242,9 @@ public class ModifiableServletContextAdapter
 		return servletRegistrationImpl;
 	}
 
-	public Dynamic addServlet(String servletName, String className) {
+	public Registration.Dynamic addServlet(
+		String servletName, String className) {
+
 		ServletRegistrationImpl servletRegistrationImpl =
 			getServletRegistrationImpl(servletName);
 
@@ -263,9 +267,9 @@ public class ModifiableServletContextAdapter
 			return clazz.newInstance();
 		}
 		catch (Throwable t) {
-			_logger.log(
-				Logger.LOG_ERROR,
+			_log.error(
 				"Bundle " + _bundle + " is unable to load filter " + clazz);
+
 			throw new ServletException(t);
 		}
 	}
@@ -277,8 +281,7 @@ public class ModifiableServletContextAdapter
 			return clazz.newInstance();
 		}
 		catch (Throwable t) {
-			_logger.log(
-				Logger.LOG_ERROR,
+			_log.error(
 				"Bundle " + _bundle + " is unable to load listener " + clazz);
 
 			throw new ServletException(t);
@@ -292,8 +295,7 @@ public class ModifiableServletContextAdapter
 			return clazz.newInstance();
 		}
 		catch (Throwable t) {
-			_logger.log(
-				Logger.LOG_ERROR,
+			_log.error(
 				"Bundle " + _bundle + " is unable to load servlet " + clazz);
 
 			throw new ServletException(t);
@@ -316,7 +318,7 @@ public class ModifiableServletContextAdapter
 				modifiableServletContext.getWrappedServletContext();
 		}
 
-		return servletContext.equals(_servletContext);
+		return _servletContext.equals(servletContext);
 	}
 
 	@Override
@@ -364,7 +366,7 @@ public class ModifiableServletContextAdapter
 	public List<ListenerDefinition> getListenerDefinitions() {
 		List<ListenerDefinition> listenerDefinitions = new ArrayList<>();
 
-		for (Entry<Class<? extends EventListener>, EventListener> entry :
+		for (Map.Entry<Class<? extends EventListener>, EventListener> entry :
 				_eventListeners.entrySet()) {
 
 			Class<? extends EventListener> eventListenerClass = entry.getKey();
@@ -384,8 +386,7 @@ public class ModifiableServletContextAdapter
 				listenerDefinitions.add(listenerDefinition);
 			}
 			catch (Exception e) {
-				_logger.log(
-					Logger.LOG_ERROR,
+				_log.error(
 					"Bundle " + _bundle + " is unable to load listener " +
 						eventListenerClass);
 			}
@@ -502,8 +503,7 @@ public class ModifiableServletContextAdapter
 					filterRegistrationImpl.getName(), filterDefinition);
 			}
 			catch (Exception e) {
-				_logger.log(
-					Logger.LOG_ERROR,
+				_log.error(
 					"Bundle " + _bundle + " is unable to load filter " +
 						filterClassName);
 			}
@@ -529,13 +529,14 @@ public class ModifiableServletContextAdapter
 			String servletClassName = servletRegistrationImpl.getClassName();
 
 			try {
-				String jspFile = servletRegistrationImpl.getJspFile();
-
 				Servlet servlet = servletRegistrationImpl.getInstance();
 
 				if (servlet == null) {
+					String jspFile = servletRegistrationImpl.getJspFile();
+
 					if (Validator.isNotNull(jspFile)) {
-						servlet = new JspServletWrapper(jspFile);
+						servlet = new JspServletWrapper(
+							_jspServletFactory.createJSPServlet(), jspFile);
 					}
 					else {
 						Class<?> clazz = _bundle.loadClass(servletClassName);
@@ -566,8 +567,7 @@ public class ModifiableServletContextAdapter
 					servletRegistrationImpl.getName(), servletDefinition);
 			}
 			catch (Exception e) {
-				_logger.log(
-					Logger.LOG_ERROR,
+				_log.error(
 					"Bundle " + _bundle + " is unable to load servlet " +
 						servletClassName);
 			}
@@ -657,6 +657,9 @@ public class ModifiableServletContextAdapter
 		ModifiableServletContext.class, ServletContext.class
 	};
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ModifiableServletContextAdapter.class);
+
 	private static final Map<Method, Method> _contextAdapterMethods;
 
 	static {
@@ -670,7 +673,7 @@ public class ModifiableServletContextAdapter
 	private final Map<String, FilterRegistrationImpl> _filterRegistrationImpls =
 		new LinkedHashMap<>();
 	private final Map<String, String> _initParameters = new HashMap<>();
-	private final Logger _logger;
+	private final JSPServletFactory _jspServletFactory;
 	private final ServletContext _servletContext;
 	private final Map<String, ServletRegistrationImpl>
 		_servletRegistrationImpls = new LinkedHashMap<>();

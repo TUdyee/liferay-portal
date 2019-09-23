@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Provides a wrapper for {@link UserGroupRoleService}.
@@ -23,54 +22,66 @@ import aQute.bnd.annotation.ProviderType;
  * @see UserGroupRoleService
  * @generated
  */
-@ProviderType
-public class UserGroupRoleServiceWrapper implements UserGroupRoleService,
-	ServiceWrapper<UserGroupRoleService> {
+public class UserGroupRoleServiceWrapper
+	implements UserGroupRoleService, ServiceWrapper<UserGroupRoleService> {
+
 	public UserGroupRoleServiceWrapper(
 		UserGroupRoleService userGroupRoleService) {
+
 		_userGroupRoleService = userGroupRoleService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link UserGroupRoleServiceUtil} to access the user group role remote service. Add custom service methods to <code>com.liferay.portal.service.impl.UserGroupRoleServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
 	public void addUserGroupRoles(long userId, long groupId, long[] roleIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_userGroupRoleService.addUserGroupRoles(userId, groupId, roleIds);
 	}
 
 	@Override
 	public void addUserGroupRoles(long[] userIds, long groupId, long roleId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_userGroupRoleService.addUserGroupRoles(userIds, groupId, roleId);
 	}
 
 	@Override
 	public void deleteUserGroupRoles(long userId, long groupId, long[] roleIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_userGroupRoleService.deleteUserGroupRoles(userId, groupId, roleIds);
 	}
 
 	@Override
 	public void deleteUserGroupRoles(long[] userIds, long groupId, long roleId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_userGroupRoleService.deleteUserGroupRoles(userIds, groupId, roleId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public java.lang.String getOSGiServiceIdentifier() {
 		return _userGroupRoleService.getOSGiServiceIdentifier();
 	}
 
 	@Override
-	public void updateUserGroupRoles(long userId, long groupId,
-		long[] addedRoleIds, long[] deletedRoleIds)
+	public void updateUserGroupRoles(
+			long userId, long groupId, long[] addedRoleIds,
+			long[] deletedRoleIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_userGroupRoleService.updateUserGroupRoles(userId, groupId,
-			addedRoleIds, deletedRoleIds);
+
+		_userGroupRoleService.updateUserGroupRoles(
+			userId, groupId, addedRoleIds, deletedRoleIds);
 	}
 
 	@Override
@@ -84,4 +95,5 @@ public class UserGroupRoleServiceWrapper implements UserGroupRoleService,
 	}
 
 	private UserGroupRoleService _userGroupRoleService;
+
 }

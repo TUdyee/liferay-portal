@@ -18,20 +18,27 @@ import com.liferay.marketplace.exception.ModuleNamespaceException;
 import com.liferay.marketplace.model.App;
 import com.liferay.marketplace.model.Module;
 import com.liferay.marketplace.service.base.ModuleLocalServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+
 /**
  * @author Ryan Park
  * @author Joan Kim
  */
+@Component(
+	property = "module.class.name=com.liferay.marketplace.model.Module",
+	service = AopService.class
+)
 public class ModuleLocalServiceImpl extends ModuleLocalServiceBaseImpl {
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link #addModule(long, String,
-	 *             String, String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #addModule(long,
+	 *             String, String, String)}
 	 */
 	@Deprecated
 	@Override
@@ -56,7 +63,7 @@ public class ModuleLocalServiceImpl extends ModuleLocalServiceBaseImpl {
 			return module;
 		}
 
-		App app = appLocalService.getApp(appId);
+		App app = appPersistence.findByPrimaryKey(appId);
 
 		validate(bundleSymbolicName, contextName);
 

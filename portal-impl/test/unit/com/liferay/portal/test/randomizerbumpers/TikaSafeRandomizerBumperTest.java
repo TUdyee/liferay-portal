@@ -91,7 +91,7 @@ public class TikaSafeRandomizerBumperTest {
 			tikaSafeRandomizerBumper, _BROKEN_EXE_BYTES, false, Level.INFO);
 	}
 
-	@AdviseWith(adviceClasses = {ReflectionTestUtilAdvice.class})
+	@AdviseWith(adviceClasses = ReflectionTestUtilAdvice.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testExceptionInInitializerError()
@@ -144,14 +144,15 @@ public class TikaSafeRandomizerBumperTest {
 
 					LogRecord logRecord = logRecords.get(0);
 
+					String s = TikaSafeRandomizerBumper.byteArrayToString(
+						byteArray);
+
 					Assert.assertEquals(
-						"Accepted: " +
-							TikaSafeRandomizerBumper.byteArrayToString(
-								byteArray),
-						logRecord.getMessage());
+						"Accepted: " + s, logRecord.getMessage());
 				}
 				else {
-					Assert.assertTrue(logRecords.isEmpty());
+					Assert.assertTrue(
+						logRecords.toString(), logRecords.isEmpty());
 				}
 			}
 			else {
@@ -159,7 +160,7 @@ public class TikaSafeRandomizerBumperTest {
 
 				List<LogRecord> logRecords = captureHandler.getLogRecords();
 
-				Assert.assertTrue(logRecords.isEmpty());
+				Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 			}
 		}
 	}

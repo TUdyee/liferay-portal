@@ -15,16 +15,21 @@
 package com.liferay.portal.kernel.service.persistence.impl;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.orm.Dialect;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Query;
+import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
@@ -41,12 +46,10 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.NullSafeStringComparator;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.Serializable;
 
@@ -56,6 +59,8 @@ import java.sql.Types;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -79,6 +84,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	implements BasePersistence<T>, SessionFactory {
 
 	public static final String COUNT_COLUMN_NAME = "COUNT_VALUE";
+
+	public void cacheResult(T model) {
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public void clearCache() {
@@ -118,21 +127,186 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		if (results.isEmpty()) {
 			return 0;
 		}
-		else {
-			return (results.get(0)).longValue();
-		}
+
+		Long firstResult = results.get(0);
+
+		return firstResult.longValue();
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public T fetchByPrimaryKey(Serializable primaryKey) {
-		throw new UnsupportedOperationException();
+		EntityCache entityCache = getEntityCache();
+
+		Serializable serializable = entityCache.getResult(
+			entityCacheEnabled, _modelImplClass, primaryKey);
+
+		if (serializable == nullModel) {
+			return null;
+		}
+
+		T model = (T)serializable;
+
+		if (model == null) {
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				model = (T)session.get(_modelImplClass, primaryKey);
+
+				if (model == null) {
+					entityCache.putResult(
+						entityCacheEnabled, _modelImplClass, primaryKey,
+						nullModel);
+				}
+				else {
+					cacheResult(model);
+				}
+			}
+			catch (Exception e) {
+				entityCache.removeResult(
+					entityCacheEnabled, _modelImplClass, primaryKey);
+
+				throw processException(e);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return model;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Map<Serializable, T> fetchByPrimaryKeys(
 		Set<Serializable> primaryKeys) {
 
-		throw new UnsupportedOperationException();
+		if (primaryKeys.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		if (primaryKeys.size() == 1) {
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			Serializable primaryKey = iterator.next();
+
+			T model = fetchByPrimaryKey(primaryKey);
+
+			if (model == null) {
+				return Collections.emptyMap();
+			}
+
+			return Collections.singletonMap(primaryKey, model);
+		}
+
+		Map<Serializable, T> map = new HashMap<>();
+
+		if (_modelPKType == ModelPKType.COMPOUND) {
+			for (Serializable primaryKey : primaryKeys) {
+				T model = fetchByPrimaryKey(primaryKey);
+
+				if (model != null) {
+					map.put(primaryKey, model);
+				}
+			}
+
+			return map;
+		}
+
+		Set<Serializable> uncachedPrimaryKeys = null;
+
+		EntityCache entityCache = getEntityCache();
+
+		for (Serializable primaryKey : primaryKeys) {
+			Serializable serializable = entityCache.getResult(
+				entityCacheEnabled, _modelImplClass, primaryKey);
+
+			if (serializable != nullModel) {
+				if (serializable == null) {
+					if (uncachedPrimaryKeys == null) {
+						uncachedPrimaryKeys = new HashSet<>();
+					}
+
+					uncachedPrimaryKeys.add(primaryKey);
+				}
+				else {
+					map.put(primaryKey, (T)serializable);
+				}
+			}
+		}
+
+		if (uncachedPrimaryKeys == null) {
+			return map;
+		}
+
+		com.liferay.petra.string.StringBundler query =
+			new com.liferay.petra.string.StringBundler(
+				2 * uncachedPrimaryKeys.size() + 4);
+
+		query.append(getSelectSQL());
+		query.append(" WHERE ");
+		query.append(getPKDBName());
+		query.append(" IN (");
+
+		if (_modelPKType == ModelPKType.STRING) {
+			for (int i = 0; i < uncachedPrimaryKeys.size(); i++) {
+				query.append("?");
+
+				query.append(",");
+			}
+		}
+		else {
+			for (Serializable primaryKey : uncachedPrimaryKeys) {
+				query.append((long)primaryKey);
+
+				query.append(",");
+			}
+		}
+
+		query.setIndex(query.index() - 1);
+
+		query.append(")");
+
+		String sql = query.toString();
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Query q = session.createQuery(sql);
+
+			if (_modelPKType == ModelPKType.STRING) {
+				QueryPos qPos = QueryPos.getInstance(q);
+
+				for (Serializable primaryKey : uncachedPrimaryKeys) {
+					qPos.add(primaryKey);
+				}
+			}
+
+			for (T model : (List<T>)q.list()) {
+				map.put(model.getPrimaryKeyObj(), model);
+
+				cacheResult(model);
+
+				uncachedPrimaryKeys.remove(model.getPrimaryKeyObj());
+			}
+
+			for (Serializable primaryKey : uncachedPrimaryKeys) {
+				entityCache.putResult(
+					entityCacheEnabled, _modelImplClass, primaryKey, nullModel);
+			}
+		}
+		catch (Exception e) {
+			throw processException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return map;
 	}
 
 	@Override
@@ -213,6 +387,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		return Collections.emptySet();
 	}
 
+	public Set<String> getCompoundPKColumnNames() {
+		return Collections.emptySet();
+	}
+
 	@Override
 	public Session getCurrentSession() throws ORMException {
 		return _sessionFactory.getCurrentSession();
@@ -224,6 +402,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	}
 
 	public DB getDB() {
+		if (_db == null) {
+			_db = DBManagerUtil.getDB(_dialect, _dataSource);
+		}
+
 		return _db;
 	}
 
@@ -276,7 +458,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	@Override
 	public T remove(T model) {
-		if (model instanceof ModelWrapper) {
+		while (model instanceof ModelWrapper) {
 			ModelWrapper<T> modelWrapper = (ModelWrapper<T>)model;
 
 			model = modelWrapper.getWrappedModel();
@@ -297,6 +479,19 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		return model;
 	}
 
+	public void setConfiguration(Configuration configuration) {
+		String modelClassName = _modelClass.getName();
+
+		entityCacheEnabled = GetterUtil.getBoolean(
+			configuration.get(
+				"value.object.entity.cache.enabled.".concat(modelClassName)),
+			true);
+		finderCacheEnabled = GetterUtil.getBoolean(
+			configuration.get(
+				"value.object.finder.cache.enabled.".concat(modelClassName)),
+			true);
+	}
+
 	@Override
 	public void setDataSource(DataSource dataSource) {
 		_dataSource = dataSource;
@@ -307,13 +502,16 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 		_dialect = _sessionFactory.getDialect();
 
-		_db = DBManagerUtil.getDB(_dialect, getDataSource());
-
-		DBType dbType = _db.getDBType();
+		DBType dbType = DBManagerUtil.getDBType(_dialect);
 
 		_databaseOrderByMaxColumns = GetterUtil.getInteger(
 			PropsUtil.get(
 				PropsKeys.DATABASE_ORDER_BY_MAX_COLUMNS,
+				new Filter(dbType.getName())));
+
+		databaseInMaxParameters = GetterUtil.getInteger(
+			PropsUtil.get(
+				PropsKeys.DATABASE_IN_MAX_PARAMETERS,
 				new Filter(dbType.getName())));
 	}
 
@@ -324,7 +522,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	@Override
 	public T update(T model) {
-		if (model instanceof ModelWrapper) {
+		while (model instanceof ModelWrapper) {
 			ModelWrapper<T> modelWrapper = (ModelWrapper<T>)model;
 
 			model = modelWrapper.getWrappedModel();
@@ -362,9 +560,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		try {
 			ServiceContextThreadLocal.pushServiceContext(serviceContext);
 
-			update(model);
-
-			return model;
+			return update(model);
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -382,17 +578,17 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	}
 
 	protected void appendOrderByComparator(
-		StringBundler query, String entityAlias,
+		com.liferay.petra.string.StringBundler sb, String entityAlias,
 		OrderByComparator<T> orderByComparator) {
 
-		appendOrderByComparator(query, entityAlias, orderByComparator, false);
+		appendOrderByComparator(sb, entityAlias, orderByComparator, false);
 	}
 
 	protected void appendOrderByComparator(
-		StringBundler query, String entityAlias,
+		com.liferay.petra.string.StringBundler sb, String entityAlias,
 		OrderByComparator<T> orderByComparator, boolean sqlQuery) {
 
-		query.append(ORDER_BY_CLAUSE);
+		sb.append(ORDER_BY_CLAUSE);
 
 		String[] orderByFields = orderByComparator.getOrderByFields();
 
@@ -405,25 +601,64 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		}
 
 		for (int i = 0; i < length; i++) {
-			query.append(
-				getColumnName(entityAlias, orderByFields[i], sqlQuery));
+			sb.append(getColumnName(entityAlias, orderByFields[i], sqlQuery));
 
 			if ((i + 1) < length) {
 				if (orderByComparator.isAscending(orderByFields[i])) {
-					query.append(ORDER_BY_ASC_HAS_NEXT);
+					sb.append(ORDER_BY_ASC_HAS_NEXT);
 				}
 				else {
-					query.append(ORDER_BY_DESC_HAS_NEXT);
+					sb.append(ORDER_BY_DESC_HAS_NEXT);
 				}
 			}
 			else {
 				if (orderByComparator.isAscending(orderByFields[i])) {
-					query.append(ORDER_BY_ASC);
+					sb.append(ORDER_BY_ASC);
 				}
 				else {
-					query.append(ORDER_BY_DESC);
+					sb.append(ORDER_BY_DESC);
 				}
 			}
+		}
+	}
+
+	/**
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #appendOrderByComparator(
+	 *             com.liferay.petra.string.Stringbundler, String,
+	 *             OrderByComparator<T>)}
+	 */
+	@Deprecated
+	protected void appendOrderByComparator(
+		StringBundler sb, String entityAlias,
+		OrderByComparator<T> orderByComparator) {
+
+		appendOrderByComparator(sb, entityAlias, orderByComparator, false);
+	}
+
+	/**
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #appendOrderByComparator(
+	 *             com.liferay.petra.string.Stringbundler, String,
+	 *             OrderByComparator<T>, boolean)}
+	 */
+	@Deprecated
+	protected void appendOrderByComparator(
+		StringBundler sb, String entityAlias,
+		OrderByComparator<T> orderByComparator, boolean sqlQuery) {
+
+		com.liferay.petra.string.StringBundler petraSB =
+			new com.liferay.petra.string.StringBundler(sb.getStrings());
+
+		int index = sb.index();
+
+		petraSB.setIndex(index);
+
+		appendOrderByComparator(
+			petraSB, entityAlias, orderByComparator, sqlQuery);
+
+		for (int i = index; i < petraSB.index(); i++) {
+			sb.append(petraSB.stringAt(i));
 		}
 	}
 
@@ -436,10 +671,17 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	protected String getColumnName(
 		String entityAlias, String fieldName, boolean sqlQuery) {
 
-		String columnName = _getDBColumnName(fieldName);
+		String columnName = _dbColumnNames.getOrDefault(fieldName, fieldName);
 
 		if (sqlQuery) {
 			fieldName = columnName;
+		}
+		else {
+			Set<String> compoundPKColumnNames = getCompoundPKColumnNames();
+
+			if (compoundPKColumnNames.contains(fieldName)) {
+				fieldName = "id.".concat(fieldName);
+			}
 		}
 
 		fieldName = entityAlias.concat(fieldName);
@@ -454,11 +696,26 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		}
 
 		if (type == Types.CLOB) {
-			fieldName = CAST_CLOB_TEXT_OPEN.concat(fieldName).concat(
-				StringPool.CLOSE_PARENTHESIS);
+			fieldName = CAST_CLOB_TEXT_OPEN.concat(
+				fieldName
+			).concat(
+				StringPool.CLOSE_PARENTHESIS
+			);
 		}
 
 		return fieldName;
+	}
+
+	protected EntityCache getEntityCache() {
+		throw new UnsupportedOperationException();
+	}
+
+	protected String getPKDBName() {
+		throw new UnsupportedOperationException();
+	}
+
+	protected String getSelectSQL() {
+		throw new UnsupportedOperationException();
 	}
 
 	protected Map<String, Integer> getTableColumnsMap() {
@@ -477,8 +734,29 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		throw new UnsupportedOperationException();
 	}
 
+	protected void setDBColumnNames(Map<String, String> dbColumnNames) {
+		_dbColumnNames = dbColumnNames;
+	}
+
+	protected void setEntityCacheEnabled(boolean entityCacheEnabled) {
+		this.entityCacheEnabled = entityCacheEnabled;
+	}
+
 	protected void setModelClass(Class<T> modelClass) {
 		_modelClass = modelClass;
+	}
+
+	protected void setModelImplClass(Class<? extends T> modelImplClass) {
+		_modelImplClass = modelImplClass;
+	}
+
+	protected void setModelPKClass(Class<? extends Serializable> clazz) {
+		if (clazz.isPrimitive()) {
+			_modelPKType = ModelPKType.NUMBER;
+		}
+		else if (String.class.isAssignableFrom(clazz)) {
+			_modelPKType = ModelPKType.STRING;
+		}
 	}
 
 	/**
@@ -497,8 +775,12 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	protected static final Object[] FINDER_ARGS_EMPTY = new Object[0];
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	protected static final Comparator<String> NULL_SAFE_STRING_COMPARATOR =
-		new NullSafeStringComparator();
+		Comparator.nullsLast(Comparator.naturalOrder());
 
 	protected static final String ORDER_BY_ASC = " ASC";
 
@@ -524,26 +806,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	protected static final NullModel nullModel = new NullModel();
 
-	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
-	 */
-	@Deprecated
-	protected ModelListener<T>[] listeners = new ModelListener[0];
-
-	private String _getDBColumnName(String fieldName) {
-		if (_dbColumnNames == null) {
-			Map<String, String> dbColumnNames = new HashMap<>();
-
-			for (String badColumnName : getBadColumnNames()) {
-				dbColumnNames.put(
-					badColumnName, badColumnName.concat(StringPool.UNDERLINE));
-			}
-
-			_dbColumnNames = dbColumnNames;
-		}
-
-		return _dbColumnNames.getOrDefault(fieldName, fieldName);
-	}
+	protected int databaseInMaxParameters;
+	protected Map<String, String> dbColumnNames;
+	protected boolean entityCacheEnabled;
+	protected boolean finderCacheEnabled;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		BasePersistenceImpl.class);
@@ -551,9 +817,11 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	private int _databaseOrderByMaxColumns;
 	private DataSource _dataSource;
 	private DB _db;
-	private Map<String, String> _dbColumnNames;
+	private Map<String, String> _dbColumnNames = Collections.emptyMap();
 	private Dialect _dialect;
 	private Class<T> _modelClass;
+	private Class<? extends T> _modelImplClass;
+	private ModelPKType _modelPKType = ModelPKType.COMPOUND;
 	private SessionFactory _sessionFactory;
 
 	private static class NullModel
@@ -690,6 +958,12 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		public String toXmlString() {
 			throw new UnsupportedOperationException();
 		}
+
+	}
+
+	private enum ModelPKType {
+
+		COMPOUND, NUMBER, STRING
 
 	}
 

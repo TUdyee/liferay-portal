@@ -60,7 +60,7 @@ something like this to your `build.gradle`:
 
 ```gradle
 liferay {
-   deployDir = file("${liferayHome}/osgi/test")
+   deployDir = file("${liferayHome}/osgi/test")
 }
 ```
 
@@ -73,13 +73,23 @@ module with `ant all` and the other marker files choose the deploy directory.
 
 ## Marker Files
 
+### Baseline
+
+File Name | Description
+--------- | -----------
+`.lfrbuild-packageinfo` | Ignores specified baseline warnings: `EXCESSIVE-VERSION-INCREASE`, `PACKAGE-ADDED-MISSING-PACKAGEINFO`, `PACKAGE-REMOVED`, `PACKAGE-REMOVED-UNNECESSARY-PACKAGEINFO`, `VERSION-INCREASE-REQUIRED`, `VERSION-INCREASE-SUGGESTED`. Adding the suffix `-RECURSIVE` (i.e., `EXCESSIVE-VERSION-INCREASE-RECURSIVE`) will apply the ignored warning to the current directory and all child directories.
+
 ### Build
 
 File Name | Description
 --------- | -----------
-`.lfrbuild-portal-pre` | Builds the module, during the `ant compile` execution, in the `tmp/lib-pre` directory before building `portal-kernel`, `portal-impl`, etc.
+`.lfrbuild-deploy-wsdd` | Deploys the WSDD fragment JAR file when deploying the OSGi module.
+`.lfrbuild-lowest-major-version` | Declares the lowest major version of the released artifact to use in the semantic versioning check.
+`.lfrbuild-portal-deprecated` | Marks the module as deprecated and skip deployment during the `ant all` execution. `-test` modules never have this file.
+`.lfrbuild-portal-pre` | Builds the module during the `ant compile` execution in the `tmp/lib-pre` directory before building `portal-kernel`, `portal-impl`, etc.
 `.lfrbuild-portal-private` | Deploys the module during the `ant all` execution in a private branch. `-test` modules never have this file.
 `.lfrbuild-portal-public` | Deploys the module during the `ant all` execution in a public branch. `-test` modules never have this file.
+`.lfrbuild-portal-skip-deploy` | Skip deploying the module during the `ant all` execution.
 `.lfrbuild-portal` | Deploys the module during the `ant all` execution. `-test` modules never have this file.
 `.lfrbuild-slim-private` | Deploys the module during the `ant all` execution if building a Liferay Slim Runtime in a private branch.
 `.lfrbuild-slim-public` | Deploys the module during the `ant all` execution if building a Liferay Slim Runtime in a public branch.
@@ -90,6 +100,7 @@ File Name | Description
 File Name | Description
 --------- | -----------
 `.lfrbuild-ci` | Deploys the module during the `ant all` execution, but only if running in Jenkins.
+`.lfrbuild-ci-skip-test-integration-check` | When on Jenkins, prevent the `testIntegration` task from failing if a project defined in the `testIntegrationCompile` configuration should not be deployed and has this marker file.
 `.lfrbuild-semantic-versioning` | Enables the semantic versioning check of the module on CI. `apps` and `core` modules are already checked, so they don't need this marker file.
 
 ### Deploy Directory
@@ -118,8 +129,10 @@ File Name | Description
 
 File Name | Description
 --------- | -----------
+`.lfrbuild-master-only` | Marks a module that should not be forked and deleted for release branches. If a `.lfrbuild-master-only` file is added to a parent directory, the whole subtree should not be forked.
 `.lfrbuild-release-src` | Includes the app's source code in the DXP release, when added to the root of an app.
-`.lfrbuild-releng-ignore` | Ignores checking the module for staleness, so the module is never publishable. A *stale* module has code that is different from the latest published release.
+`.lfrbuild-releng-ignore` | Ignores checking the module for stale artifacts. An artifact is *stale* when the module has code that is different from the latest published release. This module can never be published. If a `.lfrbuild-releng-ignore` file is added to a parent directory, the whole subtree is ignored.
+`.lfrbuild-releng-skip-update-file-versions` | Prevents the `updateFileVersions` task from converting project dependencies into module dependencies. If a `.lfrbuild-releng-skip-update-file-versions` file is added to a parent directory, the whole subtree is skipped.
 
 ### Themes
 
@@ -145,17 +158,17 @@ closure arguments.
 	* Always sort dependencies alphabetically.
 	* Separate dependencies of different configurations with an empty line.
 * Ordering inside Gradle files:
-	1. Class imports, sorted and separated in groups (same logic used in
-	Java).
-	2. `apply plugin` logic, sorted alphabetically.
-	3. `ext { ... }` block.
-	4. Task creation: `task taskName(type: TaskType)` or simply `task taskName`
+	1. Class imports, sorted and separated in groups (same logic used in Java).
+	2. `buildscript { ... }` block.
+	3. `apply plugin` logic, sorted alphabetically.
+	4. `ext { ... }` block.
+	5. Initialization logic.
+	6. Task creation: `task taskName(type: TaskType)` or simply `task taskName`
 	for default tasks. Don't declare the task dependencies here.
-	5. Project property assignments (e.g., `sourceCompatibility`).
-	6. Variables used globally by the whole script, like a URL or a relative
+	7. Project property assignments (e.g., `sourceCompatibility`).
+	8. Variables used globally by the whole script, like a URL or a relative
 	path.
-	7. Blocks `{ ... }` to configure tasks, extension objects, etc. These must be
-	sorted alphabetically.
+	9. Blocks `{ ... }` to configure tasks, extension objects, etc.
 * Inside a block `{ ... }`:
 	* If variables are needed, declare them inside the block at the beginning.
 	* If setting a property, use the `=` assignment, even if Gradle doesn't
@@ -171,7 +184,7 @@ closure arguments.
 ### `gradle.properties`
 
 The following settings are available to you in the `gradle.properties` file of a
-Liferay subrepository (e.g., [com-liferay-journal](https://github.com/liferay/com-liferay-journal/blob/master/gradle.properties)).
+Liferay subrepository (e.g., [com-liferay-poshi-runner](https://github.com/liferay/com-liferay-poshi-runner)).
 
 Property Name | Mandatory | Description
 ------------- | --------- | -----------

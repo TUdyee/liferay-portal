@@ -14,6 +14,8 @@
 
 package com.liferay.portal.dao.jdbc;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.jdbc.pool.metrics.C3P0ConnectionPoolMetrics;
 import com.liferay.portal.dao.jdbc.pool.metrics.DBCPConnectionPoolMetrics;
 import com.liferay.portal.dao.jdbc.pool.metrics.HikariConnectionPoolMetrics;
@@ -29,9 +31,6 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jndi.JNDIUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
-import com.liferay.portal.kernel.util.CharPool;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ServerDetector;
@@ -50,6 +49,8 @@ import com.liferay.registry.ServiceTracker;
 import com.liferay.registry.ServiceTrackerCustomizer;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import com.zaxxer.hikari.HikariDataSource;
 
 import java.io.Closeable;
 
@@ -84,7 +85,6 @@ import org.apache.tomcat.jdbc.pool.jmx.ConnectionPool;
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
  */
-@DoPrivileged
 public class DataSourceFactoryImpl implements DataSourceFactory {
 
 	@Override
@@ -125,13 +125,6 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 	@Override
 	public DataSource initDataSource(Properties properties) throws Exception {
-		Properties defaultProperties = PropsUtil.getProperties(
-			"jdbc.default.", true);
-
-		PropertiesUtil.merge(defaultProperties, properties);
-
-		properties = defaultProperties;
-
 		testDatabaseClass(properties);
 
 		_waitForJDBCConnection(properties);
@@ -210,7 +203,7 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 			}
 		}
 
-		return _pacl.getDataSource(dataSource);
+		return dataSource;
 	}
 
 	@Override
@@ -230,6 +223,10 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 		return initDataSource(properties);
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	public interface PACL {
 
 		public DataSource getDataSource(DataSource dataSource);
@@ -336,16 +333,7 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 	protected DataSource initDataSourceHikariCP(Properties properties)
 		throws Exception {
 
-		testLiferayPoolProviderClass(_HIKARICP_DATASOURCE_CLASS_NAME);
-
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		Class<?> hikariDataSourceClazz = contextClassLoader.loadClass(
-			_HIKARICP_DATASOURCE_CLASS_NAME);
-
-		Object hikariDataSource = hikariDataSourceClazz.newInstance();
+		HikariDataSource hikariDataSource = new HikariDataSource();
 
 		String connectionPropertiesString = (String)properties.remove(
 			"connectionProperties");
@@ -356,13 +344,11 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 					connectionPropertiesString, CharPool.SEMICOLON,
 					CharPool.NEW_LINE));
 
-			BeanUtil.setProperty(
-				hikariDataSource, "dataSourceProperties", connectionProperties);
+			hikariDataSource.setDataSourceProperties(connectionProperties);
 		}
 
 		for (Map.Entry<Object, Object> entry : properties.entrySet()) {
 			String key = (String)entry.getKey();
-			String value = (String)entry.getValue();
 
 			// Map org.apache.commons.dbcp.BasicDataSource to Hikari CP
 
@@ -397,7 +383,8 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 			// Set HikariCP property
 
 			try {
-				BeanUtil.setProperty(hikariDataSource, key, value);
+				BeanUtil.setProperty(
+					hikariDataSource, key, (String)entry.getValue());
 			}
 			catch (Exception e) {
 				if (_log.isWarnEnabled()) {
@@ -410,7 +397,7 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 		registerConnectionPoolMetrics(
 			new HikariConnectionPoolMetrics(hikariDataSource));
 
-		return (DataSource)hikariDataSource;
+		return hikariDataSource;
 	}
 
 	protected DataSource initDataSourceTomcat(Properties properties)
@@ -420,7 +407,6 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 		for (Map.Entry<Object, Object> entry : properties.entrySet()) {
 			String key = (String)entry.getKey();
-			String value = (String)entry.getValue();
 
 			// Ignore Liferay property
 
@@ -443,13 +429,15 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 			// Set Tomcat JDBC property
 
 			try {
-				BeanUtil.setProperty(poolProperties, key, value);
+				BeanUtil.setProperty(
+					poolProperties, key, (String)entry.getValue());
 			}
 			catch (Exception e) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Property " + key + " is an invalid Tomcat JDBC " +
-							"property");
+						StringBundler.concat(
+							"Property ", key, " is an invalid Tomcat JDBC ",
+							"property"));
 				}
 			}
 		}
@@ -568,7 +556,7 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 			Class.forName(driverClassName);
 		}
 		catch (ClassNotFoundException cnfe) {
-			if (!ServerDetector.isJetty() && !ServerDetector.isTomcat()) {
+			if (!ServerDetector.isTomcat()) {
 				throw cnfe;
 			}
 
@@ -593,44 +581,6 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 			JarUtil.downloadAndInstallJar(
 				new URL(url), PropsValues.LIFERAY_LIB_GLOBAL_DIR, name,
-				(URLClassLoader)classLoader);
-		}
-	}
-
-	protected void testLiferayPoolProviderClass(String className)
-		throws Exception {
-
-		try {
-			Class.forName(className);
-		}
-		catch (ClassNotFoundException cnfe) {
-			if (!ServerDetector.isJetty() && !ServerDetector.isTomcat()) {
-				throw cnfe;
-			}
-
-			String url = PropsUtil.get(
-				PropsKeys.SETUP_LIFERAY_POOL_PROVIDER_JAR_URL,
-				new Filter(PropsValues.JDBC_DEFAULT_LIFERAY_POOL_PROVIDER));
-			String name = PropsUtil.get(
-				PropsKeys.SETUP_LIFERAY_POOL_PROVIDER_JAR_NAME,
-				new Filter(PropsValues.JDBC_DEFAULT_LIFERAY_POOL_PROVIDER));
-
-			if (Validator.isNull(url) || Validator.isNull(name)) {
-				throw cnfe;
-			}
-
-			ClassLoader classLoader = ClassLoaderUtil.getPortalClassLoader();
-
-			if (!(classLoader instanceof URLClassLoader)) {
-				_log.error(
-					"Unable to install JAR because the portal class loader " +
-						"is not an instance of URLClassLoader");
-
-				return;
-			}
-
-			JarUtil.downloadAndInstallJar(
-				new URL(url), PropsValues.LIFERAY_LIB_PORTAL_DIR, name,
 				(URLClassLoader)classLoader);
 		}
 	}
@@ -674,9 +624,10 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"At attempt " + (maxRetries - count) + " of " + maxRetries +
-						" in acquiring a JDBC connection after a " + delay +
-							" second " + delay);
+					StringBundler.concat(
+						"At attempt ", maxRetries - count, " of ", maxRetries,
+						" in acquiring a JDBC connection after a ", delay,
+						" second ", delay));
 			}
 
 			try {
@@ -698,16 +649,11 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 		}
 	}
 
-	private static final String _HIKARICP_DATASOURCE_CLASS_NAME =
-		"com.zaxxer.hikari.HikariDataSource";
-
 	private static final String _TOMCAT_JDBC_POOL_OBJECT_NAME_PREFIX =
 		"TomcatJDBCPool:type=ConnectionPool,name=";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DataSourceFactoryImpl.class);
-
-	private static final PACL _pacl = new NoPACL();
 
 	private ServiceTracker<MBeanServer, MBeanServer> _serviceTracker;
 
@@ -720,6 +666,7 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 			throws MalformedObjectNameException {
 
 			_dataSource = dataSource;
+
 			_objectName = new ObjectName(
 				_TOMCAT_JDBC_POOL_OBJECT_NAME_PREFIX + poolName);
 		}
@@ -773,15 +720,6 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 		private final org.apache.tomcat.jdbc.pool.DataSource _dataSource;
 		private final ObjectName _objectName;
-
-	}
-
-	private static class NoPACL implements PACL {
-
-		@Override
-		public DataSource getDataSource(DataSource dataSource) {
-			return dataSource;
-		}
 
 	}
 

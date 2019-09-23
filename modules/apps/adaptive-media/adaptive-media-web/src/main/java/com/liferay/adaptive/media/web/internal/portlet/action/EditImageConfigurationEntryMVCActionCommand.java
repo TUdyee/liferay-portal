@@ -18,7 +18,8 @@ import com.liferay.adaptive.media.exception.AMImageConfigurationException;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
 import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
-import com.liferay.adaptive.media.web.constants.AMPortletKeys;
+import com.liferay.adaptive.media.web.internal.constants.AMPortletKeys;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -26,7 +27,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -88,7 +88,8 @@ public class EditImageConfigurationEntryMVCActionCommand
 		boolean autoModifiedUuid = false;
 
 		if (automaticUuid) {
-			String normalizedName = FriendlyURLNormalizerUtil.normalize(name);
+			String normalizedName =
+				FriendlyURLNormalizerUtil.normalizeWithPeriodsAndSlashes(name);
 
 			newUuid = _getAutomaticUuid(
 				themeDisplay.getCompanyId(), normalizedName, uuid);
@@ -142,14 +143,12 @@ public class EditImageConfigurationEntryMVCActionCommand
 				boolean addHighResolution = ParamUtil.getBoolean(
 					actionRequest, "addHighResolution");
 
-				AMImageConfigurationEntry
-					highResolutionAMImageConfigurationEntry = null;
-
 				if (addHighResolution) {
-					highResolutionAMImageConfigurationEntry =
-						_addHighResolutionConfigurationEntry(
-							themeDisplay.getCompanyId(),
-							amImageConfigurationEntry);
+					AMImageConfigurationEntry
+						highResolutionAMImageConfigurationEntry =
+							_addHighResolutionConfigurationEntry(
+								themeDisplay.getCompanyId(),
+								amImageConfigurationEntry);
 
 					SessionMessages.add(
 						actionRequest, "highResolutionConfigurationEntryAdded",
@@ -178,10 +177,8 @@ public class EditImageConfigurationEntryMVCActionCommand
 		}
 	}
 
-	private AMImageConfigurationEntry
-			_addHighResolutionConfigurationEntry(
-				long companyId,
-				AMImageConfigurationEntry amImageConfigurationEntry)
+	private AMImageConfigurationEntry _addHighResolutionConfigurationEntry(
+			long companyId, AMImageConfigurationEntry amImageConfigurationEntry)
 		throws AMImageConfigurationException, IOException {
 
 		Map<String, String> properties =

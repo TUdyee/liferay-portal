@@ -14,6 +14,9 @@
 
 package com.liferay.portal.fabric.netty.worker;
 
+import com.liferay.petra.concurrent.DefaultNoticeableFuture;
+import com.liferay.petra.concurrent.NoticeableFuture;
+import com.liferay.portal.fabric.ReturnProcessCallable;
 import com.liferay.portal.fabric.local.worker.EmbeddedProcessChannel;
 import com.liferay.portal.fabric.local.worker.LocalFabricWorker;
 import com.liferay.portal.fabric.netty.NettyTestUtil;
@@ -23,9 +26,6 @@ import com.liferay.portal.fabric.netty.util.NettyUtilAdvice;
 import com.liferay.portal.fabric.repository.MockRepository;
 import com.liferay.portal.fabric.status.FabricStatus;
 import com.liferay.portal.fabric.status.RemoteFabricStatus;
-import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
-import com.liferay.portal.kernel.concurrent.NoticeableFuture;
-import com.liferay.portal.kernel.process.local.ReturnProcessCallable;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
@@ -324,8 +324,8 @@ public class NettyFabricWorkerStubTest {
 		NoticeableFuture<String> noticeableFuture = nettyFabricWorkerStub.write(
 			new ReturnProcessCallable<String>(result));
 
-		embeddedChannel.writeInbound(embeddedChannel.readOutbound());
-		embeddedChannel.writeInbound(embeddedChannel.readOutbound());
+		embeddedChannel.writeOneInbound(embeddedChannel.readOutbound());
+		embeddedChannel.writeOneInbound(embeddedChannel.readOutbound());
 
 		Assert.assertEquals(result, noticeableFuture.get());
 	}

@@ -47,16 +47,18 @@ public class GoogleDocsDLViewFileVersionDisplayContext
 
 	public GoogleDocsDLViewFileVersionDisplayContext(
 		DLViewFileVersionDisplayContext parentDLDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileVersion fileVersion,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileVersion fileVersion,
 		GoogleDocsMetadataHelper googleDocsMetadataHelper) {
 
-		super(_UUID, parentDLDisplayContext, request, response, fileVersion);
+		super(
+			_UUID, parentDLDisplayContext, httpServletRequest,
+			httpServletResponse, fileVersion);
 
 		_googleDocsMetadataHelper = googleDocsMetadataHelper;
 
 		_googleDocsUIItemsProcessor = new GoogleDocsUIItemsProcessor(
-			request, googleDocsMetadataHelper);
+			httpServletRequest, googleDocsMetadataHelper);
 	}
 
 	@Override
@@ -85,6 +87,15 @@ public class GoogleDocsDLViewFileVersionDisplayContext
 	@Override
 	public Menu getMenu() throws PortalException {
 		Menu menu = super.getMenu();
+
+		// See LPS-79987
+
+		if (Validator.isNull(
+				_googleDocsMetadataHelper.getFieldValue(
+					GoogleDocsConstants.DDM_FIELD_NAME_URL))) {
+
+			return menu;
+		}
 
 		List<MenuItem> menuItems = menu.getMenuItems();
 
@@ -123,10 +134,11 @@ public class GoogleDocsDLViewFileVersionDisplayContext
 
 	@Override
 	public void renderPreview(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		PrintWriter printWriter = response.getWriter();
+		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		if (_googleDocsMetadataHelper.containsField(
 				GoogleDocsConstants.DDM_FIELD_NAME_EMBEDDABLE_URL)) {
@@ -136,7 +148,7 @@ public class GoogleDocsDLViewFileVersionDisplayContext
 
 			if (Validator.isNotNull(previewURL)) {
 				printWriter.format(
-					"<iframe frameborder=\"0\" height=\"300\" src=\"%s\" " +
+					"<iframe frameborder=\"0\" height=\"664px\" src=\"%s\" " +
 						"width=\"100%%\"></iframe>",
 					previewURL);
 
@@ -145,7 +157,7 @@ public class GoogleDocsDLViewFileVersionDisplayContext
 		}
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", request.getLocale(), getClass());
+			"content.Language", httpServletRequest.getLocale(), getClass());
 
 		printWriter.write("<div class=\"alert alert-info\">");
 		printWriter.write(

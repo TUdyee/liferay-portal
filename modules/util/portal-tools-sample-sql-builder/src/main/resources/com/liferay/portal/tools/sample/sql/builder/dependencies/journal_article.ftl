@@ -10,6 +10,10 @@
 
 ${dataFactory.toInsertSQL(ddmTemplateModel)}
 
+<#assign ddmTemplateVersionModel = dataFactory.defaultJournalDDMTemplateVersionModel />
+
+${dataFactory.toInsertSQL(ddmTemplateVersionModel)}
+
 <#assign
 	journalArticlePageCounts = dataFactory.getSequence(dataFactory.maxJournalArticlePageCount)
 
@@ -80,6 +84,6 @@ ${dataFactory.toInsertSQL(ddmTemplateModel)}
 
 		${dataFactory.toInsertSQL(dataFactory.newPortletPreferencesModel(layoutModel.plid, portletIdPrefix + journalArticleCount, journalArticleResourceModel))}
 
-		${dataFactory.toInsertSQL(dataFactory.newJournalContentSearchModel(journalArticleModel, layoutModel.plid))}
+		${dataFactory.toInsertSQL(dataFactory.newJournalContentSearchModel(journalArticleModel, layoutModel.layoutId))}
 	</#list>
 </#list>

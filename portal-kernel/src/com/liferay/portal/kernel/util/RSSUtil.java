@@ -14,10 +14,15 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringPool;
+
 /**
- * @author Brian Wing Shun Chan
- * @author Eduardo Garcia
+ * @author     Brian Wing Shun Chan
+ * @author     Eduardo García
+ * @deprecated As of Judson (7.1.x), replaced by {@link
+ *             com.liferay.rss.util.RSSUtil}
  */
+@Deprecated
 public class RSSUtil {
 
 	public static final String ATOM = "atom";

@@ -14,11 +14,13 @@
 
 package com.liferay.registry.internal.test;
 
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceTracker;
 import com.liferay.registry.ServiceTrackerFieldUpdaterCustomizer;
-import com.liferay.registry.internal.RegistryImpl;
 
 import java.io.Closeable;
 
@@ -26,18 +28,16 @@ import java.lang.reflect.Field;
 
 import java.util.Hashtable;
 
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -46,16 +46,17 @@ import org.osgi.framework.ServiceRegistration;
 @RunWith(Arquillian.class)
 public class ServiceTrackerFieldUpdaterCustomizerTest {
 
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new LiferayIntegrationTestRule();
+
 	@Before
-	public void setUp() throws BundleException {
-		_bundle.start();
+	public void setUp() {
+		Bundle bundle = FrameworkUtil.getBundle(
+			ServiceTrackerFieldUpdaterCustomizerTest.class);
 
-		RegistryUtil.setRegistry(new RegistryImpl(_bundleContext));
-	}
-
-	@After
-	public void tearDown() throws BundleException {
-		_bundle.stop();
+		_bundleContext = bundle.getBundleContext();
 	}
 
 	@Test
@@ -75,7 +76,7 @@ public class ServiceTrackerFieldUpdaterCustomizerTest {
 	public void testWrongDeclaration() throws NoSuchFieldException {
 		Field field =
 			ServiceTrackerFieldUpdaterCustomizerTest.class.getDeclaredField(
-				"_bundle");
+				"_bundleContext");
 
 		try {
 			new ServiceTrackerFieldUpdaterCustomizer(field, this, null);
@@ -116,7 +117,7 @@ public class ServiceTrackerFieldUpdaterCustomizerTest {
 
 		Hashtable<String, Object> hashtable = new Hashtable<>();
 
-		hashtable.put("service.ranking", "2");
+		hashtable.put("service.ranking", 2);
 
 		serviceRegistration1.setProperties(hashtable);
 
@@ -147,10 +148,6 @@ public class ServiceTrackerFieldUpdaterCustomizerTest {
 	private static final TestService _defaultTestService =
 		new TestServiceDefault();
 
-	@ArquillianResource
-	private Bundle _bundle;
-
-	@ArquillianResource
 	private BundleContext _bundleContext;
 
 	private static class NonStaticTestServiceUsage implements TestServiceUsage {

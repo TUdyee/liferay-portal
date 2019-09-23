@@ -21,7 +21,7 @@ package com.liferay.source.formatter.checks;
 public class JavaUnsafeCastingCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -43,14 +43,15 @@ public class JavaUnsafeCastingCheck extends BaseFileCheck {
 
 				addMessage(
 					fileName, message, "unsafe_casting.markdown",
-					getLineCount(content, pos));
+					getLineNumber(content, pos));
 			}
 		}
 
 		return content;
 	}
 
-	private static final String[] _UNSAFE_CLASS_NAMES =
-		{"LiferayPortletRequest", "LiferayPortletResponse"};
+	private static final String[] _UNSAFE_CLASS_NAMES = {
+		"LiferayPortletRequest", "LiferayPortletResponse"
+	};
 
 }

@@ -17,6 +17,8 @@ package com.liferay.adaptive.media.journal.web.internal.transformer;
 import com.liferay.adaptive.media.content.transformer.ContentTransformerHandler;
 import com.liferay.adaptive.media.content.transformer.constants.ContentTransformerContentTypes;
 import com.liferay.journal.util.JournalContent;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.xml.Document;
 
 import java.util.HashMap;
@@ -39,9 +41,11 @@ public class AMJournalTransformerListenerTest {
 
 	@Before
 	public void setUp() {
-		_amJournalTransformerListener.setContentTransformerHandler(
+		ReflectionTestUtil.setFieldValue(
+			_amJournalTransformerListener, "_contentTransformerHandler",
 			_contentTransformerHandler);
-		_amJournalTransformerListener.setJournalContent(_journalContent);
+		ReflectionTestUtil.setFieldValue(
+			_amJournalTransformerListener, "_journalContent", _journalContent);
 	}
 
 	@Test
@@ -64,8 +68,8 @@ public class AMJournalTransformerListenerTest {
 
 	@Test
 	public void testOnOutputTransformsTheOutput() throws Exception {
-		String originalOutput = "some content";
-		String transformedOutput = "some transformed content";
+		String originalOutput = RandomTestUtil.randomString();
+		String transformedOutput = RandomTestUtil.randomString();
 
 		Mockito.when(
 			_contentTransformerHandler.transform(
@@ -82,7 +86,7 @@ public class AMJournalTransformerListenerTest {
 
 	@Test
 	public void testOnScriptDoesNotModifyTheScript() throws Exception {
-		String originalScript = "some script content";
+		String originalScript = RandomTestUtil.randomString();
 
 		String newScript = _amJournalTransformerListener.onScript(
 			originalScript, _document, _LANGUAGE_ID, _tokens);

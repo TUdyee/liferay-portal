@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.workflow;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.messaging.proxy.MessagingProxy;
 import com.liferay.portal.kernel.messaging.proxy.ProxyMode;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -25,6 +23,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Micha Kiener
@@ -85,6 +85,11 @@ public interface WorkflowTaskManager {
 
 	public int getWorkflowTaskCountByUserRoles(
 			long companyId, long userId, Boolean completed)
+		throws WorkflowException;
+
+	public int getWorkflowTaskCountByUserRoles(
+			long companyId, long userId, long workflowInstanceId,
+			Boolean completed)
 		throws WorkflowException;
 
 	public int getWorkflowTaskCountByWorkflowInstance(

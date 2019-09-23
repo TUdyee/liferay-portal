@@ -14,9 +14,9 @@
 
 package com.liferay.taglib.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
-import com.liferay.portal.kernel.util.ServerDetector;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -29,7 +29,30 @@ import javax.servlet.jsp.JspWriter;
  */
 public class OutputTag extends PositionTagSupport {
 
-	public static StringBundler getData(
+	/**
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #getDataSB(ServletRequest, String)}
+	 */
+	@Deprecated
+	public static com.liferay.portal.kernel.util.StringBundler getData(
+		ServletRequest servletRequest, String webKey) {
+
+		StringBundler petraSB = getDataSB(servletRequest, webKey);
+
+		if (petraSB == null) {
+			return null;
+		}
+
+		com.liferay.portal.kernel.util.StringBundler sb =
+			new com.liferay.portal.kernel.util.StringBundler(
+				petraSB.getStrings());
+
+		sb.setIndex(petraSB.index());
+
+		return sb;
+	}
+
+	public static StringBundler getDataSB(
 		ServletRequest servletRequest, String webKey) {
 
 		OutputData outputData = (OutputData)servletRequest.getAttribute(
@@ -39,7 +62,7 @@ public class OutputTag extends PositionTagSupport {
 			return null;
 		}
 
-		return outputData.getMergedData(webKey);
+		return outputData.getMergedDataSB(webKey);
 	}
 
 	public OutputTag(String stringBundlerKey) {
@@ -53,6 +76,16 @@ public class OutputTag extends PositionTagSupport {
 				String bodyContentString =
 					getBodyContentAsStringBundler().toString();
 
+				bodyContentString = _addAtrribute(
+					bodyContentString, "link", "data-senna-track",
+					"\"temporary\"");
+				bodyContentString = _addAtrribute(
+					bodyContentString, "script", "data-senna-track",
+					"\"permanent\"");
+				bodyContentString = _addAtrribute(
+					bodyContentString, "style", "data-senna-track",
+					"\"temporary\"");
+
 				if (isPositionInLine()) {
 					JspWriter jspWriter = pageContext.getOut();
 
@@ -62,7 +95,7 @@ public class OutputTag extends PositionTagSupport {
 					OutputData outputData = _getOutputData(
 						pageContext.getRequest());
 
-					outputData.addData(
+					outputData.addDataSB(
 						_outputKey, _webKey,
 						new StringBundler(bodyContentString));
 				}
@@ -74,9 +107,7 @@ public class OutputTag extends PositionTagSupport {
 			throw new JspException(e);
 		}
 		finally {
-			if (!ServerDetector.isResin()) {
-				cleanUp();
-			}
+			cleanUp();
 		}
 	}
 
@@ -112,6 +143,40 @@ public class OutputTag extends PositionTagSupport {
 		}
 
 		return outputData;
+	}
+
+	private String _addAtrribute(
+		String content, String tagName, String attributeName,
+		String attributeValue) {
+
+		int x = 0;
+		int y = 0;
+
+		while (x >= 0) {
+			x = content.indexOf("<" + tagName, y);
+
+			if (x < 0) {
+				break;
+			}
+
+			y = content.indexOf(">", x);
+
+			if (y < 0) {
+				break;
+			}
+
+			String subcontent = content.substring(x, y);
+
+			if (!subcontent.contains(attributeName)) {
+				content = StringUtil.insert(
+					content,
+					StringBundler.concat(
+						" ", attributeName, "=", attributeValue),
+					x + tagName.length() + 1);
+			}
+		}
+
+		return content;
 	}
 
 	private boolean _output;

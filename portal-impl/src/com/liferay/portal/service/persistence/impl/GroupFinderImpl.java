@@ -14,6 +14,8 @@
 
 package com.liferay.portal.service.persistence.impl;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
@@ -28,14 +30,11 @@ import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.security.permission.RolePermissions;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
-import com.liferay.portal.kernel.service.ResourceBlockLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.GroupFinder;
 import com.liferay.portal.kernel.service.persistence.GroupUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.comparator.GroupNameComparator;
@@ -70,6 +69,9 @@ public class GroupFinderImpl
 	public static final String COUNT_BY_C_PG_N_D =
 		GroupFinder.class.getName() + ".countByC_PG_N_D";
 
+	public static final String FIND_BY_ACTIVE_GROUPS =
+		GroupFinder.class.getName() + ".findByActiveGroups";
+
 	public static final String FIND_BY_COMPANY_ID =
 		GroupFinder.class.getName() + ".findByCompanyId";
 
@@ -78,9 +80,6 @@ public class GroupFinderImpl
 
 	public static final String FIND_BY_LIVE_GROUPS =
 		GroupFinder.class.getName() + ".findByLiveGroups";
-
-	public static final String FIND_BY_NO_LAYOUTS =
-		GroupFinder.class.getName() + ".findByNoLayouts";
 
 	public static final String FIND_BY_NULL_FRIENDLY_URL =
 		GroupFinder.class.getName() + ".findByNullFriendlyURL";
@@ -118,8 +117,8 @@ public class GroupFinderImpl
 	public static final String JOIN_BY_GROUPS_USER_GROUPS =
 		GroupFinder.class.getName() + ".joinByGroupsUserGroups";
 
-	public static final String JOIN_BY_LAYOUT_SET =
-		GroupFinder.class.getName() + ".joinByLayoutSet";
+	public static final String JOIN_BY_LAYOUT =
+		GroupFinder.class.getName() + ".joinByLayout";
 
 	public static final String JOIN_BY_MANUAL_MEMBERSHIP =
 		GroupFinder.class.getName() + ".joinByManualMembership";
@@ -132,9 +131,6 @@ public class GroupFinderImpl
 
 	public static final String JOIN_BY_ROLE_RESOURCE_PERMISSIONS =
 		GroupFinder.class.getName() + ".joinByRoleResourcePermissions";
-
-	public static final String JOIN_BY_ROLE_RESOURCE_TYPE_PERMISSIONS =
-		GroupFinder.class.getName() + ".joinByRoleResourceTypePermissions";
 
 	public static final String JOIN_BY_SITE =
 		GroupFinder.class.getName() + ".joinBySite";
@@ -152,12 +148,27 @@ public class GroupFinderImpl
 	public int countByLayouts(
 		long companyId, long parentGroupId, boolean site) {
 
+		return countByLayouts(companyId, parentGroupId, site, null);
+	}
+
+	@Override
+	public int countByLayouts(
+		long companyId, long parentGroupId, boolean site, Boolean active) {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
 			String sql = CustomSQLUtil.get(COUNT_BY_LAYOUTS);
+
+			if (active != null) {
+				sql = StringUtil.replace(
+					sql, "[$ACTIVE$]", "AND (Group_.active_ = ?)");
+			}
+			else {
+				sql = StringUtil.replace(sql, "[$ACTIVE$]", StringPool.BLANK);
+			}
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
@@ -168,6 +179,10 @@ public class GroupFinderImpl
 			qPos.add(companyId);
 			qPos.add(parentGroupId);
 			qPos.add(site);
+
+			if (active != null) {
+				qPos.add(active);
+			}
 
 			Iterator<Long> itr = q.iterate();
 
@@ -322,6 +337,33 @@ public class GroupFinderImpl
 	}
 
 	@Override
+	public List<Long> findByActiveGroupIds(long userId) {
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = CustomSQLUtil.get(FIND_BY_ACTIVE_GROUPS);
+
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+
+			q.addScalar("groupId", Type.LONG);
+
+			QueryPos qPos = QueryPos.getInstance(q);
+
+			qPos.add(userId);
+
+			return q.list(true);
+		}
+		catch (Exception e) {
+			throw new SystemException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	@Override
 	public List<Group> findByCompanyId(
 		long companyId, LinkedHashMap<String, Object> params, int start,
 		int end, OrderByComparator<Group> obc) {
@@ -375,7 +417,7 @@ public class GroupFinderImpl
 
 			findByCompanyIdSQL = replaceOrderBy(findByCompanyIdSQL, obc);
 
-			StringBundler sb = new StringBundler(9);
+			StringBundler sb = new StringBundler(11);
 
 			sb.append(StringPool.OPEN_PARENTHESIS);
 			sb.append(replaceJoinAndWhere(findByCompanyIdSQL, params1));
@@ -451,21 +493,10 @@ public class GroupFinderImpl
 		}
 	}
 
-	/**
-	 * @deprecated As of 7.0.0
-	 */
-	@Deprecated
 	@Override
 	public List<Group> findByLayouts(
-		long companyId, long parentGroupId, boolean site, int start, int end) {
-
-		return findByLayouts(companyId, parentGroupId, site, start, end, null);
-	}
-
-	@Override
-	public List<Group> findByLayouts(
-		long companyId, long parentGroupId, boolean site, int start, int end,
-		OrderByComparator<Group> obc) {
+		long companyId, long parentGroupId, boolean site, Boolean active,
+		int start, int end, OrderByComparator<Group> obc) {
 
 		Session session = null;
 
@@ -475,6 +506,14 @@ public class GroupFinderImpl
 			String sql = CustomSQLUtil.get(FIND_BY_LAYOUTS);
 
 			sql = CustomSQLUtil.replaceOrderBy(sql, obc);
+
+			if (active != null) {
+				sql = StringUtil.replace(
+					sql, "[$ACTIVE$]", "AND (Group_.active_ = ?)");
+			}
+			else {
+				sql = StringUtil.replace(sql, "[$ACTIVE$]", StringPool.BLANK);
+			}
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
@@ -486,6 +525,10 @@ public class GroupFinderImpl
 			qPos.add(parentGroupId);
 			qPos.add(site);
 
+			if (active != null) {
+				qPos.add(active);
+			}
+
 			return q.list(true);
 		}
 		catch (Exception e) {
@@ -494,6 +537,27 @@ public class GroupFinderImpl
 		finally {
 			closeSession(session);
 		}
+	}
+
+	/**
+	 * @deprecated As of Wilberforce (7.0.x)
+	 */
+	@Deprecated
+	@Override
+	public List<Group> findByLayouts(
+		long companyId, long parentGroupId, boolean site, int start, int end) {
+
+		return findByLayouts(
+			companyId, parentGroupId, site, null, start, end, null);
+	}
+
+	@Override
+	public List<Group> findByLayouts(
+		long companyId, long parentGroupId, boolean site, int start, int end,
+		OrderByComparator<Group> obc) {
+
+		return findByLayouts(
+			companyId, parentGroupId, site, null, start, end, obc);
 	}
 
 	@Override
@@ -519,36 +583,10 @@ public class GroupFinderImpl
 		}
 	}
 
-	@Override
-	public List<Group> findByNoLayouts(
-		long classNameId, boolean privateLayout, int start, int end) {
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = CustomSQLUtil.get(FIND_BY_NO_LAYOUTS);
-
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
-
-			q.addEntity("Group_", GroupImpl.class);
-
-			QueryPos qPos = QueryPos.getInstance(q);
-
-			qPos.add(classNameId);
-			qPos.add(privateLayout);
-
-			return q.list(true);
-		}
-		catch (Exception e) {
-			throw new SystemException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public List<Group> findByNullFriendlyURL() {
 		Session session = null;
@@ -707,10 +745,8 @@ public class GroupFinderImpl
 			qPos.add(site);
 			qPos.add(remoteStagingGroupCount);
 
-			List<Group> groups = (List<Group>)QueryUtil.list(
+			return (List<Group>)QueryUtil.list(
 				q, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-			return groups;
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -828,9 +864,9 @@ public class GroupFinderImpl
 		}
 
 		sql = CustomSQLUtil.replaceKeywords(
-			sql, "lower(Group_.name)", StringPool.LIKE, false, names);
+			sql, "LOWER(Group_.name)", StringPool.LIKE, false, names);
 		sql = CustomSQLUtil.replaceKeywords(
-			sql, "lower(Group_.description)", StringPool.LIKE, true,
+			sql, "LOWER(Group_.description)", StringPool.LIKE, true,
 			descriptions);
 		sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 
@@ -946,9 +982,9 @@ public class GroupFinderImpl
 		}
 
 		sql = CustomSQLUtil.replaceKeywords(
-			sql, "lower(Group_.name)", StringPool.LIKE, false, names);
+			sql, "LOWER(Group_.name)", StringPool.LIKE, false, names);
 		sql = CustomSQLUtil.replaceKeywords(
-			sql, "lower(Group_.description)", StringPool.LIKE, true,
+			sql, "LOWER(Group_.description)", StringPool.LIKE, true,
 			descriptions);
 
 		sql = replaceJoinAndWhere(sql, params);
@@ -978,24 +1014,14 @@ public class GroupFinderImpl
 		StringBundler sb = new StringBundler(params.size());
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-
-			if (Validator.isNull(value)) {
+			if (Validator.isNull(entry.getValue())) {
 				continue;
 			}
 
+			String key = entry.getKey();
+
 			if (key.equals("rolePermissions")) {
-				RolePermissions rolePermissions = (RolePermissions)value;
-
-				if (ResourceBlockLocalServiceUtil.isSupported(
-						rolePermissions.getName())) {
-
-					key = "rolePermissions_6_block";
-				}
-				else {
-					key = "rolePermissions_6";
-				}
+				key = "rolePermissions_6";
 			}
 
 			Map<String, String> joinMap = _getJoinMap();
@@ -1080,17 +1106,7 @@ public class GroupFinderImpl
 			}
 			else {
 				if (key.equals("rolePermissions")) {
-					RolePermissions rolePermissions =
-						(RolePermissions)entry.getValue();
-
-					if (ResourceBlockLocalServiceUtil.isSupported(
-							rolePermissions.getName())) {
-
-						key = "rolePermissions_6_block";
-					}
-					else {
-						key = "rolePermissions_6";
-					}
+					key = "rolePermissions_6";
 				}
 
 				Map<String, String> whereMap = _getWhereMap();
@@ -1150,7 +1166,7 @@ public class GroupFinderImpl
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			String key = entry.getKey();
 
-			if (key.equals("active") || key.equals("layoutSet") ||
+			if (key.equals("active") || key.equals("layout") ||
 				key.equals("manualMembership") || key.equals("site")) {
 
 				Boolean value = (Boolean)entry.getValue();
@@ -1204,28 +1220,16 @@ public class GroupFinderImpl
 						rolePermissions.getName(),
 						rolePermissions.getActionId());
 
-				if (ResourceBlockLocalServiceUtil.isSupported(
-						rolePermissions.getName())) {
+				qPos.add(rolePermissions.getName());
+				qPos.add(rolePermissions.getScope());
+				qPos.add(rolePermissions.getRoleId());
 
-					// Scope is assumed to always be group
-
-					qPos.add(rolePermissions.getName());
-					qPos.add(rolePermissions.getRoleId());
-					qPos.add(resourceAction.getBitwiseValue());
-				}
-				else {
-					qPos.add(rolePermissions.getName());
-					qPos.add(rolePermissions.getScope());
-					qPos.add(rolePermissions.getRoleId());
-					qPos.add(resourceAction.getBitwiseValue());
-				}
+				qPos.add(resourceAction.getBitwiseValue());
 			}
 			else if (key.equals("types")) {
 				List<Integer> values = (List<Integer>)entry.getValue();
 
-				for (int i = 0; i < values.size(); i++) {
-					Integer value = values.get(i);
-
+				for (Integer value : values) {
 					qPos.add(value);
 				}
 			}
@@ -1244,7 +1248,7 @@ public class GroupFinderImpl
 				if (value instanceof Integer) {
 					Integer valueInteger = (Integer)value;
 
-					if (Validator.isNotNull(valueInteger)) {
+					if (valueInteger != null) {
 						qPos.add(valueInteger);
 					}
 				}
@@ -1304,17 +1308,7 @@ public class GroupFinderImpl
 				String key = entry.getKey();
 
 				if (key.equals("rolePermissions")) {
-					RolePermissions rolePermissions =
-						(RolePermissions)entry.getValue();
-
-					if (ResourceBlockLocalServiceUtil.isSupported(
-							rolePermissions.getName())) {
-
-						key = "rolePermissions_6_block";
-					}
-					else {
-						key = "rolePermissions_6";
-					}
+					key = "rolePermissions_6";
 				}
 
 				sb.append(key);
@@ -1345,7 +1339,9 @@ public class GroupFinderImpl
 			int pos = join.indexOf("WHERE");
 
 			if (pos != -1) {
-				join = join.substring(pos + 5, join.length()).concat(" AND ");
+				join = join.substring(pos + 5);
+
+				join = join.concat(" AND ");
 			}
 			else {
 				join = StringPool.BLANK;
@@ -1384,8 +1380,7 @@ public class GroupFinderImpl
 		joinMap.put(
 			"groupsUserGroups",
 			_removeWhere(CustomSQLUtil.get(JOIN_BY_GROUPS_USER_GROUPS)));
-		joinMap.put(
-			"layoutSet", _removeWhere(CustomSQLUtil.get(JOIN_BY_LAYOUT_SET)));
+		joinMap.put("layout", _removeWhere(CustomSQLUtil.get(JOIN_BY_LAYOUT)));
 		joinMap.put(
 			"membershipRestriction",
 			_removeWhere(CustomSQLUtil.get(JOIN_BY_MEMBERSHIP_RESTRICTION)));
@@ -1394,10 +1389,6 @@ public class GroupFinderImpl
 		joinMap.put(
 			"rolePermissions_6",
 			_removeWhere(CustomSQLUtil.get(JOIN_BY_ROLE_RESOURCE_PERMISSIONS)));
-		joinMap.put(
-			"rolePermissions_6_block",
-			_removeWhere(
-				CustomSQLUtil.get(JOIN_BY_ROLE_RESOURCE_TYPE_PERMISSIONS)));
 		joinMap.put("site", _removeWhere(CustomSQLUtil.get(JOIN_BY_SITE)));
 		joinMap.put("type", _removeWhere(CustomSQLUtil.get(JOIN_BY_TYPE)));
 		joinMap.put(
@@ -1436,7 +1427,7 @@ public class GroupFinderImpl
 			"groupsUserGroups",
 			_getCondition(CustomSQLUtil.get(JOIN_BY_GROUPS_USER_GROUPS)));
 		whereMap.put(
-			"layoutSet", _getCondition(CustomSQLUtil.get(JOIN_BY_LAYOUT_SET)));
+			"layout", _getCondition(CustomSQLUtil.get(JOIN_BY_LAYOUT)));
 		whereMap.put(
 			"manualMembership",
 			_getCondition(CustomSQLUtil.get(JOIN_BY_MANUAL_MEMBERSHIP)));
@@ -1449,10 +1440,6 @@ public class GroupFinderImpl
 			"rolePermissions_6",
 			_getCondition(
 				CustomSQLUtil.get(JOIN_BY_ROLE_RESOURCE_PERMISSIONS)));
-		whereMap.put(
-			"rolePermissions_6_block",
-			_getCondition(
-				CustomSQLUtil.get(JOIN_BY_ROLE_RESOURCE_TYPE_PERMISSIONS)));
 		whereMap.put("site", _getCondition(CustomSQLUtil.get(JOIN_BY_SITE)));
 		whereMap.put("type", _getCondition(CustomSQLUtil.get(JOIN_BY_TYPE)));
 		whereMap.put(
@@ -1516,7 +1503,7 @@ public class GroupFinderImpl
 		if (classNameIds == null) {
 			params1.put("classNameIds", groupOrganizationClassNameIds);
 			params2.put("classNameIds", organizationClassNameId);
-			params3.put("classNameIds", groupClassNameId);
+			params3.put("classNameIds", groupOrganizationClassNameIds);
 			params4.put("classNameIds", groupOrganizationClassNameIds);
 		}
 		else {
@@ -1553,7 +1540,7 @@ public class GroupFinderImpl
 	}
 
 	private final LinkedHashMap<String, Object> _emptyLinkedHashMap =
-		new LinkedHashMap<>(0);
+		new LinkedHashMap<>();
 	private final Map<String, String> _findByCompanyIdSQLCache =
 		new ConcurrentHashMap<>();
 	private final Map<String, String> _findByC_C_PG_N_DSQLCache =

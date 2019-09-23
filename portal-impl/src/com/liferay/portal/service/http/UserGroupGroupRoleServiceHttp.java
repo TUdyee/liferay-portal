@@ -14,8 +14,6 @@
 
 package com.liferay.portal.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
@@ -26,10 +24,11 @@ import com.liferay.portal.kernel.util.MethodKey;
 
 /**
  * Provides the HTTP utility for the
- * {@link UserGroupGroupRoleServiceUtil} service utility. The
+ * <code>UserGroupGroupRoleServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -48,32 +47,36 @@ import com.liferay.portal.kernel.util.MethodKey;
  *
  * @author Brian Wing Shun Chan
  * @see UserGroupGroupRoleServiceSoap
- * @see HttpPrincipal
- * @see UserGroupGroupRoleServiceUtil
  * @generated
  */
-@ProviderType
 public class UserGroupGroupRoleServiceHttp {
-	public static void addUserGroupGroupRoles(HttpPrincipal httpPrincipal,
-		long userGroupId, long groupId, long[] roleIds)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(UserGroupGroupRoleServiceUtil.class,
-					"addUserGroupGroupRoles",
-					_addUserGroupGroupRolesParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					userGroupId, groupId, roleIds);
+	public static void addUserGroupGroupRoles(
+			HttpPrincipal httpPrincipal, long userGroupId, long groupId,
+			long[] roleIds)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				UserGroupGroupRoleServiceUtil.class, "addUserGroupGroupRoles",
+				_addUserGroupGroupRolesParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, userGroupId, groupId, roleIds);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -83,26 +86,32 @@ public class UserGroupGroupRoleServiceHttp {
 		}
 	}
 
-	public static void addUserGroupGroupRoles(HttpPrincipal httpPrincipal,
-		long[] userGroupIds, long groupId, long roleId)
+	public static void addUserGroupGroupRoles(
+			HttpPrincipal httpPrincipal, long[] userGroupIds, long groupId,
+			long roleId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(UserGroupGroupRoleServiceUtil.class,
-					"addUserGroupGroupRoles",
-					_addUserGroupGroupRolesParameterTypes1);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					userGroupIds, groupId, roleId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				UserGroupGroupRoleServiceUtil.class, "addUserGroupGroupRoles",
+				_addUserGroupGroupRolesParameterTypes1);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, userGroupIds, groupId, roleId);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -112,26 +121,33 @@ public class UserGroupGroupRoleServiceHttp {
 		}
 	}
 
-	public static void deleteUserGroupGroupRoles(HttpPrincipal httpPrincipal,
-		long userGroupId, long groupId, long[] roleIds)
+	public static void deleteUserGroupGroupRoles(
+			HttpPrincipal httpPrincipal, long userGroupId, long groupId,
+			long[] roleIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(UserGroupGroupRoleServiceUtil.class,
-					"deleteUserGroupGroupRoles",
-					_deleteUserGroupGroupRolesParameterTypes2);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					userGroupId, groupId, roleIds);
+		try {
+			MethodKey methodKey = new MethodKey(
+				UserGroupGroupRoleServiceUtil.class,
+				"deleteUserGroupGroupRoles",
+				_deleteUserGroupGroupRolesParameterTypes2);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, userGroupId, groupId, roleIds);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -141,26 +157,33 @@ public class UserGroupGroupRoleServiceHttp {
 		}
 	}
 
-	public static void deleteUserGroupGroupRoles(HttpPrincipal httpPrincipal,
-		long[] userGroupIds, long groupId, long roleId)
+	public static void deleteUserGroupGroupRoles(
+			HttpPrincipal httpPrincipal, long[] userGroupIds, long groupId,
+			long roleId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(UserGroupGroupRoleServiceUtil.class,
-					"deleteUserGroupGroupRoles",
-					_deleteUserGroupGroupRolesParameterTypes3);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					userGroupIds, groupId, roleId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				UserGroupGroupRoleServiceUtil.class,
+				"deleteUserGroupGroupRoles",
+				_deleteUserGroupGroupRolesParameterTypes3);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, userGroupIds, groupId, roleId);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -170,17 +193,16 @@ public class UserGroupGroupRoleServiceHttp {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(UserGroupGroupRoleServiceHttp.class);
-	private static final Class<?>[] _addUserGroupGroupRolesParameterTypes0 = new Class[] {
-			long.class, long.class, long[].class
-		};
-	private static final Class<?>[] _addUserGroupGroupRolesParameterTypes1 = new Class[] {
-			long[].class, long.class, long.class
-		};
-	private static final Class<?>[] _deleteUserGroupGroupRolesParameterTypes2 = new Class[] {
-			long.class, long.class, long[].class
-		};
-	private static final Class<?>[] _deleteUserGroupGroupRolesParameterTypes3 = new Class[] {
-			long[].class, long.class, long.class
-		};
+	private static Log _log = LogFactoryUtil.getLog(
+		UserGroupGroupRoleServiceHttp.class);
+
+	private static final Class<?>[] _addUserGroupGroupRolesParameterTypes0 =
+		new Class[] {long.class, long.class, long[].class};
+	private static final Class<?>[] _addUserGroupGroupRolesParameterTypes1 =
+		new Class[] {long[].class, long.class, long.class};
+	private static final Class<?>[] _deleteUserGroupGroupRolesParameterTypes2 =
+		new Class[] {long.class, long.class, long[].class};
+	private static final Class<?>[] _deleteUserGroupGroupRolesParameterTypes3 =
+		new Class[] {long[].class, long.class, long.class};
+
 }

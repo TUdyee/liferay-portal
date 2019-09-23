@@ -14,19 +14,17 @@
 
 package com.liferay.portal.kernel.security.permission;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchResourceActionException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.Role;
 
-import java.io.InputStream;
-
 import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -35,30 +33,19 @@ import javax.servlet.http.HttpServletRequest;
 @ProviderType
 public interface ResourceActions {
 
+	public void check(Portlet portlet);
+
 	public void check(String portletName);
 
 	public void checkAction(String name, String actionId)
 		throws NoSuchResourceActionException;
 
-	public String getAction(HttpServletRequest request, String action);
+	public String getAction(
+		HttpServletRequest httpServletRequest, String action);
 
 	public String getAction(Locale locale, String action);
 
 	public String getActionNamePrefix();
-
-	/**
-	 * @deprecated As of 7.0.0
-	 */
-	@Deprecated
-	public List<String> getActionsNames(
-		HttpServletRequest request, List<String> actions);
-
-	/**
-	 * @deprecated As of 7.0.0
-	 */
-	@Deprecated
-	public List<String> getActionsNames(
-		HttpServletRequest request, String name, long actionIds);
 
 	public String getCompositeModelName(String... classNames);
 
@@ -68,7 +55,8 @@ public interface ResourceActions {
 
 	public List<String> getModelPortletResources(String name);
 
-	public String getModelResource(HttpServletRequest request, String name);
+	public String getModelResource(
+		HttpServletRequest httpServletRequest, String name);
 
 	public String getModelResource(Locale locale, String name);
 
@@ -140,13 +128,6 @@ public interface ResourceActions {
 	public void read(
 			String servletContextName, ClassLoader classLoader,
 			String... sources)
-		throws Exception;
-
-	/**
-	 * @deprecated As of 7.0.0
-	 */
-	@Deprecated
-	public void read(String servletContextName, InputStream inputStream)
 		throws Exception;
 
 	public void readAndCheck(

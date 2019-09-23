@@ -14,6 +14,10 @@
 
 package com.liferay.portal.nio.intraband.proxy;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.asm.ASMUtil;
 import com.liferay.portal.asm.MethodNodeGenerator;
 import com.liferay.portal.kernel.io.Deserializer;
@@ -40,19 +44,11 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.ReflectionUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.TextFormatter;
-import com.liferay.portal.nio.intraband.proxy.IntrabandProxyUtil.MethodComparator;
-import com.liferay.portal.nio.intraband.proxy.IntrabandProxyUtil.MethodsBag;
-import com.liferay.portal.nio.intraband.proxy.IntrabandProxyUtil.TemplateSkeleton;
-import com.liferay.portal.nio.intraband.proxy.IntrabandProxyUtil.TemplateStub;
 import com.liferay.portal.test.aspects.ReflectionUtilAdvice;
 import com.liferay.portal.test.rule.AdviseWith;
 import com.liferay.portal.test.rule.AspectJNewEnvTestRule;
@@ -86,6 +82,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicReference;
@@ -143,6 +140,7 @@ public class IntrabandProxyUtilTest {
 
 			@SuppressWarnings("unused")
 			private String _testField;
+
 		}
 
 		Field[] fields = TestClass.class.getDeclaredFields();
@@ -161,8 +159,9 @@ public class IntrabandProxyUtilTest {
 		}
 		catch (IllegalArgumentException iae) {
 			Assert.assertEquals(
-				"Field " + fields[0] + " is expected to be of type " +
-					Object.class + " and not static",
+				StringBundler.concat(
+					"Field ", fields[0], " is expected to be of type ",
+					Object.class, " and not static"),
 				iae.getMessage());
 		}
 
@@ -174,8 +173,9 @@ public class IntrabandProxyUtilTest {
 		}
 		catch (IllegalArgumentException iae) {
 			Assert.assertEquals(
-				"Field " + fields[0] + " is expected to be of type " +
-					String.class + " and static",
+				StringBundler.concat(
+					"Field ", fields[0], " is expected to be of type ",
+					String.class, " and static"),
 				iae.getMessage());
 		}
 	}
@@ -307,16 +307,18 @@ public class IntrabandProxyUtilTest {
 				iae.getMessage());
 		}
 
-		MethodsBag methodsBag = IntrabandProxyUtil.extractMethods(
-			TestExtractMethodsClass5.class);
+		IntrabandProxyUtil.MethodsBag methodsBag =
+			IntrabandProxyUtil.extractMethods(TestExtractMethodsClass5.class);
 
 		List<Method> idMethods = methodsBag.idMethods;
 
 		Assert.assertEquals(idMethods.toString(), 2, idMethods.size());
 		Assert.assertTrue(
+			idMethods.toString(),
 			idMethods.contains(
 				TestExtractMethodsClass5.class.getMethod("getId1")));
 		Assert.assertTrue(
+			idMethods.toString(),
 			idMethods.contains(
 				TestExtractMethodsClass5.class.getMethod("getId2")));
 
@@ -561,7 +563,7 @@ public class IntrabandProxyUtilTest {
 			IntrabandProxyUtil.getProxyMethodSignatures(TestClass.class));
 	}
 
-	@AdviseWith(adviceClasses = {ReflectionUtilAdvice.class})
+	@AdviseWith(adviceClasses = ReflectionUtilAdvice.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testInitializationFailure() throws ClassNotFoundException {
@@ -653,8 +655,9 @@ public class IntrabandProxyUtilTest {
 
 		ClassNode classNode = _loadClass(TestClass.class);
 
-		String[] proxyMethodSignatures =
-			{"testSignature1", "testSignature2", "testSignature3"};
+		String[] proxyMethodSignatures = {
+			"testSignature1", "testSignature2", "testSignature3"
+		};
 
 		IntrabandProxyUtil.rewriteGetProxyMethodSignaturesMethodNode(
 			classNode, proxyMethodSignatures);
@@ -738,7 +741,7 @@ public class IntrabandProxyUtilTest {
 
 	@Test
 	public void testTemplateSkeleton() throws ClassNotFoundException {
-		class TestTemplateSkeleton extends TemplateSkeleton {
+		class TestTemplateSkeleton extends IntrabandProxyUtil.TemplateSkeleton {
 
 			TestTemplateSkeleton(TargetLocator targetLocator) {
 				super(targetLocator);
@@ -820,7 +823,8 @@ public class IntrabandProxyUtilTest {
 
 		try (CaptureHandler captureHandler =
 				JDKLoggerTestUtil.configureJDKLogger(
-					TemplateSkeleton.class.getName(), Level.SEVERE)) {
+					IntrabandProxyUtil.TemplateSkeleton.class.getName(),
+					Level.SEVERE)) {
 
 			testTemplateSkeleton.dispatch(
 				mockRegistrationReference,
@@ -856,7 +860,7 @@ public class IntrabandProxyUtilTest {
 	@Test
 	public void testTemplateStub() {
 		try {
-			new TemplateStub(null, null, null);
+			new IntrabandProxyUtil.TemplateStub(null, null, null);
 
 			Assert.fail();
 		}
@@ -865,7 +869,7 @@ public class IntrabandProxyUtilTest {
 		}
 
 		try {
-			new TemplateStub("id", null, null);
+			new IntrabandProxyUtil.TemplateStub("id", null, null);
 
 			Assert.fail();
 		}
@@ -894,8 +898,9 @@ public class IntrabandProxyUtilTest {
 		MockRegistrationReference mockRegistrationReference =
 			new MockRegistrationReference(mockIntraband);
 
-		TemplateStub templateStub = new TemplateStub(
-			"id", mockRegistrationReference, null);
+		IntrabandProxyUtil.TemplateStub templateStub =
+			new IntrabandProxyUtil.TemplateStub(
+				"id", mockRegistrationReference, null);
 
 		Assert.assertEquals(
 			"id", ReflectionTestUtil.getFieldValue(templateStub, "_id"));
@@ -910,7 +915,7 @@ public class IntrabandProxyUtilTest {
 			mockIntraband,
 			ReflectionTestUtil.getFieldValue(templateStub, "_intraband"));
 
-		templateStub = new TemplateStub(
+		templateStub = new IntrabandProxyUtil.TemplateStub(
 			"id", mockRegistrationReference, WarnLogExceptionHandler.INSTANCE);
 
 		Assert.assertEquals(
@@ -980,7 +985,7 @@ public class IntrabandProxyUtilTest {
 					templateStub, "_syncSend",
 					new Class<?>[] {Serializer.class}, new Serializer()));
 
-			Assert.assertTrue(logRecords.isEmpty());
+			Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 
 			rpcResponseReference.set(null);
 
@@ -991,11 +996,11 @@ public class IntrabandProxyUtilTest {
 				ReflectionTestUtil.invoke(
 					templateStub, "_syncSend",
 					new Class<?>[] {Serializer.class}, new Serializer()));
-			Assert.assertTrue(logRecords.isEmpty());
+			Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 		}
 	}
 
-	@AdviseWith(adviceClasses = {DisableProxyClassesDump.class})
+	@AdviseWith(adviceClasses = DisableProxyClassesDump.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testToClassProxyClassesDumpDisabled()
@@ -1004,7 +1009,7 @@ public class IntrabandProxyUtilTest {
 		_doTestToClass(false, false);
 	}
 
-	@AdviseWith(adviceClasses = {EnableProxyClassesDump.class})
+	@AdviseWith(adviceClasses = EnableProxyClassesDump.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testToClassProxyClassesDumpEnabled()
@@ -1254,16 +1259,19 @@ public class IntrabandProxyUtilTest {
 		Assert.assertEquals(var, varInsnNode.var);
 	}
 
-	private String[] _buildProxyMethodSignatures(Class<?> clazz) {
+	private String[] _buildProxyMethodSignatures(Class<?> clazz)
+		throws Exception {
+
 		List<Method> proxyMethods = new ArrayList<>();
 
-		for (Method method : ReflectionUtil.getVisibleMethods(clazz)) {
+		for (Method method : _getVisibleMethods(clazz)) {
 			if (method.getAnnotation(Proxy.class) != null) {
 				proxyMethods.add(method);
 			}
 		}
 
-		Collections.sort(proxyMethods, new MethodComparator());
+		Collections.sort(
+			proxyMethods, new IntrabandProxyUtil.MethodComparator());
 
 		String[] proxyMethodSignatures = new String[proxyMethods.size()];
 
@@ -1272,8 +1280,11 @@ public class IntrabandProxyUtilTest {
 
 			String name = proxyMethod.getName();
 
-			proxyMethodSignatures[i] = name.concat(StringPool.DASH).concat(
-				Type.getMethodDescriptor(proxyMethod));
+			proxyMethodSignatures[i] = name.concat(
+				StringPool.DASH
+			).concat(
+				Type.getMethodDescriptor(proxyMethod)
+			);
 		}
 
 		return proxyMethodSignatures;
@@ -1283,7 +1294,7 @@ public class IntrabandProxyUtilTest {
 		Method method, int index, String skeletonId, String stubInternalName) {
 
 		MethodNode proxyMethodNode = IntrabandProxyUtil.createProxyMethodNode(
-			method, index, skeletonId, Type.getType(stubInternalName));
+			method, index, skeletonId, Type.getObjectType(stubInternalName));
 
 		_assertMethodNodeSignature(
 			proxyMethodNode, method.getModifiers() & ~Modifier.ABSTRACT,
@@ -1430,8 +1441,6 @@ public class IntrabandProxyUtilTest {
 
 		Class<?> returnClass = method.getReturnType();
 
-		Type returnType = Type.getType(returnClass);
-
 		if (returnClass == void.class) {
 
 			// INVOKESPECIAL stubInternalName _send
@@ -1556,6 +1565,8 @@ public class IntrabandProxyUtilTest {
 
 				// xRETURN
 
+				Type returnType = Type.getType(returnClass);
+
 				_assertInsnNode(
 					iterator.next(), returnType.getOpcode(Opcodes.IRETURN));
 
@@ -1639,7 +1650,7 @@ public class IntrabandProxyUtilTest {
 
 		List<Method> proxyMethods = _getProxyMethods(clazz);
 
-		for (int i = 0; i < proxyMethods.size() + 1; i++) {
+		for (int i = 0; i < (proxyMethods.size() + 1); i++) {
 			Serializer serializer = new Serializer();
 
 			serializer.writeString(targetId);
@@ -1669,10 +1680,11 @@ public class IntrabandProxyUtilTest {
 					Assert.assertSame(
 						IllegalArgumentException.class, throwable.getClass());
 					Assert.assertEquals(
-						"Unknow method index " + i +
-							" for proxy methods mappings " +
-								ReflectionTestUtil.getFieldValue(
-									skeletonClass, "_PROXY_METHODS_MAPPING"),
+						StringBundler.concat(
+							"Unknow method index ", i,
+							" for proxy methods mappings ",
+							ReflectionTestUtil.getFieldValue(
+								skeletonClass, "_PROXY_METHODS_MAPPING")),
 						throwable.getMessage());
 				}
 
@@ -2060,7 +2072,7 @@ public class IntrabandProxyUtilTest {
 			}
 
 			if (!proxyClassesDumpEnabled || !logEnabled) {
-				Assert.assertTrue(logRecords.isEmpty());
+				Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 			}
 		}
 
@@ -2082,6 +2094,7 @@ public class IntrabandProxyUtilTest {
 			String message = throwable.getMessage();
 
 			Assert.assertTrue(
+				message,
 				message.contains(
 					"duplicate class definition for name: \"" +
 						Type.getInternalName(TestClass.class) + "\""));
@@ -2164,8 +2177,9 @@ public class IntrabandProxyUtilTest {
 				"PROXY_METHOD_SIGNATURES");
 
 			Assert.assertEquals(
-				"Field " + field + " is expected to be of type " +
-					String[].class + " and static",
+				StringBundler.concat(
+					"Field ", field, " is expected to be of type ",
+					String[].class, " and static"),
 				iae.getMessage());
 		}
 
@@ -2174,6 +2188,7 @@ public class IntrabandProxyUtilTest {
 
 				@SuppressWarnings("unused")
 				private String _PROXY_METHODS_MAPPING;
+
 			}
 
 			try {
@@ -2187,8 +2202,9 @@ public class IntrabandProxyUtilTest {
 					"_PROXY_METHODS_MAPPING");
 
 				Assert.assertEquals(
-					"Field " + field + " is expected to be of type " +
-						String.class + " and static",
+					StringBundler.concat(
+						"Field ", field, " is expected to be of type ",
+						String.class, " and static"),
 					iae.getMessage());
 			}
 
@@ -2196,6 +2212,7 @@ public class IntrabandProxyUtilTest {
 
 				@SuppressWarnings("unused")
 				private String _log;
+
 			}
 
 			try {
@@ -2208,8 +2225,9 @@ public class IntrabandProxyUtilTest {
 				Field field = TestValidateClass3.class.getDeclaredField("_log");
 
 				Assert.assertEquals(
-					"Field " + field + " is expected to be of type " +
-						Log.class + " and static",
+					StringBundler.concat(
+						"Field ", field, " is expected to be of type ",
+						Log.class, " and static"),
 					iae.getMessage());
 			}
 
@@ -2217,6 +2235,7 @@ public class IntrabandProxyUtilTest {
 
 				@SuppressWarnings("unused")
 				private Object _targetLocator;
+
 			}
 
 			try {
@@ -2230,8 +2249,9 @@ public class IntrabandProxyUtilTest {
 					"_targetLocator");
 
 				Assert.assertEquals(
-					"Field " + field + " is expected to be of type " +
-						TargetLocator.class + " and not static",
+					StringBundler.concat(
+						"Field ", field, " is expected to be of type ",
+						TargetLocator.class, " and not static"),
 					iae.getMessage());
 			}
 		}
@@ -2240,6 +2260,7 @@ public class IntrabandProxyUtilTest {
 
 				@SuppressWarnings("unused")
 				int _proxyType = 0;
+
 			}
 
 			try {
@@ -2253,8 +2274,9 @@ public class IntrabandProxyUtilTest {
 					"_proxyType");
 
 				Assert.assertEquals(
-					"Field " + field + " is expected to be of type " +
-						byte.class + " and static",
+					StringBundler.concat(
+						"Field ", field, " is expected to be of type ",
+						byte.class, " and static"),
 					iae.getMessage());
 			}
 
@@ -2262,6 +2284,7 @@ public class IntrabandProxyUtilTest {
 
 				@SuppressWarnings("unused")
 				private Object _id;
+
 			}
 
 			try {
@@ -2274,8 +2297,9 @@ public class IntrabandProxyUtilTest {
 				Field field = TestValidateClass6.class.getDeclaredField("_id");
 
 				Assert.assertEquals(
-					"Field " + field + " is expected to be of type " +
-						String.class + " and not static",
+					StringBundler.concat(
+						"Field ", field, " is expected to be of type ",
+						String.class, " and not static"),
 					iae.getMessage());
 			}
 
@@ -2283,6 +2307,7 @@ public class IntrabandProxyUtilTest {
 
 				@SuppressWarnings("unused")
 				private Object _intraband;
+
 			}
 
 			try {
@@ -2296,8 +2321,9 @@ public class IntrabandProxyUtilTest {
 					"_intraband");
 
 				Assert.assertEquals(
-					"Field " + field + " is expected to be of type " +
-						Intraband.class + " and not static",
+					StringBundler.concat(
+						"Field ", field, " is expected to be of type ",
+						Intraband.class, " and not static"),
 					iae.getMessage());
 			}
 
@@ -2305,6 +2331,7 @@ public class IntrabandProxyUtilTest {
 
 				@SuppressWarnings("unused")
 				private Object _registrationReference;
+
 			}
 
 			try {
@@ -2318,8 +2345,9 @@ public class IntrabandProxyUtilTest {
 					"_registrationReference");
 
 				Assert.assertEquals(
-					"Field " + field + " is expected to be of type " +
-						RegistrationReference.class + " and not static",
+					StringBundler.concat(
+						"Field ", field, " is expected to be of type ",
+						RegistrationReference.class, " and not static"),
 					iae.getMessage());
 			}
 
@@ -2327,6 +2355,7 @@ public class IntrabandProxyUtilTest {
 
 				@SuppressWarnings("unused")
 				private Object _exceptionHandler;
+
 			}
 
 			try {
@@ -2340,8 +2369,9 @@ public class IntrabandProxyUtilTest {
 					"_exceptionHandler");
 
 				Assert.assertEquals(
-					"Field " + field + " is expected to be of type " +
-						ExceptionHandler.class + " and not static",
+					StringBundler.concat(
+						"Field ", field, " is expected to be of type ",
+						ExceptionHandler.class, " and not static"),
 					iae.getMessage());
 			}
 		}
@@ -2350,10 +2380,10 @@ public class IntrabandProxyUtilTest {
 			_classLoader, TestValidateClass.class, skeletonOrStub);
 	}
 
-	private List<Method> _getCopiedMethods(Class<?> clazz) {
+	private List<Method> _getCopiedMethods(Class<?> clazz) throws Exception {
 		List<Method> emptyMethods = new ArrayList<>();
 
-		for (Method method : ReflectionUtil.getVisibleMethods(clazz)) {
+		for (Method method : _getVisibleMethods(clazz)) {
 			String name = method.getName();
 
 			if (!Modifier.isAbstract(method.getModifiers()) &&
@@ -2368,10 +2398,10 @@ public class IntrabandProxyUtilTest {
 		return emptyMethods;
 	}
 
-	private List<Method> _getEmptyMethods(Class<?> clazz) {
+	private List<Method> _getEmptyMethods(Class<?> clazz) throws Exception {
 		List<Method> emptyMethods = new ArrayList<>();
 
-		for (Method method : ReflectionUtil.getVisibleMethods(clazz)) {
+		for (Method method : _getVisibleMethods(clazz)) {
 			if (Modifier.isAbstract(method.getModifiers()) &&
 				(method.getAnnotation(Id.class) == null) &&
 				(method.getAnnotation(Proxy.class) == null)) {
@@ -2383,10 +2413,10 @@ public class IntrabandProxyUtilTest {
 		return emptyMethods;
 	}
 
-	private List<Method> _getIdMethods(Class<?> clazz) {
+	private List<Method> _getIdMethods(Class<?> clazz) throws Exception {
 		List<Method> idMethods = new ArrayList<>();
 
-		for (Method method : ReflectionUtil.getVisibleMethods(clazz)) {
+		for (Method method : _getVisibleMethods(clazz)) {
 			if (method.getAnnotation(Id.class) != null) {
 				idMethods.add(method);
 			}
@@ -2395,18 +2425,23 @@ public class IntrabandProxyUtilTest {
 		return idMethods;
 	}
 
-	private List<Method> _getProxyMethods(Class<?> clazz) {
+	private List<Method> _getProxyMethods(Class<?> clazz) throws Exception {
 		List<Method> proxyMethods = new ArrayList<>();
 
-		for (Method method : ReflectionUtil.getVisibleMethods(clazz)) {
+		for (Method method : _getVisibleMethods(clazz)) {
 			if (method.getAnnotation(Proxy.class) != null) {
 				proxyMethods.add(method);
 			}
 		}
 
-		Collections.sort(proxyMethods, new MethodComparator());
+		Collections.sort(
+			proxyMethods, new IntrabandProxyUtil.MethodComparator());
 
 		return proxyMethods;
+	}
+
+	private Set<Method> _getVisibleMethods(Class<?> clazz) throws Exception {
+		return (Set<Method>)_getVisibleMethodsMethod.invoke(null, clazz);
 	}
 
 	private ClassNode _loadClass(Class<?> clazz) {
@@ -2438,13 +2473,55 @@ public class IntrabandProxyUtilTest {
 	}
 
 	private static final Map<Class<?>, Class<?>> _autoboxingMap =
-		new HashMap<>();
+		new HashMap<Class<?>, Class<?>>() {
+			{
+				put(boolean.class, Boolean.class);
+				put(byte.class, Number.class);
+				put(char.class, Character.class);
+				put(double.class, Number.class);
+				put(float.class, Number.class);
+				put(int.class, Number.class);
+				put(long.class, Number.class);
+				put(short.class, Number.class);
+			}
+		};
 	private static final ClassLoader _classLoader =
 		IntrabandProxyUtilTest.class.getClassLoader();
 	private static final Map<Class<?>, Object> _defaultValueMap =
-		new HashMap<>();
+		new HashMap<Class<?>, Object>() {
+			{
+				put(boolean.class, Boolean.FALSE);
+				put(byte.class, (byte)0);
+				put(char.class, (char)0);
+				put(double.class, (double)0);
+				put(float.class, (float)0);
+				put(int.class, 0);
+				put(long.class, (long)0);
+				put(short.class, (short)0);
+				put(String.class, null);
+				put(Date.class, null);
+				put(Object.class, null);
+				put(void.class, null);
+			}
+		};
+	private static final Method _getVisibleMethodsMethod;
 	private static final Map<Class<?>, Object> _sampleValueMap =
-		new HashMap<>();
+		new HashMap<Class<?>, Object>() {
+			{
+				put(boolean.class, Boolean.TRUE);
+				put(byte.class, (byte)11);
+				put(char.class, 'X');
+				put(double.class, 12.345);
+				put(float.class, 5.325F);
+				put(int.class, 127);
+				put(long.class, (long)82465);
+				put(short.class, (short)-35);
+				put(String.class, "Hello");
+				put(Date.class, new Date());
+				put(Object.class, new Locale("en"));
+				put(void.class, null);
+			}
+		};
 	private static final Type[] _types = {
 		Type.BOOLEAN_TYPE, Type.BYTE_TYPE, Type.CHAR_TYPE, Type.DOUBLE_TYPE,
 		Type.FLOAT_TYPE, Type.INT_TYPE, Type.LONG_TYPE, Type.SHORT_TYPE,
@@ -2452,40 +2529,13 @@ public class IntrabandProxyUtilTest {
 	};
 
 	static {
-		_autoboxingMap.put(boolean.class, Boolean.class);
-		_autoboxingMap.put(byte.class, Number.class);
-		_autoboxingMap.put(char.class, Character.class);
-		_autoboxingMap.put(double.class, Number.class);
-		_autoboxingMap.put(float.class, Number.class);
-		_autoboxingMap.put(int.class, Number.class);
-		_autoboxingMap.put(long.class, Number.class);
-		_autoboxingMap.put(short.class, Number.class);
-
-		_defaultValueMap.put(boolean.class, Boolean.FALSE);
-		_defaultValueMap.put(byte.class, (byte)0);
-		_defaultValueMap.put(char.class, (char)0);
-		_defaultValueMap.put(double.class, (double)0);
-		_defaultValueMap.put(float.class, (float)0);
-		_defaultValueMap.put(int.class, 0);
-		_defaultValueMap.put(long.class, (long)0);
-		_defaultValueMap.put(short.class, (short)0);
-		_defaultValueMap.put(String.class, null);
-		_defaultValueMap.put(Date.class, null);
-		_defaultValueMap.put(Object.class, null);
-		_defaultValueMap.put(void.class, null);
-
-		_sampleValueMap.put(boolean.class, Boolean.TRUE);
-		_sampleValueMap.put(byte.class, (byte)11);
-		_sampleValueMap.put(char.class, 'X');
-		_sampleValueMap.put(double.class, 12.345);
-		_sampleValueMap.put(float.class, 5.325F);
-		_sampleValueMap.put(int.class, 127);
-		_sampleValueMap.put(long.class, (long)82465);
-		_sampleValueMap.put(short.class, (short)-35);
-		_sampleValueMap.put(String.class, "Hello");
-		_sampleValueMap.put(Date.class, new Date());
-		_sampleValueMap.put(Object.class, new Locale("en"));
-		_sampleValueMap.put(void.class, null);
+		try {
+			_getVisibleMethodsMethod = ReflectionUtil.getDeclaredMethod(
+				IntrabandProxyUtil.class, "_getVisibleMethods", Class.class);
+		}
+		catch (Exception e) {
+			throw new ExceptionInInitializerError(e);
+		}
 	}
 
 	private static class AutoReplyMockIntraband extends MockIntraband {
@@ -2572,6 +2622,42 @@ public class IntrabandProxyUtilTest {
 
 	}
 
+	private abstract static class TestExtractMethodsClass5 {
+
+		@Proxy
+		public void doStuff1() {
+		}
+
+		@Proxy(name = "doStuffX")
+		public void doStuff2() {
+		}
+
+		@SuppressWarnings("unused")
+		public void doStuff3() {
+		}
+
+		public abstract void doStuff4();
+
+		@Id
+		public String getId1() {
+			return null;
+		}
+
+		@Id
+		public String getId2() {
+			return null;
+		}
+
+	}
+
+	private abstract static class TestGenerateClass1
+		extends TestProxyMethodsClass implements TestGenerateInterface1 {
+	}
+
+	private abstract static class TestGenerateClass2
+		extends TestProxyMethodsClass implements TestGenerateInterface2 {
+	}
+
 	private static class TestGenerateStubFunction1 {
 
 		@SuppressWarnings("unused")
@@ -2591,6 +2677,43 @@ public class IntrabandProxyUtilTest {
 					TestGenerateStubFunction1.class.getName() + " in <clinit>");
 			}
 		}
+
+	}
+
+	private abstract static class TestGenerateStubFunction2
+		extends TestProxyMethodsClass
+		implements TestEmptyMethodsInterface, TestIdMethodsInterface {
+
+		@SuppressWarnings("unused")
+		public void copyMethod1() {
+			if (_log.isInfoEnabled()) {
+				_log.info("copyMethod1");
+			}
+		}
+
+		@SuppressWarnings("unused")
+		protected void copyMethod2() {
+			if (_log.isInfoEnabled()) {
+				_log.info("copyMethod2");
+			}
+		}
+
+		@SuppressWarnings("unused")
+		void copyMethod3() {
+			if (_log.isInfoEnabled()) {
+				_log.info("copyMethod3");
+			}
+		}
+
+		@SuppressWarnings("unused")
+		private void copyMethod4() {
+			if (_log.isInfoEnabled()) {
+				_log.info("copyMethod4");
+			}
+		}
+
+		private static final Log _log = LogFactoryUtil.getLog(
+			TestGenerateStubFunction2.class);
 
 	}
 
@@ -2649,6 +2772,29 @@ public class IntrabandProxyUtilTest {
 
 	}
 
+	private abstract static class TestProxyMethodsClass
+		implements TestProxyMethodsInterface {
+
+		@Proxy
+		protected abstract short syncCallShort(
+				boolean z, byte b, char c, double d, float f, int i, long j,
+				short s, String string, Date date, Object obj)
+			throws InterruptedException, IOException;
+
+		@Proxy
+		abstract Object syncCallObject(
+				boolean z, byte b, char c, double d, float f, int i, long j,
+				short s, String string, Date date, Object obj)
+			throws InterruptedException, IOException;
+
+		@Proxy
+		abstract String syncCallString(
+				boolean z, byte b, char c, double d, float f, int i, long j,
+				short s, String string, Date date, Object obj)
+			throws InterruptedException, IOException;
+
+	}
+
 	private static class TestValidateClass {
 
 		@SuppressWarnings("unused")
@@ -2704,42 +2850,6 @@ public class IntrabandProxyUtilTest {
 
 	}
 
-	private abstract static class TestExtractMethodsClass5 {
-
-		@Proxy
-		public void doStuff1() {
-		}
-
-		@Proxy(name = "doStuffX")
-		public void doStuff2() {
-		}
-
-		@SuppressWarnings("unused")
-		public void doStuff3() {
-		}
-
-		public abstract void doStuff4();
-
-		@Id
-		public String getId1() {
-			return null;
-		}
-
-		@Id
-		public String getId2() {
-			return null;
-		}
-
-	}
-
-	private abstract static class TestGenerateClass1
-		extends TestProxyMethodsClass implements TestGenerateInterface1 {
-	}
-
-	private abstract static class TestGenerateClass2
-		extends TestProxyMethodsClass implements TestGenerateInterface2 {
-	}
-
 	private interface TestGenerateInterface1
 		extends Comparable<String>, Callable<String>, Runnable,
 				TestEmptyMethodsInterface, TestProxyMethodsInterface {
@@ -2749,43 +2859,6 @@ public class IntrabandProxyUtilTest {
 		extends TestIdMethodsInterface, TestGenerateInterface1 {
 	}
 
-	private abstract static class TestGenerateStubFunction2
-		extends TestProxyMethodsClass
-		implements TestEmptyMethodsInterface, TestIdMethodsInterface {
-
-		@SuppressWarnings("unused")
-		public void copyMethod1() {
-			if (_log.isInfoEnabled()) {
-				_log.info("copyMethod1");
-			}
-		}
-
-		@SuppressWarnings("unused")
-		protected void copyMethod2() {
-			if (_log.isInfoEnabled()) {
-				_log.info("copyMethod2");
-			}
-		}
-
-		@SuppressWarnings("unused")
-		void copyMethod3() {
-			if (_log.isInfoEnabled()) {
-				_log.info("copyMethod3");
-			}
-		}
-
-		@SuppressWarnings("unused")
-		private void copyMethod4() {
-			if (_log.isInfoEnabled()) {
-				_log.info("copyMethod4");
-			}
-		}
-
-		private static final Log _log = LogFactoryUtil.getLog(
-			TestGenerateStubFunction2.class);
-
-	}
-
 	private interface TestIdMethodsInterface {
 
 		@Id
@@ -2793,29 +2866,6 @@ public class IntrabandProxyUtilTest {
 
 		@Id
 		public abstract String getId2();
-
-	}
-
-	private abstract static class TestProxyMethodsClass
-		implements TestProxyMethodsInterface {
-
-		@Proxy
-		protected abstract short syncCallShort(
-				boolean z, byte b, char c, double d, float f, int i, long j,
-				short s, String string, Date date, Object obj)
-			throws InterruptedException, IOException;
-
-		@Proxy
-		abstract Object syncCallObject(
-				boolean z, byte b, char c, double d, float f, int i, long j,
-				short s, String string, Date date, Object obj)
-			throws InterruptedException, IOException;
-
-		@Proxy
-		abstract String syncCallString(
-				boolean z, byte b, char c, double d, float f, int i, long j,
-				short s, String string, Date date, Object obj)
-			throws InterruptedException, IOException;
 
 	}
 

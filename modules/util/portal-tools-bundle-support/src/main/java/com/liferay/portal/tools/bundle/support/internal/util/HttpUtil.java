@@ -75,11 +75,11 @@ public class HttpUtil {
 
 			HttpPost httpPost = new HttpPost(uri);
 
-			InetAddress localHost = InetAddress.getLocalHost();
+			InetAddress inetAddress = InetAddress.getLocalHost();
 
 			NameValuePair deviceNameValuePair = new BasicNameValuePair(
 				"device",
-				"portal-tools-bundle-support-" + localHost.getHostName());
+				"portal-tools-bundle-support-" + inetAddress.getHostName());
 
 			httpPost.setEntity(
 				new UrlEncodedFormEntity(
@@ -183,8 +183,8 @@ public class HttpUtil {
 				}
 			}
 			else {
-				RedirectLocations redirectLocations = (RedirectLocations)
-					httpContext.getAttribute(
+				RedirectLocations redirectLocations =
+					(RedirectLocations)httpContext.getAttribute(
 						HttpClientContext.REDIRECT_LOCATIONS);
 
 				if (redirectLocations != null) {

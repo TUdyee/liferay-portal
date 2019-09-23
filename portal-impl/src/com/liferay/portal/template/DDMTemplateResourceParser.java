@@ -17,6 +17,9 @@ package com.liferay.portal.template;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMTemplate;
 import com.liferay.dynamic.data.mapping.kernel.DDMTemplateManagerUtil;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -26,10 +29,8 @@ import com.liferay.portal.kernel.template.DDMTemplateResource;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateException;
 import com.liferay.portal.kernel.template.TemplateResource;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringPool;
 
 /**
  * @author Tina Tian
@@ -81,9 +82,10 @@ public class DDMTemplateResourceParser implements TemplateResourceParser {
 
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"Loading {companyId=" + companyId + ", groupId=" + groupId +
-						", classNameId=" + classNameId + ", ddmTemplateKey=" +
-							ddmTemplateKey + "}");
+					StringBundler.concat(
+						"Loading {companyId=", companyId, ", groupId=", groupId,
+						", classNameId=", classNameId, ", ddmTemplateKey=",
+						ddmTemplateKey, "}"));
 			}
 
 			DDMTemplate ddmTemplate = DDMTemplateManagerUtil.fetchTemplate(
@@ -113,10 +115,9 @@ public class DDMTemplateResourceParser implements TemplateResourceParser {
 			if (ddmTemplate == null) {
 				return null;
 			}
-			else {
-				return new DDMTemplateResource(
-					ddmTemplate.getTemplateKey(), ddmTemplate);
-			}
+
+			return new DDMTemplateResource(
+				ddmTemplate.getTemplateKey(), ddmTemplate);
 		}
 		catch (Exception e) {
 			throw new TemplateException(

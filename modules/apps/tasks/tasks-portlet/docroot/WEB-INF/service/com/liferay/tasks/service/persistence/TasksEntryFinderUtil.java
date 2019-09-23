@@ -14,41 +14,40 @@
 
 package com.liferay.tasks.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortletBeanLocatorUtil;
-import com.liferay.portal.kernel.util.ReferenceRegistry;
 
 /**
  * @author Ryan Park
  * @generated
  */
-@ProviderType
 public class TasksEntryFinderUtil {
-	public static int countByG_U_P_A_S_T_N(long groupId, long userId,
-		int priority, long assigneeUserId, int status, long[] assetTagIds,
-		long[] notAssetTagIds) {
-		return getFinder()
-				   .countByG_U_P_A_S_T_N(groupId, userId, priority,
-			assigneeUserId, status, assetTagIds, notAssetTagIds);
+
+	public static int countByG_U_P_A_S_T_N(
+		long groupId, long userId, int priority, long assigneeUserId,
+		int status, long[] assetTagIds, long[] notAssetTagIds) {
+
+		return getFinder().countByG_U_P_A_S_T_N(
+			groupId, userId, priority, assigneeUserId, status, assetTagIds,
+			notAssetTagIds);
 	}
 
-	public static java.util.List<com.liferay.tasks.model.TasksEntry> findByG_U_P_A_S_T_N(
-		long groupId, long userId, int priority, long assigneeUserId,
-		int status, long[] assetTagIds, long[] notAssetTagIds, int start,
-		int end) {
-		return getFinder()
-				   .findByG_U_P_A_S_T_N(groupId, userId, priority,
-			assigneeUserId, status, assetTagIds, notAssetTagIds, start, end);
+	public static java.util.List<com.liferay.tasks.model.TasksEntry>
+		findByG_U_P_A_S_T_N(
+			long groupId, long userId, int priority, long assigneeUserId,
+			int status, long[] assetTagIds, long[] notAssetTagIds, int start,
+			int end) {
+
+		return getFinder().findByG_U_P_A_S_T_N(
+			groupId, userId, priority, assigneeUserId, status, assetTagIds,
+			notAssetTagIds, start, end);
 	}
 
 	public static TasksEntryFinder getFinder() {
 		if (_finder == null) {
-			_finder = (TasksEntryFinder)PortletBeanLocatorUtil.locate(com.liferay.tasks.service.ClpSerializer.getServletContextName(),
-					TasksEntryFinder.class.getName());
-
-			ReferenceRegistry.registerReference(TasksEntryFinderUtil.class,
-				"_finder");
+			_finder = (TasksEntryFinder)PortletBeanLocatorUtil.locate(
+				com.liferay.tasks.service.ServletContextUtil.
+					getServletContextName(),
+				TasksEntryFinder.class.getName());
 		}
 
 		return _finder;
@@ -56,10 +55,8 @@ public class TasksEntryFinderUtil {
 
 	public void setFinder(TasksEntryFinder finder) {
 		_finder = finder;
-
-		ReferenceRegistry.registerReference(TasksEntryFinderUtil.class,
-			"_finder");
 	}
 
 	private static TasksEntryFinder _finder;
+
 }

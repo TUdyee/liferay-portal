@@ -14,6 +14,9 @@
 
 package com.liferay.portal.model.impl;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.LayoutFriendlyURLException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -51,10 +54,8 @@ import com.liferay.portal.kernel.service.ThemeLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.LayoutTypePortletFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -63,8 +64,6 @@ import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ReflectionUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -351,12 +350,11 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 			return layoutSet.getColorScheme();
 		}
-		else {
-			Theme theme = getTheme();
 
-			return ThemeLocalServiceUtil.getColorScheme(
-				getCompanyId(), theme.getThemeId(), getColorSchemeId());
-		}
+		Theme theme = getTheme();
+
+		return ThemeLocalServiceUtil.getColorScheme(
+			getCompanyId(), theme.getThemeId(), getColorSchemeId());
 	}
 
 	/**
@@ -378,9 +376,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 			return layoutSet.getCss();
 		}
-		else {
-			return getCss();
-		}
+
+		return getCss();
 	}
 
 	@Override
@@ -450,7 +447,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 			}
 			else {
-				portlet = new PortletWrapper(portlet) {
+				embeddedPortlet = new PortletWrapper(portlet) {
 
 					@Override
 					public boolean getStatic() {
@@ -564,10 +561,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public String getFriendlyURLsXML() {
-		Map<Locale, String> friendlyURLMap = getFriendlyURLMap();
-
 		return LocalizationUtil.updateLocalization(
-			friendlyURLMap, StringPool.BLANK, "FriendlyURL",
+			getFriendlyURLMap(), StringPool.BLANK, "FriendlyURL",
 			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
 	}
 
@@ -695,31 +690,13 @@ public class LayoutImpl extends LayoutBaseImpl {
 			getGroupId(), isPrivateLayout(), linkToLayoutId);
 	}
 
-	/**
-	 * Returns the current layout's parent plid.
-	 *
-	 * @return the current layout's parent plid, or <code>0</code> if the
-	 *         current layout is the topmost parent layout
-	 */
 	@Override
-	public long getParentPlid() throws PortalException {
-		if (getParentLayoutId() == LayoutConstants.DEFAULT_PARENT_LAYOUT_ID) {
-			return 0;
-		}
-
-		Layout layout = LayoutLocalServiceUtil.getLayout(
-			getGroupId(), isPrivateLayout(), getParentLayoutId());
-
-		return layout.getPlid();
-	}
-
-	@Override
-	public String getRegularURL(HttpServletRequest request)
+	public String getRegularURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		String url = _getURL(request, false, false);
+		String url = _getURL(httpServletRequest, false, false);
 
-		if (!url.startsWith(Http.HTTP) && !url.startsWith(StringPool.SLASH)) {
+		if (!Validator.isUrl(url, true)) {
 			return StringPool.SLASH + url;
 		}
 
@@ -727,17 +704,17 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	@Override
-	public String getResetLayoutURL(HttpServletRequest request)
+	public String getResetLayoutURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		return _getURL(request, true, true);
+		return _getURL(httpServletRequest, true, true);
 	}
 
 	@Override
-	public String getResetMaxStateURL(HttpServletRequest request)
+	public String getResetMaxStateURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		return _getURL(request, true, false);
+		return _getURL(httpServletRequest, true, false);
 	}
 
 	@Override
@@ -779,9 +756,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 			return layoutSet.getTheme();
 		}
-		else {
-			return ThemeLocalServiceUtil.getTheme(getCompanyId(), getThemeId());
-		}
+
+		return ThemeLocalServiceUtil.getTheme(getCompanyId(), getThemeId());
 	}
 
 	@Override
@@ -810,9 +786,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 		if (_typeSettingsProperties == null) {
 			return super.getTypeSettings();
 		}
-		else {
-			return _typeSettingsProperties.toString();
-		}
+
+		return _typeSettingsProperties.toString();
 	}
 
 	@Override
@@ -887,9 +862,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 		if (group != null) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -899,14 +873,15 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public boolean includeLayoutContent(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		LayoutTypeController layoutTypeController =
 			LayoutTypeControllerTracker.getLayoutTypeController(getType());
 
 		return layoutTypeController.includeLayoutContent(
-			request, response, this);
+			httpServletRequest, httpServletResponse, this);
 	}
 
 	@Override
@@ -1165,15 +1140,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 		return false;
 	}
 
-	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public boolean isTypeArticle() {
-		return false;
-	}
-
 	@Override
 	public boolean isTypeControlPanel() {
 		if (Objects.equals(getType(), LayoutConstants.TYPE_CONTROL_PANEL) ||
@@ -1237,6 +1203,10 @@ public class LayoutImpl extends LayoutBaseImpl {
 		return false;
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isTypeSharedPortlet() {
 		if (Objects.equals(getType(), LayoutConstants.TYPE_SHARED_PORTLET)) {
@@ -1256,13 +1226,16 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	@Override
-	public boolean matches(HttpServletRequest request, String friendlyURL) {
+	public boolean matches(
+		HttpServletRequest httpServletRequest, String friendlyURL) {
+
 		LayoutType layoutType = getLayoutType();
 
 		LayoutTypeController layoutTypeController =
 			layoutType.getLayoutTypeController();
 
-		return layoutTypeController.matches(request, friendlyURL, this);
+		return layoutTypeController.matches(
+			httpServletRequest, friendlyURL, this);
 	}
 
 	@Override
@@ -1321,7 +1294,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 			new String[PropsValues.LAYOUT_FRIENDLY_URL_KEYWORDS.length];
 
 		for (int i = 0; i < PropsValues.LAYOUT_FRIENDLY_URL_KEYWORDS.length;
-			i++) {
+			 i++) {
 
 			String keyword = PropsValues.LAYOUT_FRIENDLY_URL_KEYWORDS[i];
 
@@ -1363,7 +1336,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	private LayoutTypePortlet _getLayoutTypePortletClone(
-			HttpServletRequest request)
+			HttpServletRequest httpServletRequest)
 		throws IOException {
 
 		LayoutTypePortlet layoutTypePortlet = null;
@@ -1371,7 +1344,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 		LayoutClone layoutClone = LayoutCloneFactory.getInstance();
 
 		if (layoutClone != null) {
-			String typeSettings = layoutClone.get(request, getPlid());
+			String typeSettings = layoutClone.get(
+				httpServletRequest, getPlid());
 
 			if (typeSettings != null) {
 				UnicodeProperties typeSettingsProperties =
@@ -1429,12 +1403,13 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	private String _getURL(
-			HttpServletRequest request, boolean resetMaxState,
+			HttpServletRequest httpServletRequest, boolean resetMaxState,
 			boolean resetRenderParameters)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (resetMaxState) {
 			Layout layout = themeDisplay.getLayout();
@@ -1446,7 +1421,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 			}
 			else {
 				try {
-					layoutTypePortlet = _getLayoutTypePortletClone(request);
+					layoutTypePortlet = _getLayoutTypePortletClone(
+						httpServletRequest);
 				}
 				catch (IOException ioe) {
 					_log.error("Unable to clone layout settings", ioe);
@@ -1456,11 +1432,12 @@ public class LayoutImpl extends LayoutBaseImpl {
 			}
 
 			if (layoutTypePortlet.hasStateMax()) {
-				String portletId = StringUtil.split(
-					layoutTypePortlet.getStateMax())[0];
+				String portletId =
+					StringUtil.split(layoutTypePortlet.getStateMax())[0];
 
 				LiferayPortletURL portletURL = PortletURLFactoryUtil.create(
-					request, portletId, this, PortletRequest.ACTION_PHASE);
+					httpServletRequest, portletId, this,
+					PortletRequest.ACTION_PHASE);
 
 				try {
 					portletURL.setWindowState(WindowState.NORMAL);
@@ -1489,14 +1466,13 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 		String url = PortalUtil.getLayoutURL(this, themeDisplay);
 
-		if (!CookieKeys.hasSessionId(request)) {
-			String portalURL = PortalUtil.getPortalURL(request);
+		if (!CookieKeys.hasSessionId(httpServletRequest) &&
+			(url.startsWith(PortalUtil.getPortalURL(httpServletRequest)) ||
+			 url.startsWith(StringPool.SLASH))) {
 
-			if (url.startsWith(portalURL) || url.startsWith(StringPool.SLASH)) {
-				HttpSession session = request.getSession();
+			HttpSession session = httpServletRequest.getSession();
 
-				url = PortalUtil.getURLWithSessionId(url, session.getId());
-			}
+			url = PortalUtil.getURLWithSessionId(url, session.getId());
 		}
 
 		if (!resetMaxState) {

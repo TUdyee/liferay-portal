@@ -5,7 +5,7 @@ into JavaScript functions. It also lets you use a custom localization mechanism
 in the generated `.soy.js` files by replacing [`goog.getMsg`](https://developers.google.com/closure/templates/docs/translation#closurecompiler)
 definitions with a different function call (e.g., `Liferay.Language.get`).
 
-The plugin has been successfully tested with Gradle 2.5 up to 3.3.
+The plugin has been successfully tested with Gradle 4.10.2.
 
 ## Usage
 
@@ -14,12 +14,12 @@ To use the plugin, include it in your build script:
 ```gradle
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.soy", version: "3.1.3"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.soy", version: "3.1.8"
 	}
 
 	repositories {
 		maven {
-			url "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+			url "https://repository-cdn.liferay.com/nexus/content/groups/public"
 		}
 	}
 }
@@ -48,7 +48,7 @@ transitive dependencies. The Liferay CDN repository hosts them all:
 ```gradle
 repositories {
 	maven {
-		url "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+		url "https://repository-cdn.liferay.com/nexus/content/groups/public"
 	}
 }
 ```

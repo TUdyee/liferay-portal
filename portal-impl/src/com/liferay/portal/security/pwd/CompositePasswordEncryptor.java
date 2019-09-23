@@ -14,6 +14,7 @@
 
 package com.liferay.portal.security.pwd;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PwdEncryptorException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -95,8 +96,10 @@ public class CompositePasswordEncryptor
 				Class<?> clazz = passwordEncryptor.getClass();
 
 				_log.debug(
-					"Registering " + StringUtil.merge(supportedAlgorithmTypes) +
-						" for " + clazz.getName());
+					StringBundler.concat(
+						"Registering ",
+						StringUtil.merge(supportedAlgorithmTypes), " for ",
+						clazz.getName()));
 			}
 
 			for (String supportedAlgorithmType : supportedAlgorithmTypes) {
@@ -135,8 +138,9 @@ public class CompositePasswordEncryptor
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Found " + ClassUtil.getClassName(passwordEncryptor) +
-					" to encrypt password using " + algorithm);
+				StringBundler.concat(
+					"Found ", ClassUtil.getClassName(passwordEncryptor),
+					" to encrypt password using ", algorithm));
 		}
 
 		return passwordEncryptor;

@@ -14,7 +14,7 @@
 
 package com.liferay.currency.converter.web.internal.portlet;
 
-import com.liferay.currency.converter.web.configuration.CurrencyConverterConfiguration;
+import com.liferay.currency.converter.web.internal.configuration.CurrencyConverterConfiguration;
 import com.liferay.currency.converter.web.internal.constants.CurrencyConverterPortletKeys;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.model.Release;
@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Peter Fellwock
  */
 @Component(
-	configurationPid = "com.liferay.currency.converter.web.configuration.CurrencyConverterConfiguration",
+	configurationPid = "com.liferay.currency.converter.web.internal.configuration.CurrencyConverterConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-currency-converter",
@@ -50,14 +50,13 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.preferences-owned-by-group=false",
 		"com.liferay.portlet.private-request-attributes=false",
 		"com.liferay.portlet.private-session-attributes=false",
-		"com.liferay.portlet.remoteable=true",
 		"com.liferay.portlet.render-weight=0",
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Currency Converter",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.edit-guest-template=/edit.jsp",
 		"javax.portlet.init-param.edit-template=/edit.jsp",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + CurrencyConverterPortletKeys.CURRENCY_CONVERTER,
 		"javax.portlet.portlet-mode=text/html;edit,edit-guest",
@@ -111,7 +110,7 @@ public class CurrencyConverterPortlet extends MVCPortlet {
 	}
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.currency.converter.web)(release.schema.version=1.0.0))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.currency.converter.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

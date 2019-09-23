@@ -14,10 +14,10 @@
 
 package com.liferay.knowledge.base.internal.upgrade.v1_1_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -40,14 +40,11 @@ public class UpgradeClassName extends UpgradeProcess {
 	}
 
 	protected long getClassNameId(String className) throws Exception {
-		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement(
+			ps = connection.prepareStatement(
 				"select classNameId from ClassName_ where value = ?");
 
 			ps.setString(1, className);
@@ -61,7 +58,7 @@ public class UpgradeClassName extends UpgradeProcess {
 			return 0;
 		}
 		finally {
-			DataAccess.cleanUp(con, ps, rs);
+			DataAccess.cleanUp(ps, rs);
 		}
 	}
 
@@ -69,15 +66,17 @@ public class UpgradeClassName extends UpgradeProcess {
 		throws Exception {
 
 		long oldClassNameId = getClassNameId(oldClassName);
-		long newClassNameId = getClassNameId(newClassName);
 
 		if (oldClassNameId != 0) {
+			long newClassNameId = getClassNameId(newClassName);
+
 			runSQL(
 				"delete from ClassName_ where classNameId = " + newClassNameId);
 
 			runSQL(
-				"update ClassName_ set value = '" + newClassName +
-					"' where classNameId = " + oldClassNameId);
+				StringBundler.concat(
+					"update ClassName_ set value = '", newClassName,
+					"' where classNameId = ", oldClassNameId));
 		}
 	}
 

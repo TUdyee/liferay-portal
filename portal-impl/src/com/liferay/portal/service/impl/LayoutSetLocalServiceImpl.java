@@ -15,6 +15,7 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.LayoutSetVirtualHostException;
 import com.liferay.portal.kernel.exception.NoSuchImageException;
@@ -35,9 +36,9 @@ import com.liferay.portal.kernel.util.ColorSchemeFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.ThemeFactoryUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.LayoutSetImpl;
 import com.liferay.portal.model.impl.LayoutSetModelImpl;
@@ -68,7 +69,8 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 
 		Date now = new Date();
 
-		long layoutSetId = counterLocalService.increment();
+		long layoutSetId = counterLocalService.increment(
+			LayoutSet.class.getName());
 
 		LayoutSet layoutSet = layoutSetPersistence.create(layoutSetId);
 
@@ -213,6 +215,11 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 			layoutSetPrototypeUuid);
 	}
 
+	@Override
+	public int getPageCount(long groupId, boolean privateLayout) {
+		return layoutPersistence.countByG_P(groupId, privateLayout);
+	}
+
 	/**
 	 * Updates the state of the layout set prototype link.
 	 *
@@ -244,9 +251,9 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 				layoutSetPrototypeLinkEnabled = false;
 			}
 
+			layoutSet.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
 			layoutSet.setLayoutSetPrototypeLinkEnabled(
 				layoutSetPrototypeLinkEnabled);
-			layoutSet.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
 
 			layoutSetPersistence.update(layoutSet);
 
@@ -266,16 +273,16 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 					"layoutSetPrototypeUuid is null");
 		}
 
+		layoutSetBranch.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
 		layoutSetBranch.setLayoutSetPrototypeLinkEnabled(
 			layoutSetPrototypeLinkEnabled);
-		layoutSetBranch.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
 
 		layoutSetBranchPersistence.update(layoutSetBranch);
 	}
 
 	@Override
 	public LayoutSet updateLogo(
-			long groupId, boolean privateLayout, boolean logo, byte[] bytes)
+			long groupId, boolean privateLayout, boolean hasLogo, byte[] bytes)
 		throws PortalException {
 
 		LayoutSet layoutSet = layoutSetPersistence.findByG_P(
@@ -286,7 +293,8 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		if (layoutSetBranch == null) {
 			layoutSet.setModifiedDate(new Date());
 
-			PortalUtil.updateImageId(layoutSet, logo, bytes, "logoId", 0, 0, 0);
+			PortalUtil.updateImageId(
+				layoutSet, hasLogo, bytes, "logoId", 0, 0, 0);
 
 			return layoutSetPersistence.update(layoutSet);
 		}
@@ -294,7 +302,7 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		layoutSetBranch.setModifiedDate(new Date());
 
 		PortalUtil.updateImageId(
-			layoutSetBranch, logo, bytes, "logoId", 0, 0, 0);
+			layoutSetBranch, hasLogo, bytes, "logoId", 0, 0, 0);
 
 		layoutSetBranchPersistence.update(layoutSetBranch);
 
@@ -303,7 +311,7 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 
 	@Override
 	public LayoutSet updateLogo(
-			long groupId, boolean privateLayout, boolean logo, File file)
+			long groupId, boolean privateLayout, boolean hasLogo, File file)
 		throws PortalException {
 
 		byte[] bytes = null;
@@ -315,21 +323,22 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 			throw new SystemException(ioe);
 		}
 
-		return updateLogo(groupId, privateLayout, logo, bytes);
+		return updateLogo(groupId, privateLayout, hasLogo, bytes);
 	}
 
 	@Override
 	public LayoutSet updateLogo(
-			long groupId, boolean privateLayout, boolean logo, InputStream is)
+			long groupId, boolean privateLayout, boolean hasLogo,
+			InputStream is)
 		throws PortalException {
 
-		return updateLogo(groupId, privateLayout, logo, is, true);
+		return updateLogo(groupId, privateLayout, hasLogo, is, true);
 	}
 
 	@Override
 	public LayoutSet updateLogo(
-			long groupId, boolean privateLayout, boolean logo, InputStream is,
-			boolean cleanUpStream)
+			long groupId, boolean privateLayout, boolean hasLogo,
+			InputStream is, boolean cleanUpStream)
 		throws PortalException {
 
 		byte[] bytes = null;
@@ -341,7 +350,7 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 			throw new SystemException(ioe);
 		}
 
-		return updateLogo(groupId, privateLayout, logo, bytes);
+		return updateLogo(groupId, privateLayout, hasLogo, bytes);
 	}
 
 	@Override
@@ -366,10 +375,10 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		LayoutSetBranch layoutSetBranch = _getLayoutSetBranch(layoutSet);
 
 		if (layoutSetBranch == null) {
-			layoutSet.setColorSchemeId(colorSchemeId);
-			layoutSet.setCss(css);
 			layoutSet.setModifiedDate(new Date());
 			layoutSet.setThemeId(themeId);
+			layoutSet.setColorSchemeId(colorSchemeId);
+			layoutSet.setCss(css);
 
 			layoutSetPersistence.update(layoutSet);
 
@@ -389,10 +398,10 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 			return layoutSet;
 		}
 
-		layoutSetBranch.setColorSchemeId(colorSchemeId);
-		layoutSetBranch.setCss(css);
 		layoutSetBranch.setModifiedDate(new Date());
 		layoutSetBranch.setThemeId(themeId);
+		layoutSetBranch.setColorSchemeId(colorSchemeId);
+		layoutSetBranch.setCss(css);
 
 		layoutSetBranchPersistence.update(layoutSetBranch);
 
@@ -409,26 +418,13 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 	}
 
 	@Override
-	public LayoutSet updatePageCount(long groupId, boolean privateLayout)
-		throws PortalException {
-
-		int pageCount = layoutPersistence.countByG_P(groupId, privateLayout);
-
-		LayoutSet layoutSet = layoutSetPersistence.findByG_P(
-			groupId, privateLayout);
-
-		layoutSet.setModifiedDate(new Date());
-		layoutSet.setPageCount(pageCount);
-
-		layoutSetPersistence.update(layoutSet);
-
-		return layoutSet;
-	}
-
-	@Override
 	public LayoutSet updateSettings(
 			long groupId, boolean privateLayout, String settings)
 		throws PortalException {
+
+		UnicodeProperties settingsProperties = new UnicodeProperties();
+
+		settingsProperties.fastLoad(settings);
 
 		LayoutSet layoutSet = layoutSetPersistence.findByG_P(
 			groupId, privateLayout);
@@ -437,7 +433,11 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 
 		if (layoutSetBranch == null) {
 			layoutSet.setModifiedDate(new Date());
-			layoutSet.setSettings(settings);
+
+			validateSettings(
+				layoutSet.getSettingsProperties(), settingsProperties);
+
+			layoutSet.setSettingsProperties(settingsProperties);
 
 			layoutSetPersistence.update(layoutSet);
 
@@ -445,7 +445,11 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		}
 
 		layoutSetBranch.setModifiedDate(new Date());
-		layoutSetBranch.setSettings(settings);
+
+		validateSettings(
+			layoutSetBranch.getSettingsProperties(), settingsProperties);
+
+		layoutSetBranch.setSettingsProperties(settingsProperties);
 
 		layoutSetBranchPersistence.update(layoutSetBranch);
 
@@ -527,14 +531,12 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 
 		Group group = layoutSet.getGroup();
 
-		boolean privateLayout = layoutSet.isPrivateLayout();
-
 		if (group.isStagingGroup()) {
 			LayoutSet liveLayoutSet = null;
 
 			Group liveGroup = group.getLiveGroup();
 
-			if (privateLayout) {
+			if (layoutSet.isPrivateLayout()) {
 				liveLayoutSet = liveGroup.getPrivateLayoutSet();
 			}
 			else {
@@ -575,6 +577,21 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		return layoutSet;
 	}
 
+	protected void validateSettings(
+		UnicodeProperties oldSettingsProperties,
+		UnicodeProperties newSettingsProperties) {
+
+		boolean enableJavaScript =
+			PropsValues.
+				FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_LAYOUTSET_JAVASCRIPT;
+
+		if (!enableJavaScript) {
+			String javaScript = oldSettingsProperties.getProperty("javascript");
+
+			newSettingsProperties.setProperty("javascript", javaScript);
+		}
+	}
+
 	private LayoutSetBranch _getLayoutSetBranch(LayoutSet layoutSet)
 		throws PortalException {
 
@@ -586,7 +603,7 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		}
 
 		if (LayoutStagingUtil.isBranchingLayoutSet(
-				layoutSet.getGroup(), layoutSet.getPrivateLayout())) {
+				layoutSet.getGroup(), layoutSet.isPrivateLayout())) {
 
 			layoutSetStagingHandler = new LayoutSetStagingHandler(layoutSet);
 

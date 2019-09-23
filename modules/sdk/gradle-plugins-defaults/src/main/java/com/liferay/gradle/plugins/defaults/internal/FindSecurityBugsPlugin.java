@@ -40,7 +40,6 @@ import org.gradle.api.reporting.ReportingExtension;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
@@ -235,8 +234,7 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 
 					Set<File> files = fileCollection.getFiles();
 
-					return _containsClassOrJar(
-						files.toArray(new File[files.size()]));
+					return _containsClassOrJar(files.toArray(new File[0]));
 				}
 
 				private boolean _containsClassOrJar(File[] files) {
@@ -281,11 +279,11 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 			"findsecbugs.injection.customconfigfile.XssServletDetector",
 			"liferay-config/liferay-XssServletDetector.txt|XSS_SERVLET");
 
-		javaExec.systemProperty("findsecbugs.taint.outputsummaries", "true");
+		javaExec.systemProperty("findsecbugs.taint.outputconfigs", "true");
 
 		String customConfigFile = "liferay-config/liferay.txt";
 
-		File derivedSummariesTxtFile = project.file("derived-summaries.txt");
+		File derivedSummariesTxtFile = project.file("derived-config.txt");
 
 		if (derivedSummariesTxtFile.exists()) {
 			customConfigFile =
@@ -349,7 +347,7 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 			project, WRITE_FIND_BUGS_PROJECT_TASK_NAME,
 			WriteFindBugsProjectTask.class);
 
-		JavaCompile compileJSPTask = (JavaCompile)GradleUtil.getTask(
+		final JavaCompile compileJSPTask = (JavaCompile)GradleUtil.getTask(
 			project, JspCPlugin.COMPILE_JSP_TASK_NAME);
 
 		writeFindBugsProjectTask.dependsOn(
@@ -364,14 +362,21 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 		writeFindBugsProjectTask.setAuxClasspath(auxClasspath);
 
 		FileCollection classpath = project.files(
-			compileJSPTask.getDestinationDir(),
 			new Callable<File>() {
 
 				@Override
 				public File call() throws Exception {
-					SourceSetOutput sourceSetOutput = sourceSet.getOutput();
+					return compileJSPTask.getDestinationDir();
+				}
 
-					return sourceSetOutput.getClassesDir();
+			},
+			new Callable<File>() {
+
+				@Override
+				public File call() throws Exception {
+					SourceDirectorySet sourceDirectorySet = sourceSet.getJava();
+
+					return sourceDirectorySet.getOutputDir();
 				}
 
 			});
@@ -426,7 +431,7 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 	 */
 	private static final String _UNZIP_JAR_TASK_NAME = "unzipJar";
 
-	private static final String _VERSION = "1.6.0.LIFERAY-PATCHED-5";
+	private static final String _VERSION = "1.9.0.LIFERAY-PATCHED-1";
 
 	private static final Transformer<File, Task> _reportsFileGetter =
 		new Transformer<File, Task>() {

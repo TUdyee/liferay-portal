@@ -14,8 +14,6 @@
 
 package com.liferay.opensocial.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,53 +23,55 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see GadgetService
  * @generated
  */
-@ProviderType
-public class GadgetServiceWrapper implements GadgetService,
-	ServiceWrapper<GadgetService> {
+public class GadgetServiceWrapper
+	implements GadgetService, ServiceWrapper<GadgetService> {
+
 	public GadgetServiceWrapper(GadgetService gadgetService) {
 		_gadgetService = gadgetService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link GadgetServiceUtil} to access the gadget remote service. Add custom service methods to <code>com.liferay.opensocial.service.impl.GadgetServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
-	public com.liferay.opensocial.model.Gadget addGadget(long companyId,
-		java.lang.String url, java.lang.String portletCategoryNames,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public com.liferay.opensocial.model.Gadget addGadget(
+			long companyId, String url, String portletCategoryNames,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _gadgetService.addGadget(companyId, url, portletCategoryNames,
-			serviceContext);
+
+		return _gadgetService.addGadget(
+			companyId, url, portletCategoryNames, serviceContext);
 	}
 
 	@Override
-	public void deleteGadget(long gadgetId,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public void deleteGadget(
+			long gadgetId,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_gadgetService.deleteGadget(gadgetId, serviceContext);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _gadgetService.getOSGiServiceIdentifier();
 	}
 
 	@Override
-	public java.lang.Object invokeMethod(java.lang.String name,
-		java.lang.String[] parameterTypes, java.lang.Object[] arguments)
-		throws java.lang.Throwable {
-		return _gadgetService.invokeMethod(name, parameterTypes, arguments);
-	}
-
-	@Override
-	public void updateGadget(long gadgetId,
-		java.lang.String portletCategoryNames,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public void updateGadget(
+			long gadgetId, String portletCategoryNames,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_gadgetService.updateGadget(gadgetId, portletCategoryNames,
-			serviceContext);
+
+		_gadgetService.updateGadget(
+			gadgetId, portletCategoryNames, serviceContext);
 	}
 
 	@Override
@@ -85,4 +85,5 @@ public class GadgetServiceWrapper implements GadgetService,
 	}
 
 	private GadgetService _gadgetService;
+
 }

@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
 
@@ -120,7 +120,7 @@ public class BNDDefinitionKeysCheck extends DefinitionKeysCheck {
 			content, "\n" + definitionKey + ":", "\n" + correctKey + ":");
 	}
 
-	private final Pattern _definitionKeyPattern = Pattern.compile(
+	private static final Pattern _definitionKeyPattern = Pattern.compile(
 		"([A-Za-z-]+?)[:=]");
 
 	private static class DefinitionComparator implements Comparator<String> {

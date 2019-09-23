@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 
@@ -37,6 +38,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 
 /**
@@ -44,6 +47,16 @@ import java.util.function.ToLongFunction;
  * @author Shuyang Zhou
  */
 public class ListUtil {
+
+	public static <E> List<E> concat(List<? extends E>... lists) {
+		List<E> newList = new ArrayList<>();
+
+		for (List<? extends E> list : lists) {
+			newList.addAll(list);
+		}
+
+		return newList;
+	}
 
 	public static <E> List<E> copy(List<? extends E> master) {
 		if (master == null) {
@@ -66,7 +79,7 @@ public class ListUtil {
 	}
 
 	public static <E> int count(
-		List<? extends E> list, PredicateFilter<E> predicateFilter) {
+		List<? extends E> list, Predicate<E> predicate) {
 
 		if (isEmpty(list)) {
 			return 0;
@@ -75,7 +88,7 @@ public class ListUtil {
 		int count = 0;
 
 		for (E element : list) {
-			if (predicateFilter.filter(element)) {
+			if (predicate.test(element)) {
 				count++;
 			}
 		}
@@ -112,14 +125,14 @@ public class ListUtil {
 	}
 
 	public static <E> boolean exists(
-		List<? extends E> list, PredicateFilter<E> predicateFilter) {
+		List<? extends E> list, Predicate<E> predicate) {
 
 		if (isEmpty(list)) {
 			return false;
 		}
 
 		for (E element : list) {
-			if (predicateFilter.filter(element)) {
+			if (predicate.test(element)) {
 				return true;
 			}
 		}
@@ -129,10 +142,10 @@ public class ListUtil {
 
 	public static <T> List<T> filter(
 		List<? extends T> inputList, List<T> outputList,
-		PredicateFilter<T> predicateFilter) {
+		Predicate<T> predicate) {
 
 		for (T item : inputList) {
-			if (predicateFilter.filter(item)) {
+			if (predicate.test(item)) {
 				outputList.add(item);
 			}
 		}
@@ -141,10 +154,9 @@ public class ListUtil {
 	}
 
 	public static <T> List<T> filter(
-		List<? extends T> inputList, PredicateFilter<T> predicateFilter) {
+		List<? extends T> inputList, Predicate<T> predicate) {
 
-		return filter(
-			inputList, new ArrayList<T>(inputList.size()), predicateFilter);
+		return filter(inputList, new ArrayList<T>(inputList.size()), predicate);
 	}
 
 	public static <E> List<E> fromArray(E[] array) {
@@ -253,9 +265,7 @@ public class ListUtil {
 			return true;
 		}
 
-		for (int i = 0; i < list.size(); i++) {
-			Object bean = list.get(i);
-
+		for (Object bean : list) {
 			if (Validator.isNotNull(bean)) {
 				return false;
 			}
@@ -265,7 +275,7 @@ public class ListUtil {
 	}
 
 	public static boolean isUnmodifiableList(List<?> list) {
-		return _unmodifiableListClass.isInstance(list);
+		return _UNMODIFIABLE_LIST_CLASS.isInstance(list);
 	}
 
 	public static <E> List<E> remove(List<E> list, List<? extends E> remove) {
@@ -398,6 +408,10 @@ public class ListUtil {
 		}
 
 		return list;
+	}
+
+	public static <E> List<E> toList(E value) {
+		return new ArrayList<>(Arrays.asList(value));
 	}
 
 	public static <E> List<E> toList(E[] array) {
@@ -619,13 +633,13 @@ public class ListUtil {
 
 	private static final long[] _EMPTY_LONG_ARRAY = {};
 
-	private static final Class<? extends List<?>> _unmodifiableListClass;
+	private static final Class<? extends List<?>> _UNMODIFIABLE_LIST_CLASS;
 
 	static {
 		List<Object> unmodifiableList = Collections.<Object>unmodifiableList(
 			new LinkedList<Object>());
 
-		_unmodifiableListClass =
+		_UNMODIFIABLE_LIST_CLASS =
 			(Class<? extends List<?>>)unmodifiableList.getClass();
 	}
 

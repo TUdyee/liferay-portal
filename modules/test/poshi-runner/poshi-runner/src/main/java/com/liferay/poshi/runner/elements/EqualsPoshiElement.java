@@ -14,12 +14,19 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.dom4j.Node;
 
 /**
  * @author Kenji Heigel
  */
-public class EqualsPoshiElement extends BasePoshiElement {
+public class EqualsPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(Element element) {
@@ -32,34 +39,37 @@ public class EqualsPoshiElement extends BasePoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String readableSyntax) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
-		if (_isElementType(parentPoshiElement, readableSyntax)) {
-			return new EqualsPoshiElement(readableSyntax);
+		if (_isElementType(parentPoshiElement, poshiScript)) {
+			return new EqualsPoshiElement(parentPoshiElement, poshiScript);
 		}
 
 		return null;
 	}
 
 	@Override
-	public void parseReadableSyntax(String readableSyntax) {
-		String[] equalsContentArray = readableSyntax.split("==");
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
+		String[] equalsContentArray = poshiScript.split("==");
 
 		String arg1 = equalsContentArray[0].trim();
 
-		arg1 = getQuotedContent(arg1);
+		arg1 = getDoubleQuotedContent(arg1);
 
 		addAttribute("arg1", arg1);
 
 		String arg2 = equalsContentArray[1].trim();
 
-		arg2 = getQuotedContent(arg2);
+		arg2 = getDoubleQuotedContent(arg2);
 
 		addAttribute("arg2", arg2);
 	}
 
 	@Override
-	public String toReadableSyntax() {
+	public String toPoshiScript() {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("\"");
@@ -78,8 +88,15 @@ public class EqualsPoshiElement extends BasePoshiElement {
 		super(_ELEMENT_NAME, element);
 	}
 
-	protected EqualsPoshiElement(String readableSyntax) {
-		super(_ELEMENT_NAME, readableSyntax);
+	protected EqualsPoshiElement(List<Attribute> attributes, List<Node> nodes) {
+		super(_ELEMENT_NAME, attributes, nodes);
+	}
+
+	protected EqualsPoshiElement(
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
+
+		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
 
 	@Override
@@ -87,18 +104,20 @@ public class EqualsPoshiElement extends BasePoshiElement {
 		return "equals";
 	}
 
+	@Override
+	protected Pattern getConditionPattern() {
+		return _conditionPattern;
+	}
+
 	private boolean _isElementType(
-		PoshiElement parentPoshiElement, String readableSyntax) {
+		PoshiElement parentPoshiElement, String poshiScript) {
 
-		if ((parentPoshiElement instanceof IfPoshiElement) &&
-			readableSyntax.contains("==")) {
-
-			return true;
-		}
-
-		return false;
+		return isConditionElementType(parentPoshiElement, poshiScript);
 	}
 
 	private static final String _ELEMENT_NAME = "equals";
+
+	private static final Pattern _conditionPattern = Pattern.compile(
+		"^\"[\\s\\S]*\"[\\s]*==[\\s]*\"[\\s\\S]*\"$");
 
 }

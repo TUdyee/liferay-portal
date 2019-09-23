@@ -15,11 +15,11 @@
 package com.liferay.adaptive.media.web.internal.search;
 
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -42,21 +42,21 @@ public class ImageConfigurationEntriesChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public String getAllRowsCheckBox(HttpServletRequest request) {
+	public String getAllRowsCheckBox(HttpServletRequest httpServletRequest) {
 		return null;
 	}
 
 	@Override
 	public String getRowCheckBox(
-		HttpServletRequest request, boolean checked, boolean disabled,
-		String primaryKey) {
+		HttpServletRequest httpServletRequest, boolean checked,
+		boolean disabled, String primaryKey) {
 
 		String name = AMImageConfigurationEntry.class.getSimpleName();
 
 		String checkBoxRowIds = getEntryRowIds();
 
 		return getRowCheckBox(
-			request, checked, disabled,
+			httpServletRequest, checked, disabled,
 			_liferayPortletResponse.getNamespace() + RowChecker.ROW_IDS + name,
 			primaryKey, checkBoxRowIds, "'#" + getAllRowIds() + "'",
 			StringPool.BLANK);

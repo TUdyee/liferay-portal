@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,8 +25,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class ResourceActionSoap implements Serializable {
+
 	public static ResourceActionSoap toSoapModel(ResourceAction model) {
 		ResourceActionSoap soapModel = new ResourceActionSoap();
 
@@ -51,11 +49,14 @@ public class ResourceActionSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static ResourceActionSoap[][] toSoapModels(ResourceAction[][] models) {
+	public static ResourceActionSoap[][] toSoapModels(
+		ResourceAction[][] models) {
+
 		ResourceActionSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new ResourceActionSoap[models.length][models[0].length];
+			soapModels =
+				new ResourceActionSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new ResourceActionSoap[0][0];
@@ -68,8 +69,11 @@ public class ResourceActionSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static ResourceActionSoap[] toSoapModels(List<ResourceAction> models) {
-		List<ResourceActionSoap> soapModels = new ArrayList<ResourceActionSoap>(models.size());
+	public static ResourceActionSoap[] toSoapModels(
+		List<ResourceAction> models) {
+
+		List<ResourceActionSoap> soapModels = new ArrayList<ResourceActionSoap>(
+			models.size());
 
 		for (ResourceAction model : models) {
 			soapModels.add(toSoapModel(model));
@@ -134,4 +138,5 @@ public class ResourceActionSoap implements Serializable {
 	private String _name;
 	private String _actionId;
 	private long _bitwiseValue;
+
 }

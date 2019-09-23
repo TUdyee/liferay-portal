@@ -14,6 +14,9 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.string.StringPool;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
@@ -33,6 +36,12 @@ import java.lang.ref.SoftReference;
 public class StringBundler implements Serializable {
 
 	public static String concat(String... strings) {
+		for (int i = 0; i < strings.length; i++) {
+			if (strings[i] == null) {
+				strings[i] = StringPool.NULL;
+			}
+		}
+
 		return _toString(strings, strings.length);
 	}
 
@@ -74,9 +83,8 @@ public class StringBundler implements Serializable {
 		if (b) {
 			return append(StringPool.TRUE);
 		}
-		else {
-			return append(StringPool.FALSE);
-		}
+
+		return append(StringPool.FALSE);
 	}
 
 	public StringBundler append(char c) {
@@ -87,25 +95,24 @@ public class StringBundler implements Serializable {
 		if (chars == null) {
 			return append("null");
 		}
-		else {
-			return append(new String(chars));
-		}
+
+		return append(new String(chars));
 	}
 
 	public StringBundler append(double d) {
-		return append(Double.toString(d));
+		return append(String.valueOf(d));
 	}
 
 	public StringBundler append(float f) {
-		return append(Float.toString(f));
+		return append(String.valueOf(f));
 	}
 
 	public StringBundler append(int i) {
-		return append(Integer.toString(i));
+		return append(String.valueOf(i));
 	}
 
 	public StringBundler append(long l) {
-		return append(Long.toString(l));
+		return append(String.valueOf(l));
 	}
 
 	public StringBundler append(Object obj) {
@@ -263,7 +270,15 @@ public class StringBundler implements Serializable {
 		}
 
 		if (arrayIndex == 3) {
-			return array[0].concat(array[1]).concat(array[2]);
+			if (array[0].length() < array[2].length()) {
+				return array[0].concat(
+					array[1]
+				).concat(
+					array[2]
+				);
+			}
+
+			return array[0].concat(array[1].concat(array[2]));
 		}
 
 		int length = 0;
@@ -272,42 +287,44 @@ public class StringBundler implements Serializable {
 			length += array[i].length();
 		}
 
-		UnsafeStringBuilder usb = null;
+		StringBuilder sb = null;
 
 		if (length > _THREAD_LOCAL_BUFFER_LIMIT) {
-			Reference<UnsafeStringBuilder> reference =
-				_unsafeStringBuilderThreadLocal.get();
+			Reference<StringBuilder> reference =
+				_stringBuilderThreadLocal.get();
 
 			if (reference != null) {
-				usb = reference.get();
+				sb = reference.get();
 			}
 
-			if (usb == null) {
-				usb = new UnsafeStringBuilder(length);
+			if (sb == null) {
+				sb = new StringBuilder(length);
 
-				_unsafeStringBuilderThreadLocal.set(new SoftReference<>(usb));
+				_stringBuilderThreadLocal.set(new SoftReference<>(sb));
 			}
 			else {
-				usb.resetAndEnsureCapacity(length);
+				sb.setLength(length);
 			}
+
+			sb.setLength(0);
 		}
 		else {
-			usb = new UnsafeStringBuilder(length);
+			sb = new StringBuilder(length);
 		}
 
 		for (int i = 0; i < arrayIndex; i++) {
-			usb.append(array[i]);
+			sb.append(array[i]);
 		}
 
-		return usb.toString();
+		return sb.toString();
 	}
 
 	private static final int _DEFAULT_ARRAY_CAPACITY = 16;
 
 	private static final int _THREAD_LOCAL_BUFFER_LIMIT;
 
-	private static final ThreadLocal<Reference<UnsafeStringBuilder>>
-		_unsafeStringBuilderThreadLocal;
+	private static final ThreadLocal<Reference<StringBuilder>>
+		_stringBuilderThreadLocal;
 	private static final long serialVersionUID = 1L;
 
 	static {
@@ -321,55 +338,16 @@ public class StringBundler implements Serializable {
 
 			_THREAD_LOCAL_BUFFER_LIMIT = threadLocalBufferLimit;
 
-			_unsafeStringBuilderThreadLocal = new CentralizedThreadLocal<>(
-				false);
+			_stringBuilderThreadLocal = new CentralizedThreadLocal<>(false);
 		}
 		else {
 			_THREAD_LOCAL_BUFFER_LIMIT = Integer.MAX_VALUE;
 
-			_unsafeStringBuilderThreadLocal = null;
+			_stringBuilderThreadLocal = null;
 		}
 	}
 
 	private String[] _array;
 	private int _arrayIndex;
-
-	private static class UnsafeStringBuilder {
-
-		public void append(String s) {
-			int length = s.length();
-
-			s.getChars(0, length, _value, _count);
-
-			_count += length;
-		}
-
-		public void resetAndEnsureCapacity(int newLength) {
-			if (_value.length < newLength) {
-				int length = _value.length * 2 + 2;
-
-				if (length < newLength) {
-					length = newLength;
-				}
-
-				_value = new char[length];
-			}
-
-			_count = 0;
-		}
-
-		@Override
-		public String toString() {
-			return new String(_value, 0, _count);
-		}
-
-		private UnsafeStringBuilder(int length) {
-			_value = new char[length];
-		}
-
-		private int _count;
-		private char[] _value;
-
-	}
 
 }

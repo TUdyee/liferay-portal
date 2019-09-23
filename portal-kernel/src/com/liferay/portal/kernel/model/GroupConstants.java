@@ -21,6 +21,8 @@ public class GroupConstants {
 
 	public static final int ANY_PARENT_GROUP_ID = -1;
 
+	public static final String APP = "App";
+
 	public static final String CONTROL_PANEL = "Control Panel";
 
 	public static final String CONTROL_PANEL_FRIENDLY_URL = "/control_panel";
@@ -45,11 +47,15 @@ public class GroupConstants {
 
 	public static final int MEMBERSHIP_RESTRICTION_TO_PARENT_SITE_MEMBERS = 1;
 
-	public static final String[] SYSTEM_GROUPS =
-		{CONTROL_PANEL, FORMS, GUEST, GroupConstants.USER_PERSONAL_SITE};
+	public static final String[] SYSTEM_GROUPS = {
+		CONTROL_PANEL, FORMS, GUEST, GroupConstants.USER_PERSONAL_SITE
+	};
 
 	public static final String TYPE_SETTINGS_KEY_INHERIT_LOCALES =
 		"inheritLocales";
+
+	public static final String TYPE_SETTINGS_KEY_LIFERAY_ANALYTICS_KEY =
+		"liferayAnalyticsKey";
 
 	public static final int TYPE_SITE_OPEN = 1;
 
@@ -82,9 +88,8 @@ public class GroupConstants {
 		else if (type == TYPE_SITE_RESTRICTED) {
 			return TYPE_SITE_RESTRICTED_LABEL;
 		}
-		else {
-			return TYPE_SITE_SYSTEM_LABEL;
-		}
+
+		return TYPE_SITE_SYSTEM_LABEL;
 	}
 
 }

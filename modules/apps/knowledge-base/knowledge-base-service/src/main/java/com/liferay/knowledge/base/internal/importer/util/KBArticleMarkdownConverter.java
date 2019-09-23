@@ -14,21 +14,20 @@
 
 package com.liferay.knowledge.base.internal.importer.util;
 
-import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.knowledge.base.exception.KBArticleImportException;
 import com.liferay.knowledge.base.markdown.converter.MarkdownConverter;
-import com.liferay.knowledge.base.markdown.converter.factory.MarkdownConverterFactoryUtil;
 import com.liferay.knowledge.base.model.KBArticle;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.zip.ZipReader;
@@ -45,7 +44,8 @@ import java.util.TreeSet;
 public class KBArticleMarkdownConverter {
 
 	public KBArticleMarkdownConverter(
-			String markdown, String fileEntryName, Map<String, String> metadata)
+			String markdown, String fileEntryName, Map<String, String> metadata,
+			DLURLHelper dlURLHelper)
 		throws KBArticleImportException {
 
 		MarkdownConverter markdownConverter =
@@ -94,6 +94,8 @@ public class KBArticleMarkdownConverter {
 		String baseSourceURL = metadata.get(_METADATA_BASE_SOURCE_URL);
 
 		_sourceURL = buildSourceURL(baseSourceURL, fileEntryName);
+
+		_dlURLHelper = dlURLHelper;
 	}
 
 	public String getSourceURL() {
@@ -180,7 +182,7 @@ public class KBArticleMarkdownConverter {
 				String imageSrc = StringPool.BLANK;
 
 				try {
-					imageSrc = DLUtil.getPreviewURL(
+					imageSrc = _dlURLHelper.getPreviewURL(
 						imageFileEntry, imageFileEntry.getFileVersion(), null,
 						StringPool.BLANK);
 				}
@@ -254,13 +256,13 @@ public class KBArticleMarkdownConverter {
 	}
 
 	protected String getUrlTitle(String heading) {
-		String urlTitle = null;
-
 		int x = heading.indexOf("[](id=");
 
 		if (x == -1) {
 			return null;
 		}
+
+		String urlTitle = null;
 
 		int y = heading.indexOf(StringPool.CLOSE_PARENTHESIS, x);
 
@@ -373,6 +375,7 @@ public class KBArticleMarkdownConverter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		KBArticleMarkdownConverter.class);
 
+	private final DLURLHelper _dlURLHelper;
 	private final String _html;
 	private final String _sourceURL;
 	private final String _title;

@@ -14,11 +14,8 @@
 
 package com.liferay.portal.kernel.image;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.ImageResolutionException;
 import com.liferay.portal.kernel.model.Image;
-import com.liferay.portal.kernel.security.pacl.permission.PortalRuntimePermission;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -36,7 +33,6 @@ import java.util.concurrent.Future;
  * @author Brian Wing Shun Chan
  * @author Alexander Chow
  */
-@ProviderType
 public class ImageToolUtil {
 
 	/**
@@ -158,6 +154,10 @@ public class ImageToolUtil {
 		return getImageTool().getDefaultUserMalePortrait();
 	}
 
+	public static Image getDefaultUserPortrait() {
+		return getImageTool().getDefaultUserPortrait();
+	}
+
 	public static Image getImage(byte[] bytes)
 		throws ImageResolutionException, IOException {
 
@@ -183,8 +183,6 @@ public class ImageToolUtil {
 	}
 
 	public static ImageTool getImageTool() {
-		PortalRuntimePermission.checkGetBeanProperty(ImageToolUtil.class);
-
 		return _imageTool;
 	}
 
@@ -285,8 +283,6 @@ public class ImageToolUtil {
 	}
 
 	public void setImageTool(ImageTool imageTool) {
-		PortalRuntimePermission.checkSetBeanProperty(getClass());
-
 		_imageTool = imageTool;
 	}
 

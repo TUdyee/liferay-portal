@@ -14,12 +14,12 @@
 
 package com.liferay.translator.web.internal.util;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ReflectionUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.webcache.WebCacheException;
 import com.liferay.portal.kernel.webcache.WebCacheItem;
-import com.liferay.translator.web.configuration.TranslatorConfiguration;
+import com.liferay.translator.web.internal.configuration.TranslatorConfiguration;
 import com.liferay.translator.web.internal.model.Translation;
 
 import java.util.Comparator;
@@ -52,13 +52,13 @@ public class TranslatorUtil {
 				}
 			}
 
-			String toLanguageId = translationId.substring(pos + 1);
-
 			if (!languageIdsMap.containsKey(fromLanguageId)) {
 				return null;
 			}
 
-			return new String[] {fromLanguageId, toLanguageId};
+			return new String[] {
+				fromLanguageId, translationId.substring(pos + 1)
+			};
 		}
 		catch (Exception e) {
 			ReflectionUtil.throwException(e);

@@ -14,15 +14,16 @@
 
 package com.liferay.css.builder.maven;
 
+import com.liferay.css.builder.CSSBuilder;
 import com.liferay.css.builder.CSSBuilderArgs;
-import com.liferay.css.builder.CSSBuilderInvoker;
-import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
@@ -54,24 +55,49 @@ public class BuildCSSMojo extends AbstractMojo {
 	@Override
 	public void execute() throws MojoExecutionException {
 		try {
-			for (ComponentDependency componentDependency :
-					_pluginDescriptor.getDependencies()) {
+			boolean artifactPresent = false;
 
-				String artifactId = componentDependency.getArtifactId();
+			if (_cssBuilderArgs.getImportPaths() == null) {
+				for (Dependency dependency : _project.getDependencies()) {
+					String artifactId = dependency.getArtifactId();
 
-				if (artifactId.equals("com.liferay.frontend.css.common") &&
-					(_cssBuilderArgs.getPortalCommonPath() == null)) {
+					if (artifactId.equals("com.liferay.frontend.css.common")) {
+						Artifact artifact = _resolveArtifact(dependency);
 
-					Artifact artifact = _resolveArtifact(componentDependency);
+						if (artifact != null) {
+							_cssBuilderArgs.setImportPaths(
+								Arrays.asList(artifact.getFile()));
+						}
 
-					File file = artifact.getFile();
+						artifactPresent = true;
 
-					_cssBuilderArgs.setPortalCommonPath(file.getAbsolutePath());
+						break;
+					}
+				}
+			}
+
+			if (!artifactPresent &&
+				(_cssBuilderArgs.getImportPaths() == null)) {
+
+				for (ComponentDependency componentDependency :
+						_pluginDescriptor.getDependencies()) {
+
+					String artifactId = componentDependency.getArtifactId();
+
+					if (artifactId.equals("com.liferay.frontend.css.common")) {
+						Artifact artifact = _resolveArtifact(
+							componentDependency);
+
+						_cssBuilderArgs.setImportPaths(
+							Arrays.asList(artifact.getFile()));
+
+						break;
+					}
 				}
 			}
 
 			if (_buildContext.isIncremental()) {
-				Scanner scanner = _buildContext.newScanner(_baseDir);
+				Scanner scanner = _buildContext.newScanner(_projectBaseDir);
 
 				String[] includes = {"", "**/*.scss"};
 
@@ -81,12 +107,12 @@ public class BuildCSSMojo extends AbstractMojo {
 
 				String[] includedFiles = scanner.getIncludedFiles();
 
-				if (ArrayUtil.isNotEmpty(includedFiles)) {
-					CSSBuilderInvoker.invoke(_baseDir, _cssBuilderArgs);
+				if ((includedFiles != null) && (includedFiles.length > 0)) {
+					_execute();
 				}
 			}
 			else {
-				CSSBuilderInvoker.invoke(_baseDir, _cssBuilderArgs);
+				_execute();
 			}
 		}
 		catch (Exception e) {
@@ -104,6 +130,13 @@ public class BuildCSSMojo extends AbstractMojo {
 	}
 
 	/**
+	 * @parameter default-value="${project.build.directory}/${project.build.finalName}"
+	 */
+	public void setBaseDir(File baseDir) {
+		_cssBuilderArgs.setBaseDir(baseDir);
+	}
+
+	/**
 	 * @parameter
 	 */
 	public void setDirNames(String dirNames) {
@@ -111,10 +144,10 @@ public class BuildCSSMojo extends AbstractMojo {
 	}
 
 	/**
-	 * @parameter default-value="${project.build.directory}/${project.build.finalName}"
+	 * @parameter
 	 */
-	public void setDocrootDirName(String docrootDirName) {
-		_cssBuilderArgs.setDocrootDirName(docrootDirName);
+	public void setExcludes(String excludes) {
+		_cssBuilderArgs.setExcludes(excludes);
 	}
 
 	/**
@@ -125,17 +158,17 @@ public class BuildCSSMojo extends AbstractMojo {
 	}
 
 	/**
-	 * @parameter default-value="/"
+	 * @parameter
 	 */
-	public void setOutputDirName(String outputDirName) {
-		_cssBuilderArgs.setOutputDirName(outputDirName);
+	public void setImportDir(File importDir) {
+		_cssBuilderArgs.setImportPaths(Arrays.asList(importDir));
 	}
 
 	/**
-	 * @parameter
+	 * @parameter default-value=".sass-cache/"
 	 */
-	public void setPortalCommonPath(String portalCommonPath) {
-		_cssBuilderArgs.setPortalCommonPath(portalCommonPath);
+	public void setOutputDirName(String outputDirName) {
+		_cssBuilderArgs.setOutputDirName(outputDirName);
 	}
 
 	/**
@@ -159,13 +192,14 @@ public class BuildCSSMojo extends AbstractMojo {
 		_cssBuilderArgs.setSassCompilerClassName(sassCompilerClassName);
 	}
 
-	private Artifact _resolveArtifact(ComponentDependency componentDependency)
-		throws ArtifactResolutionException {
+	private void _execute() throws Exception {
+		try (CSSBuilder cssBuilder = new CSSBuilder(_cssBuilderArgs)) {
+			cssBuilder.execute();
+		}
+	}
 
-		Artifact artifact = new DefaultArtifact(
-			componentDependency.getGroupId(),
-			componentDependency.getArtifactId(), componentDependency.getType(),
-			componentDependency.getVersion());
+	private Artifact _resolveArtifact(Artifact artifact)
+		throws ArtifactResolutionException {
 
 		ArtifactRequest artifactRequest = new ArtifactRequest();
 
@@ -184,11 +218,26 @@ public class BuildCSSMojo extends AbstractMojo {
 		return artifactResult.getArtifact();
 	}
 
-	/**
-	 * @parameter default-value="${project.basedir}"
-	 * @readonly
-	 */
-	private File _baseDir;
+	private Artifact _resolveArtifact(ComponentDependency componentDependency)
+		throws ArtifactResolutionException {
+
+		Artifact artifact = new DefaultArtifact(
+			componentDependency.getGroupId(),
+			componentDependency.getArtifactId(), componentDependency.getType(),
+			componentDependency.getVersion());
+
+		return _resolveArtifact(artifact);
+	}
+
+	private Artifact _resolveArtifact(Dependency dependency)
+		throws ArtifactResolutionException {
+
+		Artifact artifact = new DefaultArtifact(
+			dependency.getGroupId(), dependency.getArtifactId(),
+			dependency.getType(), dependency.getVersion());
+
+		return _resolveArtifact(artifact);
+	}
 
 	/**
 	 * @component
@@ -210,6 +259,12 @@ public class BuildCSSMojo extends AbstractMojo {
 	 * @readonly
 	 */
 	private MavenProject _project;
+
+	/**
+	 * @parameter default-value="${project.basedir}"
+	 * @readonly
+	 */
+	private File _projectBaseDir;
 
 	/**
 	 * @component

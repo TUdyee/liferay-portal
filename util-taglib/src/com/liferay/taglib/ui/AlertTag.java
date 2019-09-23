@@ -14,9 +14,9 @@
 
 package com.liferay.taglib.ui;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.taglib.aui.ScriptTag;
 import com.liferay.taglib.util.IncludeTag;
@@ -40,6 +40,38 @@ public class AlertTag extends IncludeTag {
 		return EVAL_BODY_INCLUDE;
 	}
 
+	public Integer getAnimationTime() {
+		return _animationTime;
+	}
+
+	public String getIcon() {
+		return _icon;
+	}
+
+	public String getMessage() {
+		return _message;
+	}
+
+	public String getTargetNode() {
+		return _targetNode;
+	}
+
+	public Integer getTimeout() {
+		return _timeout;
+	}
+
+	public String getTitle() {
+		return _title;
+	}
+
+	public String getType() {
+		return _type;
+	}
+
+	public boolean isCloseable() {
+		return _closeable;
+	}
+
 	@Override
 	public int processEndTag() throws Exception {
 		Map<String, String> values = new HashMap<>();
@@ -49,11 +81,12 @@ public class AlertTag extends IncludeTag {
 		values.put("icon", String.valueOf(_icon));
 		values.put("message", HtmlUtil.escapeJS(_message));
 
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+		PortletResponse portletResponse =
+			(PortletResponse)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		if (portletResponse == null) {
 			values.put("namespace", StringPool.BLANK);
@@ -68,7 +101,7 @@ public class AlertTag extends IncludeTag {
 		values.put("type", _type);
 
 		String result = StringUtil.replace(
-			_TMPL_CONTENT, StringPool.POUND, StringPool.POUND, values);
+			_CONTENT_TMPL, StringPool.POUND, StringPool.POUND, values);
 
 		ScriptTag.doTag(
 			null, null, "liferay-alert", result, getBodyContent(), pageContext);
@@ -85,14 +118,14 @@ public class AlertTag extends IncludeTag {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setCssClass(String cssClass) {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setDestroyOnHide(boolean destroyOnHide) {
@@ -142,15 +175,15 @@ public class AlertTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
 	}
 
 	private static final String _ATTRIBUTE_NAMESPACE = "liferay-ui:alert:";
 
-	private static final String _PAGE = "/html/taglib/ui/alert/page.jsp";
-
-	private static final String _TMPL_CONTENT = StringUtil.read(
+	private static final String _CONTENT_TMPL = StringUtil.read(
 		AlertTag.class, "alert/alert.tmpl");
+
+	private static final String _PAGE = "/html/taglib/ui/alert/page.jsp";
 
 	private Integer _animationTime = 500;
 	private boolean _closeable = true;

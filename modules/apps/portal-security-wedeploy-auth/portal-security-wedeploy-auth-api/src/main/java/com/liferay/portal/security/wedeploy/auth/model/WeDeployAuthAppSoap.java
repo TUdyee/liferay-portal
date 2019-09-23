@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.wedeploy.auth.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,11 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.security.wedeploy.auth.service.http.WeDeployAuthAppServiceSoap}.
  *
  * @author Supritha Sundaram
- * @see com.liferay.portal.security.wedeploy.auth.service.http.WeDeployAuthAppServiceSoap
  * @generated
  */
-@ProviderType
 public class WeDeployAuthAppSoap implements Serializable {
+
 	public static WeDeployAuthAppSoap toSoapModel(WeDeployAuthApp model) {
 		WeDeployAuthAppSoap soapModel = new WeDeployAuthAppSoap();
 
@@ -49,7 +46,8 @@ public class WeDeployAuthAppSoap implements Serializable {
 	}
 
 	public static WeDeployAuthAppSoap[] toSoapModels(WeDeployAuthApp[] models) {
-		WeDeployAuthAppSoap[] soapModels = new WeDeployAuthAppSoap[models.length];
+		WeDeployAuthAppSoap[] soapModels =
+			new WeDeployAuthAppSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -60,10 +58,12 @@ public class WeDeployAuthAppSoap implements Serializable {
 
 	public static WeDeployAuthAppSoap[][] toSoapModels(
 		WeDeployAuthApp[][] models) {
+
 		WeDeployAuthAppSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new WeDeployAuthAppSoap[models.length][models[0].length];
+			soapModels =
+				new WeDeployAuthAppSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new WeDeployAuthAppSoap[0][0];
@@ -78,7 +78,9 @@ public class WeDeployAuthAppSoap implements Serializable {
 
 	public static WeDeployAuthAppSoap[] toSoapModels(
 		List<WeDeployAuthApp> models) {
-		List<WeDeployAuthAppSoap> soapModels = new ArrayList<WeDeployAuthAppSoap>(models.size());
+
+		List<WeDeployAuthAppSoap> soapModels =
+			new ArrayList<WeDeployAuthAppSoap>(models.size());
 
 		for (WeDeployAuthApp model : models) {
 			soapModels.add(toSoapModel(model));
@@ -188,4 +190,5 @@ public class WeDeployAuthAppSoap implements Serializable {
 	private String _redirectURI;
 	private String _clientId;
 	private String _clientSecret;
+
 }

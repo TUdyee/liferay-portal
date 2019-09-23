@@ -17,16 +17,16 @@
 
 package com.liferay.tasks.service.impl;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManagerUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.notifications.UserNotificationManagerUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.tasks.exception.TasksEntryDueDateException;
 import com.liferay.tasks.exception.TasksEntryTitleException;
@@ -46,6 +46,7 @@ import java.util.List;
  */
 public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 
+	@Override
 	public TasksEntry addTasksEntry(
 			long userId, String title, int priority, long assigneeUserId,
 			int dueDateMonth, int dueDateDay, int dueDateYear, int dueDateHour,
@@ -100,9 +101,8 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 
 		// Social
 
-		JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-		extraDataJSONObject.put("title", tasksEntry.getTitle());
+		JSONObject extraDataJSONObject = JSONUtil.put(
+			"title", tasksEntry.getTitle());
 
 		socialActivityLocalService.addActivity(
 			userId, groupId, TasksEntry.class.getName(), tasksEntryId,
@@ -154,6 +154,7 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 		return tasksEntry;
 	}
 
+	@Override
 	public List<TasksEntry> getAssigneeTasksEntries(
 		long assigneeUserId, int start, int end) {
 
@@ -161,10 +162,12 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 			assigneeUserId, start, end);
 	}
 
+	@Override
 	public int getAssigneeTasksEntriesCount(long assigneeUserId) {
 		return tasksEntryPersistence.countByAssigneeUserId(assigneeUserId);
 	}
 
+	@Override
 	public List<TasksEntry> getGroupAssigneeTasksEntries(
 		long groupId, long assigneeUserId, int start, int end) {
 
@@ -172,12 +175,14 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 			groupId, assigneeUserId, start, end);
 	}
 
+	@Override
 	public int getGroupAssigneeTasksEntriesCount(
 		long groupId, long assigneeUserId) {
 
 		return tasksEntryPersistence.countByG_A(groupId, assigneeUserId);
 	}
 
+	@Override
 	public List<TasksEntry> getGroupResolverTasksEntries(
 		long groupId, long resolverUserId, int start, int end) {
 
@@ -185,22 +190,26 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 			groupId, resolverUserId, start, end);
 	}
 
+	@Override
 	public int getGroupResolverTasksEntriesCount(
 		long groupId, long resolverUserId) {
 
 		return tasksEntryPersistence.countByG_R(groupId, resolverUserId);
 	}
 
+	@Override
 	public List<TasksEntry> getGroupUserTasksEntries(
 		long groupId, long userId, int start, int end) {
 
 		return tasksEntryPersistence.findByG_U(groupId, userId, start, end);
 	}
 
+	@Override
 	public int getGroupUserTasksEntriesCount(long groupId, long userId) {
 		return tasksEntryPersistence.countByG_U(groupId, userId);
 	}
 
+	@Override
 	public List<TasksEntry> getResolverTasksEntries(
 		long resolverUserId, int start, int end) {
 
@@ -208,14 +217,17 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 			resolverUserId, start, end);
 	}
 
+	@Override
 	public int getResolverTasksEntriesCount(long resolverUserId) {
 		return tasksEntryPersistence.countByResolverUserId(resolverUserId);
 	}
 
+	@Override
 	public List<TasksEntry> getTasksEntries(long groupId, int start, int end) {
 		return tasksEntryPersistence.findByGroupId(groupId, start, end);
 	}
 
+	@Override
 	public List<TasksEntry> getTasksEntries(
 		long groupId, long userId, int priority, long assigneeUserId,
 		int status, long[] assetTagIds, long[] notAssetTagIds, int start,
@@ -226,10 +238,12 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 			notAssetTagIds, start, end);
 	}
 
+	@Override
 	public int getTasksEntriesCount(long groupId) {
 		return tasksEntryPersistence.countByGroupId(groupId);
 	}
 
+	@Override
 	public int getTasksEntriesCount(
 		long groupId, long userId, int priority, long assigneeUserId,
 		int status, long[] tagsEntryIds, long[] notTagsEntryIds) {
@@ -244,16 +258,19 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 		return tasksEntryPersistence.findByPrimaryKey(tasksEntryId);
 	}
 
+	@Override
 	public List<TasksEntry> getUserTasksEntries(
 		long userId, int start, int end) {
 
 		return tasksEntryPersistence.findByUserId(userId, start, end);
 	}
 
+	@Override
 	public int getUserTasksEntriesCount(long userId) {
 		return tasksEntryPersistence.countByUserId(userId);
 	}
 
+	@Override
 	public void updateAsset(
 			long userId, TasksEntry tasksEntry, long[] assetCategoryIds,
 			String[] assetTagNames)
@@ -264,6 +281,7 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 			tasksEntry.getTasksEntryId(), assetCategoryIds, assetTagNames);
 	}
 
+	@Override
 	public TasksEntry updateTasksEntry(
 			long tasksEntryId, String title, int priority, long assigneeUserId,
 			long resolverUserId, int dueDateMonth, int dueDateDay,
@@ -278,13 +296,13 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 		TasksEntry tasksEntry = tasksEntryPersistence.findByPrimaryKey(
 			tasksEntryId);
 
-		User user = userLocalService.getUserById(tasksEntry.getUserId());
-
 		validate(title);
 
 		Date dueDate = null;
 
 		if (addDueDate) {
+			User user = userLocalService.getUserById(tasksEntry.getUserId());
+
 			dueDate = PortalUtil.getDate(
 				dueDateMonth, dueDateDay, dueDateYear, dueDateHour,
 				dueDateMinute, user.getTimeZone(),
@@ -332,6 +350,7 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 		return tasksEntry;
 	}
 
+	@Override
 	public TasksEntry updateTasksEntryStatus(
 			long tasksEntryId, long resolverUserId, int status,
 			ServiceContext serviceContext)
@@ -387,9 +406,8 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 			activity = TasksActivityKeys.RESOLVE_ENTRY;
 		}
 
-		JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-		extraDataJSONObject.put("title", tasksEntry.getTitle());
+		JSONObject extraDataJSONObject = JSONUtil.put(
+			"title", tasksEntry.getTitle());
 
 		socialActivityLocalService.addActivity(
 			serviceContext.getUserId(), tasksEntry.getGroupId(),
@@ -402,7 +420,7 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		HashSet<Long> receiverUserIds = new HashSet<>(3);
+		HashSet<Long> receiverUserIds = new HashSet<>();
 
 		receiverUserIds.add(oldAssigneeUserId);
 		receiverUserIds.add(tasksEntry.getUserId());
@@ -410,12 +428,11 @@ public class TasksEntryLocalServiceImpl extends TasksEntryLocalServiceBaseImpl {
 
 		receiverUserIds.remove(serviceContext.getUserId());
 
-		JSONObject notificationEventJSONObject =
-			JSONFactoryUtil.createJSONObject();
-
-		notificationEventJSONObject.put(
-			"classPK", tasksEntry.getTasksEntryId());
-		notificationEventJSONObject.put("userId", serviceContext.getUserId());
+		JSONObject notificationEventJSONObject = JSONUtil.put(
+			"classPK", tasksEntry.getTasksEntryId()
+		).put(
+			"userId", serviceContext.getUserId()
+		);
 
 		for (long receiverUserId : receiverUserIds) {
 			if ((receiverUserId == 0) ||

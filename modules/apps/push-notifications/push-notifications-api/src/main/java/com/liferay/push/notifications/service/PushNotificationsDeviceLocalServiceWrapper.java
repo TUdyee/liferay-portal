@@ -14,8 +14,6 @@
 
 package com.liferay.push.notifications.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,88 +23,114 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see PushNotificationsDeviceLocalService
  * @generated
  */
-@ProviderType
 public class PushNotificationsDeviceLocalServiceWrapper
 	implements PushNotificationsDeviceLocalService,
-		ServiceWrapper<PushNotificationsDeviceLocalService> {
+			   ServiceWrapper<PushNotificationsDeviceLocalService> {
+
 	public PushNotificationsDeviceLocalServiceWrapper(
-		PushNotificationsDeviceLocalService pushNotificationsDeviceLocalService) {
-		_pushNotificationsDeviceLocalService = pushNotificationsDeviceLocalService;
+		PushNotificationsDeviceLocalService
+			pushNotificationsDeviceLocalService) {
+
+		_pushNotificationsDeviceLocalService =
+			pushNotificationsDeviceLocalService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link PushNotificationsDeviceLocalServiceUtil} to access the push notifications device local service. Add custom service methods to <code>com.liferay.push.notifications.service.impl.PushNotificationsDeviceLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice addPushNotificationsDevice(
-		long userId, java.lang.String platform, java.lang.String token)
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+			addPushNotificationsDevice(
+				long userId, String platform, String token)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _pushNotificationsDeviceLocalService.addPushNotificationsDevice(userId,
-			platform, token);
+
+		return _pushNotificationsDeviceLocalService.addPushNotificationsDevice(
+			userId, platform, token);
 	}
 
 	/**
-	* Adds the push notifications device to the database. Also notifies the appropriate model listeners.
-	*
-	* @param pushNotificationsDevice the push notifications device
-	* @return the push notifications device that was added
-	*/
+	 * Adds the push notifications device to the database. Also notifies the appropriate model listeners.
+	 *
+	 * @param pushNotificationsDevice the push notifications device
+	 * @return the push notifications device that was added
+	 */
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice addPushNotificationsDevice(
-		com.liferay.push.notifications.model.PushNotificationsDevice pushNotificationsDevice) {
-		return _pushNotificationsDeviceLocalService.addPushNotificationsDevice(pushNotificationsDevice);
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+		addPushNotificationsDevice(
+			com.liferay.push.notifications.model.PushNotificationsDevice
+				pushNotificationsDevice) {
+
+		return _pushNotificationsDeviceLocalService.addPushNotificationsDevice(
+			pushNotificationsDevice);
 	}
 
 	/**
-	* Creates a new push notifications device with the primary key. Does not add the push notifications device to the database.
-	*
-	* @param pushNotificationsDeviceId the primary key for the new push notifications device
-	* @return the new push notifications device
-	*/
+	 * Creates a new push notifications device with the primary key. Does not add the push notifications device to the database.
+	 *
+	 * @param pushNotificationsDeviceId the primary key for the new push notifications device
+	 * @return the new push notifications device
+	 */
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice createPushNotificationsDevice(
-		long pushNotificationsDeviceId) {
-		return _pushNotificationsDeviceLocalService.createPushNotificationsDevice(pushNotificationsDeviceId);
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+		createPushNotificationsDevice(long pushNotificationsDeviceId) {
+
+		return _pushNotificationsDeviceLocalService.
+			createPushNotificationsDevice(pushNotificationsDeviceId);
 	}
 
 	/**
-	* @throws PortalException
-	*/
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel deletePersistedModel(
-		com.liferay.portal.kernel.model.PersistedModel persistedModel)
+			com.liferay.portal.kernel.model.PersistedModel persistedModel)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _pushNotificationsDeviceLocalService.deletePersistedModel(persistedModel);
+
+		return _pushNotificationsDeviceLocalService.deletePersistedModel(
+			persistedModel);
 	}
 
 	/**
-	* Deletes the push notifications device with the primary key from the database. Also notifies the appropriate model listeners.
-	*
-	* @param pushNotificationsDeviceId the primary key of the push notifications device
-	* @return the push notifications device that was removed
-	* @throws PortalException if a push notifications device with the primary key could not be found
-	*/
+	 * Deletes the push notifications device with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * @param pushNotificationsDeviceId the primary key of the push notifications device
+	 * @return the push notifications device that was removed
+	 * @throws PortalException if a push notifications device with the primary key could not be found
+	 */
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice deletePushNotificationsDevice(
-		long pushNotificationsDeviceId)
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+			deletePushNotificationsDevice(long pushNotificationsDeviceId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _pushNotificationsDeviceLocalService.deletePushNotificationsDevice(pushNotificationsDeviceId);
+
+		return _pushNotificationsDeviceLocalService.
+			deletePushNotificationsDevice(pushNotificationsDeviceId);
 	}
 
 	/**
-	* Deletes the push notifications device from the database. Also notifies the appropriate model listeners.
-	*
-	* @param pushNotificationsDevice the push notifications device
-	* @return the push notifications device that was removed
-	*/
+	 * Deletes the push notifications device from the database. Also notifies the appropriate model listeners.
+	 *
+	 * @param pushNotificationsDevice the push notifications device
+	 * @return the push notifications device that was removed
+	 */
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice deletePushNotificationsDevice(
-		com.liferay.push.notifications.model.PushNotificationsDevice pushNotificationsDevice) {
-		return _pushNotificationsDeviceLocalService.deletePushNotificationsDevice(pushNotificationsDevice);
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+		deletePushNotificationsDevice(
+			com.liferay.push.notifications.model.PushNotificationsDevice
+				pushNotificationsDevice) {
+
+		return _pushNotificationsDeviceLocalService.
+			deletePushNotificationsDevice(pushNotificationsDevice);
 	}
 
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice deletePushNotificationsDevice(
-		java.lang.String token)
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+			deletePushNotificationsDevice(String token)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _pushNotificationsDeviceLocalService.deletePushNotificationsDevice(token);
+
+		return _pushNotificationsDeviceLocalService.
+			deletePushNotificationsDevice(token);
 	}
 
 	@Override
@@ -115,201 +139,234 @@ public class PushNotificationsDeviceLocalServiceWrapper
 	}
 
 	/**
-	* Performs a dynamic query on the database and returns the matching rows.
-	*
-	* @param dynamicQuery the dynamic query
-	* @return the matching rows
-	*/
+	 * Performs a dynamic query on the database and returns the matching rows.
+	 *
+	 * @param dynamicQuery the dynamic query
+	 * @return the matching rows
+	 */
 	@Override
 	public <T> java.util.List<T> dynamicQuery(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
+
 		return _pushNotificationsDeviceLocalService.dynamicQuery(dynamicQuery);
 	}
 
 	/**
-	* Performs a dynamic query on the database and returns a range of the matching rows.
-	*
-	* <p>
-	* Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.push.notifications.model.impl.PushNotificationsDeviceModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
-	* </p>
-	*
-	* @param dynamicQuery the dynamic query
-	* @param start the lower bound of the range of model instances
-	* @param end the upper bound of the range of model instances (not inclusive)
-	* @return the range of matching rows
-	*/
+	 * Performs a dynamic query on the database and returns a range of the matching rows.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.push.notifications.model.impl.PushNotificationsDeviceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * </p>
+	 *
+	 * @param dynamicQuery the dynamic query
+	 * @param start the lower bound of the range of model instances
+	 * @param end the upper bound of the range of model instances (not inclusive)
+	 * @return the range of matching rows
+	 */
 	@Override
 	public <T> java.util.List<T> dynamicQuery(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
 		int end) {
-		return _pushNotificationsDeviceLocalService.dynamicQuery(dynamicQuery,
-			start, end);
+
+		return _pushNotificationsDeviceLocalService.dynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
-	* Performs a dynamic query on the database and returns an ordered range of the matching rows.
-	*
-	* <p>
-	* Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.push.notifications.model.impl.PushNotificationsDeviceModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
-	* </p>
-	*
-	* @param dynamicQuery the dynamic query
-	* @param start the lower bound of the range of model instances
-	* @param end the upper bound of the range of model instances (not inclusive)
-	* @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	* @return the ordered range of matching rows
-	*/
+	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.push.notifications.model.impl.PushNotificationsDeviceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * </p>
+	 *
+	 * @param dynamicQuery the dynamic query
+	 * @param start the lower bound of the range of model instances
+	 * @param end the upper bound of the range of model instances (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching rows
+	 */
 	@Override
 	public <T> java.util.List<T> dynamicQuery(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
 		int end,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
-		return _pushNotificationsDeviceLocalService.dynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+
+		return _pushNotificationsDeviceLocalService.dynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
-	* Returns the number of rows matching the dynamic query.
-	*
-	* @param dynamicQuery the dynamic query
-	* @return the number of rows matching the dynamic query
-	*/
+	 * Returns the number of rows matching the dynamic query.
+	 *
+	 * @param dynamicQuery the dynamic query
+	 * @return the number of rows matching the dynamic query
+	 */
 	@Override
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-		return _pushNotificationsDeviceLocalService.dynamicQueryCount(dynamicQuery);
+
+		return _pushNotificationsDeviceLocalService.dynamicQueryCount(
+			dynamicQuery);
 	}
 
 	/**
-	* Returns the number of rows matching the dynamic query.
-	*
-	* @param dynamicQuery the dynamic query
-	* @param projection the projection to apply to the query
-	* @return the number of rows matching the dynamic query
-	*/
+	 * Returns the number of rows matching the dynamic query.
+	 *
+	 * @param dynamicQuery the dynamic query
+	 * @param projection the projection to apply to the query
+	 * @return the number of rows matching the dynamic query
+	 */
 	@Override
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
-		return _pushNotificationsDeviceLocalService.dynamicQueryCount(dynamicQuery,
-			projection);
+
+		return _pushNotificationsDeviceLocalService.dynamicQueryCount(
+			dynamicQuery, projection);
 	}
 
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice fetchPushNotificationsDevice(
-		long pushNotificationsDeviceId) {
-		return _pushNotificationsDeviceLocalService.fetchPushNotificationsDevice(pushNotificationsDeviceId);
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+		fetchPushNotificationsDevice(long pushNotificationsDeviceId) {
+
+		return _pushNotificationsDeviceLocalService.
+			fetchPushNotificationsDevice(pushNotificationsDeviceId);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery getActionableDynamicQuery() {
+	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
+		getActionableDynamicQuery() {
+
 		return _pushNotificationsDeviceLocalService.getActionableDynamicQuery();
 	}
 
 	@Override
-	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		return _pushNotificationsDeviceLocalService.getIndexableActionableDynamicQuery();
+	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
+
+		return _pushNotificationsDeviceLocalService.
+			getIndexableActionableDynamicQuery();
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _pushNotificationsDeviceLocalService.getOSGiServiceIdentifier();
 	}
 
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
-		java.io.Serializable primaryKeyObj)
+			java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _pushNotificationsDeviceLocalService.getPersistedModel(primaryKeyObj);
+
+		return _pushNotificationsDeviceLocalService.getPersistedModel(
+			primaryKeyObj);
 	}
 
 	/**
-	* Returns the push notifications device with the primary key.
-	*
-	* @param pushNotificationsDeviceId the primary key of the push notifications device
-	* @return the push notifications device
-	* @throws PortalException if a push notifications device with the primary key could not be found
-	*/
+	 * Returns the push notifications device with the primary key.
+	 *
+	 * @param pushNotificationsDeviceId the primary key of the push notifications device
+	 * @return the push notifications device
+	 * @throws PortalException if a push notifications device with the primary key could not be found
+	 */
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice getPushNotificationsDevice(
-		long pushNotificationsDeviceId)
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+			getPushNotificationsDevice(long pushNotificationsDeviceId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _pushNotificationsDeviceLocalService.getPushNotificationsDevice(pushNotificationsDeviceId);
+
+		return _pushNotificationsDeviceLocalService.getPushNotificationsDevice(
+			pushNotificationsDeviceId);
 	}
 
 	/**
-	* Returns a range of all the push notifications devices.
-	*
-	* <p>
-	* Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.push.notifications.model.impl.PushNotificationsDeviceModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
-	* </p>
-	*
-	* @param start the lower bound of the range of push notifications devices
-	* @param end the upper bound of the range of push notifications devices (not inclusive)
-	* @return the range of push notifications devices
-	*/
+	 * Returns a range of all the push notifications devices.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.push.notifications.model.impl.PushNotificationsDeviceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * </p>
+	 *
+	 * @param start the lower bound of the range of push notifications devices
+	 * @param end the upper bound of the range of push notifications devices (not inclusive)
+	 * @return the range of push notifications devices
+	 */
 	@Override
-	public java.util.List<com.liferay.push.notifications.model.PushNotificationsDevice> getPushNotificationsDevices(
-		int start, int end) {
-		return _pushNotificationsDeviceLocalService.getPushNotificationsDevices(start,
-			end);
+	public java.util.List
+		<com.liferay.push.notifications.model.PushNotificationsDevice>
+			getPushNotificationsDevices(int start, int end) {
+
+		return _pushNotificationsDeviceLocalService.getPushNotificationsDevices(
+			start, end);
 	}
 
 	@Override
-	public java.util.List<com.liferay.push.notifications.model.PushNotificationsDevice> getPushNotificationsDevices(
-		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.push.notifications.model.PushNotificationsDevice> orderByComparator) {
-		return _pushNotificationsDeviceLocalService.getPushNotificationsDevices(start,
-			end, orderByComparator);
+	public java.util.List
+		<com.liferay.push.notifications.model.PushNotificationsDevice>
+			getPushNotificationsDevices(
+				int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.push.notifications.model.
+						PushNotificationsDevice> orderByComparator) {
+
+		return _pushNotificationsDeviceLocalService.getPushNotificationsDevices(
+			start, end, orderByComparator);
 	}
 
 	/**
-	* Returns the number of push notifications devices.
-	*
-	* @return the number of push notifications devices
-	*/
+	 * Returns the number of push notifications devices.
+	 *
+	 * @return the number of push notifications devices
+	 */
 	@Override
 	public int getPushNotificationsDevicesCount() {
-		return _pushNotificationsDeviceLocalService.getPushNotificationsDevicesCount();
+		return _pushNotificationsDeviceLocalService.
+			getPushNotificationsDevicesCount();
 	}
 
 	@Override
-	public void sendPushNotification(long[] toUserIds,
-		com.liferay.portal.kernel.json.JSONObject payloadJSONObject)
+	public void sendPushNotification(
+			long[] toUserIds,
+			com.liferay.portal.kernel.json.JSONObject payloadJSONObject)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_pushNotificationsDeviceLocalService.sendPushNotification(toUserIds,
-			payloadJSONObject);
+
+		_pushNotificationsDeviceLocalService.sendPushNotification(
+			toUserIds, payloadJSONObject);
 	}
 
 	@Override
-	public void sendPushNotification(java.lang.String platform,
-		java.util.List<java.lang.String> tokens,
-		com.liferay.portal.kernel.json.JSONObject payloadJSONObject)
+	public void sendPushNotification(
+			String platform, java.util.List<String> tokens,
+			com.liferay.portal.kernel.json.JSONObject payloadJSONObject)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_pushNotificationsDeviceLocalService.sendPushNotification(platform,
-			tokens, payloadJSONObject);
+
+		_pushNotificationsDeviceLocalService.sendPushNotification(
+			platform, tokens, payloadJSONObject);
 	}
 
 	/**
-	* Updates the push notifications device in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
-	*
-	* @param pushNotificationsDevice the push notifications device
-	* @return the push notifications device that was updated
-	*/
+	 * Updates the push notifications device in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * @param pushNotificationsDevice the push notifications device
+	 * @return the push notifications device that was updated
+	 */
 	@Override
-	public com.liferay.push.notifications.model.PushNotificationsDevice updatePushNotificationsDevice(
-		com.liferay.push.notifications.model.PushNotificationsDevice pushNotificationsDevice) {
-		return _pushNotificationsDeviceLocalService.updatePushNotificationsDevice(pushNotificationsDevice);
+	public com.liferay.push.notifications.model.PushNotificationsDevice
+		updatePushNotificationsDevice(
+			com.liferay.push.notifications.model.PushNotificationsDevice
+				pushNotificationsDevice) {
+
+		return _pushNotificationsDeviceLocalService.
+			updatePushNotificationsDevice(pushNotificationsDevice);
 	}
 
 	@Override
-	public void updateToken(java.lang.String oldToken, java.lang.String newToken)
+	public void updateToken(String oldToken, String newToken)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_pushNotificationsDeviceLocalService.updateToken(oldToken, newToken);
 	}
 
@@ -320,9 +377,14 @@ public class PushNotificationsDeviceLocalServiceWrapper
 
 	@Override
 	public void setWrappedService(
-		PushNotificationsDeviceLocalService pushNotificationsDeviceLocalService) {
-		_pushNotificationsDeviceLocalService = pushNotificationsDeviceLocalService;
+		PushNotificationsDeviceLocalService
+			pushNotificationsDeviceLocalService) {
+
+		_pushNotificationsDeviceLocalService =
+			pushNotificationsDeviceLocalService;
 	}
 
-	private PushNotificationsDeviceLocalService _pushNotificationsDeviceLocalService;
+	private PushNotificationsDeviceLocalService
+		_pushNotificationsDeviceLocalService;
+
 }

@@ -14,21 +14,18 @@
 
 package com.liferay.screens.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-
 import com.liferay.screens.service.ScreensRatingsEntryServiceUtil;
 
 import java.rmi.RemoteException;
 
 /**
  * Provides the SOAP utility for the
- * {@link ScreensRatingsEntryServiceUtil} service utility. The
- * static methods of this class calls the same methods of the service utility.
- * However, the signatures are different because it is difficult for SOAP to
- * support certain types.
+ * <code>ScreensRatingsEntryServiceUtil</code> service
+ * utility. The static methods of this class call the same methods of the
+ * service utility. However, the signatures are different because it is
+ * difficult for SOAP to support certain types.
  *
  * <p>
  * The benefits of using the SOAP utility is that it is cross platform
@@ -49,17 +46,18 @@ import java.rmi.RemoteException;
  *
  * @author José Manuel Navarro
  * @see ScreensRatingsEntryServiceHttp
- * @see ScreensRatingsEntryServiceUtil
  * @generated
  */
-@ProviderType
 public class ScreensRatingsEntryServiceSoap {
-	public static java.lang.String deleteRatingsEntry(long classPK,
-		java.lang.String className, int ratingsLength)
+
+	public static String deleteRatingsEntry(
+			long classPK, String className, int ratingsLength)
 		throws RemoteException {
+
 		try {
-			com.liferay.portal.kernel.json.JSONObject returnValue = ScreensRatingsEntryServiceUtil.deleteRatingsEntry(classPK,
-					className, ratingsLength);
+			com.liferay.portal.kernel.json.JSONObject returnValue =
+				ScreensRatingsEntryServiceUtil.deleteRatingsEntry(
+					classPK, className, ratingsLength);
 
 			return returnValue.toString();
 		}
@@ -70,27 +68,13 @@ public class ScreensRatingsEntryServiceSoap {
 		}
 	}
 
-	public static java.lang.String getRatingsEntries(long assetEntryId,
-		int ratingsLength) throws RemoteException {
-		try {
-			com.liferay.portal.kernel.json.JSONObject returnValue = ScreensRatingsEntryServiceUtil.getRatingsEntries(assetEntryId,
-					ratingsLength);
-
-			return returnValue.toString();
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static java.lang.String getRatingsEntries(long classPK,
-		java.lang.String className, int ratingsLength)
+	public static String getRatingsEntries(long assetEntryId, int ratingsLength)
 		throws RemoteException {
+
 		try {
-			com.liferay.portal.kernel.json.JSONObject returnValue = ScreensRatingsEntryServiceUtil.getRatingsEntries(classPK,
-					className, ratingsLength);
+			com.liferay.portal.kernel.json.JSONObject returnValue =
+				ScreensRatingsEntryServiceUtil.getRatingsEntries(
+					assetEntryId, ratingsLength);
 
 			return returnValue.toString();
 		}
@@ -101,12 +85,14 @@ public class ScreensRatingsEntryServiceSoap {
 		}
 	}
 
-	public static java.lang.String updateRatingsEntry(long classPK,
-		java.lang.String className, double score, int ratingsLength)
+	public static String getRatingsEntries(
+			long classPK, String className, int ratingsLength)
 		throws RemoteException {
+
 		try {
-			com.liferay.portal.kernel.json.JSONObject returnValue = ScreensRatingsEntryServiceUtil.updateRatingsEntry(classPK,
-					className, score, ratingsLength);
+			com.liferay.portal.kernel.json.JSONObject returnValue =
+				ScreensRatingsEntryServiceUtil.getRatingsEntries(
+					classPK, className, ratingsLength);
 
 			return returnValue.toString();
 		}
@@ -117,5 +103,25 @@ public class ScreensRatingsEntryServiceSoap {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ScreensRatingsEntryServiceSoap.class);
+	public static String updateRatingsEntry(
+			long classPK, String className, double score, int ratingsLength)
+		throws RemoteException {
+
+		try {
+			com.liferay.portal.kernel.json.JSONObject returnValue =
+				ScreensRatingsEntryServiceUtil.updateRatingsEntry(
+					classPK, className, score, ratingsLength);
+
+			return returnValue.toString();
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	private static Log _log = LogFactoryUtil.getLog(
+		ScreensRatingsEntryServiceSoap.class);
+
 }

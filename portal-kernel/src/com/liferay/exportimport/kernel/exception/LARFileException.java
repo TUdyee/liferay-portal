@@ -14,14 +14,11 @@
 
 package com.liferay.exportimport.kernel.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Raymond Augé
  */
-@ProviderType
 public class LARFileException extends PortalException {
 
 	public static final int TYPE_DEFAULT = 0;

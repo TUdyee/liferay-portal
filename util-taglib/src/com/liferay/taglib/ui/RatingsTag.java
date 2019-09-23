@@ -39,6 +39,38 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class RatingsTag extends IncludeTag {
 
+	public String getClassName() {
+		return _className;
+	}
+
+	public long getClassPK() {
+		return _classPK;
+	}
+
+	public int getNumberOfStars() {
+		return _numberOfStars;
+	}
+
+	public RatingsEntry getRatingsEntry() {
+		return _ratingsEntry;
+	}
+
+	public RatingsStats getRatingsStats() {
+		return _ratingsStats;
+	}
+
+	public String getUrl() {
+		return _url;
+	}
+
+	public boolean isInTrash() {
+		return _inTrash;
+	}
+
+	public boolean isRound() {
+		return _round;
+	}
+
 	public void setClassName(String className) {
 		_className = className;
 	}
@@ -81,6 +113,8 @@ public class RatingsTag extends IncludeTag {
 
 	@Override
 	protected void cleanUp() {
+		super.cleanUp();
+
 		_className = null;
 		_classPK = 0;
 		_inTrash = null;
@@ -99,13 +133,14 @@ public class RatingsTag extends IncludeTag {
 		return _PAGE;
 	}
 
-	protected String getType(HttpServletRequest request) {
+	protected String getType(HttpServletRequest httpServletRequest) {
 		if (Validator.isNotNull(_type)) {
 			return _type;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Group group = themeDisplay.getSiteGroup();
 
@@ -142,29 +177,34 @@ public class RatingsTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute("liferay-ui:ratings:className", _className);
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
+			"liferay-ui:ratings:className", _className);
+		httpServletRequest.setAttribute(
 			"liferay-ui:ratings:classPK", String.valueOf(_classPK));
 
 		if (_inTrash != null) {
-			request.setAttribute("liferay-ui:ratings:inTrash", _inTrash);
+			httpServletRequest.setAttribute(
+				"liferay-ui:ratings:inTrash", _inTrash);
 		}
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:ratings:numberOfStars", String.valueOf(_numberOfStars));
-		request.setAttribute("liferay-ui:ratings:ratingsEntry", _ratingsEntry);
-		request.setAttribute("liferay-ui:ratings:ratingsStats", _ratingsStats);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:ratings:ratingsEntry", _ratingsEntry);
+		httpServletRequest.setAttribute(
+			"liferay-ui:ratings:ratingsStats", _ratingsStats);
+		httpServletRequest.setAttribute(
 			"liferay-ui:ratings:round", String.valueOf(_round));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:ratings:setRatingsEntry",
 			String.valueOf(_setRatingsEntry));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:ratings:setRatingsStats",
 			String.valueOf(_setRatingsStats));
-		request.setAttribute("liferay-ui:ratings:type", getType(request));
-		request.setAttribute("liferay-ui:ratings:url", _url);
+		httpServletRequest.setAttribute(
+			"liferay-ui:ratings:type", getType(httpServletRequest));
+		httpServletRequest.setAttribute("liferay-ui:ratings:url", _url);
 	}
 
 	private static final boolean _CLEAN_UP_SET_ATTRIBUTES = true;

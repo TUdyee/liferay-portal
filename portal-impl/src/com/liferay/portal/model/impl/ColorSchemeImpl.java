@@ -14,10 +14,10 @@
 
 package com.liferay.portal.model.impl;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ColorScheme;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.SafeProperties;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -63,14 +63,11 @@ public class ColorSchemeImpl implements ColorScheme {
 
 		ColorScheme colorScheme = (ColorScheme)obj;
 
-		String colorSchemeId = colorScheme.getColorSchemeId();
-
-		if (getColorSchemeId().equals(colorSchemeId)) {
+		if (getColorSchemeId().equals(colorScheme.getColorSchemeId())) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -93,15 +90,13 @@ public class ColorSchemeImpl implements ColorScheme {
 
 			int pos = _cssClass.indexOf(CharPool.SPACE);
 
-			if (pos > 0) {
-				if (_colorSchemeImagesPath.endsWith(
-						_cssClass.substring(0, pos))) {
+			if ((pos > 0) &&
+				_colorSchemeImagesPath.endsWith(_cssClass.substring(0, pos))) {
 
-					String subclassPath = StringUtil.replace(
-						_cssClass, CharPool.SPACE, CharPool.SLASH);
+				String subclassPath = StringUtil.replace(
+					_cssClass, CharPool.SPACE, CharPool.SLASH);
 
-					return _colorSchemeImagesPath + subclassPath.substring(pos);
-				}
+				return _colorSchemeImagesPath + subclassPath.substring(pos);
 			}
 		}
 
@@ -123,9 +118,8 @@ public class ColorSchemeImpl implements ColorScheme {
 		if (Validator.isNull(_name)) {
 			return _colorSchemeId;
 		}
-		else {
-			return _name;
-		}
+
+		return _name;
 	}
 
 	@Override
@@ -137,9 +131,8 @@ public class ColorSchemeImpl implements ColorScheme {
 		if (key.endsWith("-bg")) {
 			return "#FFFFFF";
 		}
-		else {
-			return "#000000";
-		}
+
+		return "#000000";
 	}
 
 	@Override

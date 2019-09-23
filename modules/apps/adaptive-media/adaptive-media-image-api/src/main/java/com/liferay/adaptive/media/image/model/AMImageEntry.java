@@ -14,30 +14,33 @@
 
 package com.liferay.adaptive.media.image.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the AMImageEntry service. Represents a row in the &quot;AMImageEntry&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see AMImageEntryModel
- * @see com.liferay.adaptive.media.image.model.impl.AMImageEntryImpl
- * @see com.liferay.adaptive.media.image.model.impl.AMImageEntryModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.adaptive.media.image.model.impl.AMImageEntryImpl")
+@ImplementationClassName(
+	"com.liferay.adaptive.media.image.model.impl.AMImageEntryImpl"
+)
 @ProviderType
 public interface AMImageEntry extends AMImageEntryModel, PersistedModel {
-	/*
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.adaptive.media.image.model.impl.AMImageEntryImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.adaptive.media.image.model.impl.AMImageEntryImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<AMImageEntry, Long> AM_IMAGE_ENTRY_ID_ACCESSOR = new Accessor<AMImageEntry, Long>() {
+	public static final Accessor<AMImageEntry, Long>
+		AM_IMAGE_ENTRY_ID_ACCESSOR = new Accessor<AMImageEntry, Long>() {
+
 			@Override
 			public Long get(AMImageEntry amImageEntry) {
 				return amImageEntry.getAmImageEntryId();
@@ -52,5 +55,7 @@ public interface AMImageEntry extends AMImageEntryModel, PersistedModel {
 			public Class<AMImageEntry> getTypeClass() {
 				return AMImageEntry.class;
 			}
+
 		};
+
 }

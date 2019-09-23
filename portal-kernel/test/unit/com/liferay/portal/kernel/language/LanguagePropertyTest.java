@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.language;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -140,11 +141,10 @@ public class LanguagePropertyTest {
 			}
 		}
 
-		if (!failureMessages.isEmpty()) {
-			Assert.fail(
-				"Required field names are not a subset of user name field " +
-					"names in " + failureMessages);
-		}
+		Assert.assertTrue(
+			"Required field names are not a subset of user name field names " +
+				"in " + failureMessages,
+			failureMessages.isEmpty());
 	}
 
 	@Test
@@ -217,7 +217,7 @@ public class LanguagePropertyTest {
 
 			@Override
 			public FileVisitResult visitFileFailed(
-				Path path, IOException ioeException) {
+				Path path, IOException ioException) {
 
 				return FileVisitResult.CONTINUE;
 			}
@@ -263,10 +263,10 @@ public class LanguagePropertyTest {
 			}
 		}
 
-		if (!invalidFileNames.isEmpty()) {
-			Assert.fail(
-				"Special key \"" + key + "\" is found in: " + invalidFileNames);
-		}
+		Assert.assertTrue(
+			StringBundler.concat(
+				"Special key \"", key, "\" is found in: ", invalidFileNames),
+			invalidFileNames.isEmpty());
 	}
 
 	private void _testValidKey(String key) {
@@ -284,11 +284,11 @@ public class LanguagePropertyTest {
 			}
 		}
 
-		if (!invalidFileNames.isEmpty()) {
-			Assert.fail(
-				"Invalid values for key \"" + key + "\" are found in: " +
-					invalidFileNames);
-		}
+		Assert.assertTrue(
+			StringBundler.concat(
+				"Invalid values for key \"", key, "\" are found in: ",
+				invalidFileNames),
+			invalidFileNames.isEmpty());
 	}
 
 	private static Map<String, Properties> _modulesPropertiesMap;

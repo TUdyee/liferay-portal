@@ -25,32 +25,71 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * @author Peter Yoo
  */
 public class JenkinsConsoleTextLoader {
 
 	public JenkinsConsoleTextLoader(String buildURL) {
+		this(buildURL, false);
+	}
+
+	public JenkinsConsoleTextLoader(String buildURL, boolean buildComplete) {
 		this.buildURL = JenkinsResultsParserUtil.getLocalURL(buildURL);
+
+		this.buildComplete = buildComplete;
+
+		if (!this.buildComplete) {
+			try {
+				JSONObject buildJSONObject =
+					JenkinsResultsParserUtil.toJSONObject(
+						this.buildURL + "/api/json");
+
+				String result = buildJSONObject.optString("result");
+
+				if (!result.isEmpty()) {
+					this.buildComplete = true;
+				}
+			}
+			catch (IOException | JSONException e) {
+				throw new RuntimeException(
+					"Unable to determine build status for build " +
+						this.buildURL,
+					e);
+			}
+		}
 
 		logStringBuilder = new StringBuilder();
 		serverLogSize = 0;
 	}
 
 	public String getConsoleText() {
-		if (buildURL.startsWith("file:") || buildURL.contains("mirrors")) {
+		String consoleText = null;
+
+		if (buildURL.startsWith("file:") || buildURL.contains("mirrors") ||
+			buildComplete) {
+
 			try {
-				return JenkinsResultsParserUtil.toString(
-					buildURL + "/consoleText");
+				consoleText = JenkinsResultsParserUtil.toString(
+					buildURL + "/consoleText", false);
 			}
 			catch (IOException ioe) {
 				throw new RuntimeException(ioe);
 			}
 		}
 
-		update();
+		if ((consoleText == null) || !consoleText.contains("\nFinished:")) {
+			update();
 
-		return logStringBuilder.toString();
+			consoleText = logStringBuilder.toString();
+		}
+
+		return StringEscapeUtils.unescapeHtml(consoleText);
 	}
 
 	public int getLineCount() {
@@ -130,6 +169,7 @@ public class JenkinsConsoleTextLoader {
 		}
 	}
 
+	protected boolean buildComplete;
 	protected String buildURL;
 	protected boolean hasMoreData = true;
 	protected StringBuilder logStringBuilder;

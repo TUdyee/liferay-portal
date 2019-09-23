@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Provides a wrapper for {@link ImageService}.
@@ -23,24 +22,30 @@ import aQute.bnd.annotation.ProviderType;
  * @see ImageService
  * @generated
  */
-@ProviderType
-public class ImageServiceWrapper implements ImageService,
-	ServiceWrapper<ImageService> {
+public class ImageServiceWrapper
+	implements ImageService, ServiceWrapper<ImageService> {
+
 	public ImageServiceWrapper(ImageService imageService) {
 		_imageService = imageService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link ImageServiceUtil} to access the image remote service. Add custom service methods to <code>com.liferay.portal.service.impl.ImageServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.Image getImage(long imageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _imageService.getImage(imageId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public java.lang.String getOSGiServiceIdentifier() {
 		return _imageService.getOSGiServiceIdentifier();
@@ -57,4 +62,5 @@ public class ImageServiceWrapper implements ImageService,
 	}
 
 	private ImageService _imageService;
+
 }

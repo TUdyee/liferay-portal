@@ -14,14 +14,11 @@
 
 package com.liferay.marketplace.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Douglas Wong
  */
-@ProviderType
 public class FileExtensionException extends PortalException {
 
 	public FileExtensionException() {

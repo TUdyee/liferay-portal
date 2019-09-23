@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -25,11 +23,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.service.http.PortletServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portal.service.http.PortletServiceSoap
  * @generated
  */
-@ProviderType
 public class PortletSoap implements Serializable {
+
 	public static PortletSoap toSoapModel(Portlet model) {
 		PortletSoap soapModel = new PortletSoap();
 
@@ -38,7 +35,7 @@ public class PortletSoap implements Serializable {
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setPortletId(model.getPortletId());
 		soapModel.setRoles(model.getRoles());
-		soapModel.setActive(model.getActive());
+		soapModel.setActive(model.isActive());
 
 		return soapModel;
 	}
@@ -71,7 +68,8 @@ public class PortletSoap implements Serializable {
 	}
 
 	public static PortletSoap[] toSoapModels(List<Portlet> models) {
-		List<PortletSoap> soapModels = new ArrayList<PortletSoap>(models.size());
+		List<PortletSoap> soapModels = new ArrayList<PortletSoap>(
+			models.size());
 
 		for (Portlet model : models) {
 			soapModels.add(toSoapModel(model));
@@ -149,4 +147,5 @@ public class PortletSoap implements Serializable {
 	private String _portletId;
 	private String _roles;
 	private boolean _active;
+
 }

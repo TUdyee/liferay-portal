@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyUtil;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
 
@@ -61,13 +60,11 @@ public class UserGroupRoleRoleChecker extends EmptyOnClickRowChecker {
 		Role role = (Role)obj;
 
 		try {
-			PermissionChecker permissionChecker =
-				PermissionThreadLocal.getPermissionChecker();
-
 			if (isChecked(role)) {
 				if (SiteMembershipPolicyUtil.isRoleProtected(
-						permissionChecker, _user.getUserId(),
-						_group.getGroupId(), role.getRoleId()) ||
+						PermissionThreadLocal.getPermissionChecker(),
+						_user.getUserId(), _group.getGroupId(),
+						role.getRoleId()) ||
 					SiteMembershipPolicyUtil.isRoleRequired(
 						_user.getUserId(), _group.getGroupId(),
 						role.getRoleId())) {

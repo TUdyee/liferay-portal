@@ -14,14 +14,10 @@
 
 package com.liferay.adaptive.media.image.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.adaptive.media.image.model.AMImageEntry;
-
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing AMImageEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see AMImageEntry
  * @generated
  */
-@ProviderType
-public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
-	Externalizable {
+public class AMImageEntryCacheModel
+	implements CacheModel<AMImageEntry>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,7 +45,8 @@ public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
 			return false;
 		}
 
-		AMImageEntryCacheModel amImageEntryCacheModel = (AMImageEntryCacheModel)obj;
+		AMImageEntryCacheModel amImageEntryCacheModel =
+			(AMImageEntryCacheModel)obj;
 
 		if (amImageEntryId == amImageEntryCacheModel.amImageEntryId) {
 			return true;
@@ -100,7 +96,7 @@ public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
 		AMImageEntryImpl amImageEntryImpl = new AMImageEntryImpl();
 
 		if (uuid == null) {
-			amImageEntryImpl.setUuid(StringPool.BLANK);
+			amImageEntryImpl.setUuid("");
 		}
 		else {
 			amImageEntryImpl.setUuid(uuid);
@@ -118,7 +114,7 @@ public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
 		}
 
 		if (configurationUuid == null) {
-			amImageEntryImpl.setConfigurationUuid(StringPool.BLANK);
+			amImageEntryImpl.setConfigurationUuid("");
 		}
 		else {
 			amImageEntryImpl.setConfigurationUuid(configurationUuid);
@@ -127,7 +123,7 @@ public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
 		amImageEntryImpl.setFileVersionId(fileVersionId);
 
 		if (mimeType == null) {
-			amImageEntryImpl.setMimeType(StringPool.BLANK);
+			amImageEntryImpl.setMimeType("");
 		}
 		else {
 			amImageEntryImpl.setMimeType(mimeType);
@@ -165,10 +161,9 @@ public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		if (uuid == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(uuid);
@@ -182,7 +177,7 @@ public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
 		objectOutput.writeLong(createDate);
 
 		if (configurationUuid == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(configurationUuid);
@@ -191,7 +186,7 @@ public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
 		objectOutput.writeLong(fileVersionId);
 
 		if (mimeType == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(mimeType);
@@ -215,4 +210,5 @@ public class AMImageEntryCacheModel implements CacheModel<AMImageEntry>,
 	public int height;
 	public int width;
 	public long size;
+
 }

@@ -14,11 +14,8 @@
 
 package com.liferay.adaptive.media.image.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class AMImageEntryImpl extends AMImageEntryBaseImpl {
 }

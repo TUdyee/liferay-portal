@@ -15,6 +15,7 @@
 package com.liferay.asset.kernel.model;
 
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -29,7 +30,6 @@ import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -98,7 +98,7 @@ public abstract class BaseAssetRendererFactory<T>
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -122,7 +122,7 @@ public abstract class BaseAssetRendererFactory<T>
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -147,7 +147,7 @@ public abstract class BaseAssetRendererFactory<T>
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -167,7 +167,7 @@ public abstract class BaseAssetRendererFactory<T>
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -194,7 +194,7 @@ public abstract class BaseAssetRendererFactory<T>
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -221,8 +221,10 @@ public abstract class BaseAssetRendererFactory<T>
 
 		String value = LanguageUtil.get(locale, key, null);
 
-		if (value == null) {
-			PortletBag portletBag = PortletBagPool.get(getPortletId());
+		String portletId = getPortletId();
+
+		if ((value == null) && (portletId != null)) {
+			PortletBag portletBag = PortletBagPool.get(portletId);
 
 			ResourceBundle resourceBundle = portletBag.getResourceBundle(
 				locale);
@@ -240,7 +242,8 @@ public abstract class BaseAssetRendererFactory<T>
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getTypeName(Locale)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getTypeName(Locale)}
 	 */
 	@Deprecated
 	@Override
@@ -254,7 +257,7 @@ public abstract class BaseAssetRendererFactory<T>
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -293,7 +296,7 @@ public abstract class BaseAssetRendererFactory<T>
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -325,15 +328,11 @@ public abstract class BaseAssetRendererFactory<T>
 			return true;
 		}
 
-		Portlet portlet = PortletLocalServiceUtil.getPortletById(
+		Portlet portlet = PortletLocalServiceUtil.fetchPortletById(
 			companyId, getPortletId());
 
 		if (portlet == null) {
-			portlet = PortletLocalServiceUtil.getPortletById(getPortletId());
-		}
-
-		if (portlet == null) {
-			return false;
+			return true;
 		}
 
 		return portlet.isActive();

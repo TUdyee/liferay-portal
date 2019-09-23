@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.log.Log;
@@ -27,7 +28,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -72,9 +72,8 @@ public class AssetEntryQuery {
 
 			return "DESC";
 		}
-		else {
-			return "ASC";
-		}
+
+		return "ASC";
 	}
 
 	public AssetEntryQuery() {
@@ -397,9 +396,7 @@ public class AssetEntryQuery {
 	}
 
 	public void setClassName(String className) {
-		long classNameId = PortalUtil.getClassNameId(className);
-
-		_classNameIds = new long[] {classNameId};
+		_classNameIds = new long[] {PortalUtil.getClassNameId(className)};
 
 		_toString = null;
 	}
@@ -650,18 +647,13 @@ public class AssetEntryQuery {
 	private long[] _flattenTagIds(long[][] tagIdsArray) {
 		List<Long> tagIdsList = new ArrayList<>();
 
-		for (int i = 0; i < tagIdsArray.length; i++) {
-			long[] tagIds = tagIdsArray[i];
-
-			for (int j = 0; j < tagIds.length; j++) {
-				long tagId = tagIds[j];
-
+		for (long[] tagIds : tagIdsArray) {
+			for (long tagId : tagIds) {
 				tagIdsList.add(tagId);
 			}
 		}
 
-		return ArrayUtil.toArray(
-			tagIdsList.toArray(new Long[tagIdsList.size()]));
+		return ArrayUtil.toArray(tagIdsList.toArray(new Long[0]));
 	}
 
 	private long[] _getLeftAndRightCategoryIds(long[] categoryIds) {

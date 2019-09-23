@@ -14,13 +14,15 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+
+import java.io.IOException;
 
 /**
  * @author Peter Shin
@@ -30,7 +32,7 @@ public class GradlePropertiesCheck extends BaseFileCheck {
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws Exception {
+		throws IOException {
 
 		StringBundler sb = new StringBundler();
 
@@ -44,9 +46,10 @@ public class GradlePropertiesCheck extends BaseFileCheck {
 
 				if (array.length == 2) {
 					String key = array[0].trim();
-					String value = array[1].trim();
 
 					if (ArrayUtil.contains(_KEYS_WITH_QUOTED_VALUE, key)) {
+						String value = array[1].trim();
+
 						String strippedValue = StringUtil.removeChars(
 							value, CharPool.APOSTROPHE, CharPool.QUOTE);
 
@@ -67,7 +70,8 @@ public class GradlePropertiesCheck extends BaseFileCheck {
 		return sb.toString();
 	}
 
-	private static final String[] _KEYS_WITH_QUOTED_VALUE =
-		{"sourceCompatibility", "targetCompatibility"};
+	private static final String[] _KEYS_WITH_QUOTED_VALUE = {
+		"sourceCompatibility", "targetCompatibility"
+	};
 
 }

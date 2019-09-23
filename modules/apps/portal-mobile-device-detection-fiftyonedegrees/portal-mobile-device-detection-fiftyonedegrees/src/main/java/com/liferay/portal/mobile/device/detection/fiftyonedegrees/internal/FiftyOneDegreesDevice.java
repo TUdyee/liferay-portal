@@ -16,7 +16,7 @@ package com.liferay.portal.mobile.device.detection.fiftyonedegrees.internal;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.mobile.device.AbstractDevice;
+import com.liferay.portal.kernel.mobile.device.BaseDevice;
 import com.liferay.portal.kernel.mobile.device.Capability;
 import com.liferay.portal.kernel.mobile.device.Dimensions;
 import com.liferay.portal.kernel.mobile.device.VersionableName;
@@ -34,7 +34,7 @@ import java.util.Map;
  * @author Brian Greenwald
  * @author Prathima Shreenath
  */
-public class FiftyOneDegreesDevice extends AbstractDevice {
+public class FiftyOneDegreesDevice extends BaseDevice {
 
 	public FiftyOneDegreesDevice(Match match) {
 		_match = match;
@@ -56,7 +56,7 @@ public class FiftyOneDegreesDevice extends AbstractDevice {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -65,7 +65,7 @@ public class FiftyOneDegreesDevice extends AbstractDevice {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override

@@ -180,6 +180,159 @@ required.
 - [LPS-74770]: Update the [Liferay Gradle Plugins Node] dependency to version
 3.1.1.
 
+## 2.3.20 - 2017-09-28
+
+### Changed
+- [LPS-74933]: Update the [Liferay Gradle Plugins Node] dependency to version
+3.2.0.
+
+## 2.3.21 - 2017-10-10
+
+### Changed
+- [LPS-75175]: Update the [Liferay Gradle Plugins Node] dependency to version
+3.2.1.
+
+## 2.4.0 - 2017-11-13
+
+### Added
+- [LPS-75829]: Add the new `com.liferay.js.transpiler.base` plugin to apply the
+`jsCompile` configuration expansion logic.
+
+## 2.4.1 - 2017-11-20
+
+### Changed
+- [LPS-75965]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.0.0.
+
+## 2.4.2 - 2018-01-02
+
+### Changed
+- [LPS-74904]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.0.1.
+
+## 2.4.3 - 2018-01-17
+
+### Changed
+- [LPS-76644]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.0.2.
+- [LPS-77250]: Update the default value of the `soyDependencies` for
+`TranspileJSTask` instances from `"${npmInstall.workingDir}/node_modules/lexicon*/src/**/*.soy"`
+to `"${npmInstall.workingDir}/node_modules/clay*/src/**/*.soy"`.
+
+## 2.4.4 - 2018-02-08
+
+### Changed
+- [LPS-69802]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.1.0.
+
+## 2.4.5 - 2018-02-13
+
+### Changed
+- [LPS-77996]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.2.0.
+
+## 2.4.6 - 2018-03-15
+
+### Changed
+- [LPS-78741]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.3.0.
+
+## 2.4.7 - 2018-03-22
+
+### Changed
+- [LPS-78741]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.3.1.
+
+## 2.4.8 - 2018-03-30
+
+### Changed
+- [LPS-78741]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.3.2.
+
+## 2.4.9 - 2018-04-05
+
+### Changed
+- [LPS-78741]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.3.3.
+
+## 2.4.10 - 2018-05-07
+
+### Changed
+- [LPS-75530]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.3.4.
+
+## 2.4.11 - 2018-06-08
+
+### Changed
+- [LPS-82130]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.3.5.
+
+## 2.4.12 - 2018-06-22
+
+### Changed
+- [LPS-82568]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.4.0.
+
+## 2.4.13 - 2018-10-03
+
+### Changed
+- [LPS-85959]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.4.1.
+
+## 2.4.14 - 2018-10-09
+
+### Changed
+- [LPS-85959]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.4.2.
+
+## 2.4.15 - 2018-10-22
+
+### Changed
+- [LPS-86576]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.4.3.
+
+## 2.4.16 - 2018-11-16
+
+### Changed
+- [LPS-87465]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.5.0.
+
+## 2.4.17 - 2019-01-07
+
+### Changed
+- [LPS-87479]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.6.0.
+
+## 2.4.18 - 2019-01-09
+
+### Changed
+- [LPS-88909]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.6.1.
+
+## 2.4.19 - 2019-01-09
+
+### Changed
+- [LPS-87479]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.6.2.
+
+## 2.4.20 - 2019-01-14
+
+### Changed
+- [LPS-89126]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.6.3.
+
+## 2.4.21 - 2019-01-16
+
+### Changed
+- [LPS-88909]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.6.4.
+
+## 2.4.22 - 2019-01-24
+
+### Changed
+- [LPS-89369]: Update the [Liferay Gradle Plugins Node] dependency to version
+4.6.5.
+
 [Liferay Gradle Plugins Node]: https://github.com/liferay/liferay-portal/tree/master/modules/sdk/gradle-plugins-node
 [LPS-66906]: https://issues.liferay.com/browse/LPS-66906
 [LPS-67023]: https://issues.liferay.com/browse/LPS-67023
@@ -205,3 +358,22 @@ required.
 [LPS-73472]: https://issues.liferay.com/browse/LPS-73472
 [LPS-74343]: https://issues.liferay.com/browse/LPS-74343
 [LPS-74770]: https://issues.liferay.com/browse/LPS-74770
+[LPS-74904]: https://issues.liferay.com/browse/LPS-74904
+[LPS-74933]: https://issues.liferay.com/browse/LPS-74933
+[LPS-75175]: https://issues.liferay.com/browse/LPS-75175
+[LPS-75530]: https://issues.liferay.com/browse/LPS-75530
+[LPS-75829]: https://issues.liferay.com/browse/LPS-75829
+[LPS-75965]: https://issues.liferay.com/browse/LPS-75965
+[LPS-76644]: https://issues.liferay.com/browse/LPS-76644
+[LPS-77250]: https://issues.liferay.com/browse/LPS-77250
+[LPS-77996]: https://issues.liferay.com/browse/LPS-77996
+[LPS-78741]: https://issues.liferay.com/browse/LPS-78741
+[LPS-82130]: https://issues.liferay.com/browse/LPS-82130
+[LPS-82568]: https://issues.liferay.com/browse/LPS-82568
+[LPS-85959]: https://issues.liferay.com/browse/LPS-85959
+[LPS-86576]: https://issues.liferay.com/browse/LPS-86576
+[LPS-87465]: https://issues.liferay.com/browse/LPS-87465
+[LPS-87479]: https://issues.liferay.com/browse/LPS-87479
+[LPS-88909]: https://issues.liferay.com/browse/LPS-88909
+[LPS-89126]: https://issues.liferay.com/browse/LPS-89126
+[LPS-89369]: https://issues.liferay.com/browse/LPS-89369

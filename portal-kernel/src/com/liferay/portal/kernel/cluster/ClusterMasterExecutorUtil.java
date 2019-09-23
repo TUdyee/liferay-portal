@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.cluster;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
@@ -24,7 +22,6 @@ import java.util.concurrent.Future;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class ClusterMasterExecutorUtil {
 
 	public static void addClusterMasterTokenTransitionListener(
@@ -40,7 +37,7 @@ public class ClusterMasterExecutorUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static ClusterMasterExecutor getClusterMasterExecutor() {

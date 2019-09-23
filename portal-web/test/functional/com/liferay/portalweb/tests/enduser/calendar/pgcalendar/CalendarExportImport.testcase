@@ -1,186 +1,157 @@
-<definition component-name="portal-calendar">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="custom.properties" value="default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles" />
-	<property name="testray.main.component.name" value="Calendar" />
+@component-name = "portal-calendar"
+definition {
 
-	<var name="pageName" value="Calendar Page" />
-	<var name="portletName" value="Calendar" />
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property testray.main.component.name = "Calendar";
+	var pageName = "Calendar Page";
+	var portletName = "Calendar";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			panel = "Site Administration",
+			portlet = "Pages");
 
-		<execute macro="Portlet#addPG">
-			<var name="pageName" value="Calendar Page" />
-			<var name="portletName" value="Calendar" />
-		</execute>
-	</set-up>
+		SitePages.addPublicPage(
+			pageName = "Calendar Page",
+			sitePageType = "Widget Page");
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		SitePages.configurePage(
+			columnName = "1 Column",
+			pageName = "Calendar Page",
+			privacy = "Public Pages",
+			sitePageType = "Widget Page");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="Navigator#gotoPage">
-					<var name="pageName" value="Calendar Page" />
-				</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-				<if>
-					<condition function="IsElementPresent" locator1="Calendar#SCHEDULER_EVENT_GENERIC" />
-					<then>
-						<execute macro="CalendarEvent#tearDown" />
-					</then>
-				</if>
+		Portlet.addPG(
+			pageName = "Calendar Page",
+			portletName = "Calendar");
+	}
 
-				<execute macro="Calendar#tearDown" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-				<execute macro="CalendarConfiguration#tearDown" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			Navigator.gotoPage(pageName = "Calendar Page");
 
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
+			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
+				CalendarEvent.tearDown();
+			}
 
-	<command name="ExportUserCalendarAsICS" priority="4">
-		<description message="This is a use case for LPS-57992." />
+			Calendar.tearDown();
 
-		<execute macro="CalendarNavigator#gotoAddEvent" />
+			CalendarConfiguration.tearDown();
 
-		<execute macro="CalendarEvent#add">
-			<var name="calendarName" value="Test Test" />
-			<var name="eventTitle" value="Event For Export" />
-			<var name="eventType" value="Regular" />
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+			Page.tearDownCP();
+		}
+	}
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+	@description = "This is a use case for LPS-57992."
+	@priority = "4"
+	test ExportUserCalendarAsICS {
+		CalendarNavigator.gotoAddEvent();
 
-		<execute macro="CalendarNavigator#gotoMyCalendarsManage" />
+		CalendarEvent.add(
+			calendarName = "Test Test",
+			eventTitle = "Event For Export",
+			eventType = "Regular",
+			pageName = "Calendar Page");
 
-		<execute macro="Calendar#exportCalendarFile">
-			<var name="calendarName" value="Test Test" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		CalendarNavigator.gotoMyCalendarsManage();
 
-		<execute macro="CalendarEvent#view">
-			<var name="eventTitle" value="Event For Export" />
-		</execute>
-	</command>
+		Calendar.exportCalendarFile(calendarName = "Test Test");
 
-	<command name="ImportCalendarAndViewEventComment" priority="5">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Calendar#enableComments">
-			<var name="calendarName" value="${siteName}" />
-			<var name="calendarType" value="Current Site Calendars" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
+		CalendarEvent.view(eventTitle = "Event For Export");
+	}
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+	@priority = "5"
+	test ImportCalendarAndViewEventComment {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<execute macro="CalendarNavigator#gotoAddEvent" />
+		Calendar.enableComments(
+			calendarName = "${siteName}",
+			calendarType = "Current Site Calendars",
+			site = "${siteName}",
+			user = "Test Test");
 
-		<execute macro="CalendarEvent#add">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event Regular Comment" />
-			<var name="eventCommentEnabled" value="true" />
-			<var name="eventTitle" value="Calendar Event Regular Title" />
-			<var name="eventType" value="Regular" />
-			<var name="pageName" value="Calendar Page" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		CalendarNavigator.gotoAddEvent();
 
-		<execute macro="CalendarEvent#viewComment">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event Regular Comment" />
-			<var name="eventTitle" value="Calendar Event Regular Title" />
-			<var name="eventType" value="Regular" />
-			<var name="site" value="${siteName}" />
-			<var name="user" value="Test Test" />
-		</execute>
+		CalendarEvent.add(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event Regular Comment",
+			eventCommentEnabled = "true",
+			eventTitle = "Calendar Event Regular Title",
+			eventType = "Regular",
+			pageName = "Calendar Page",
+			site = "${siteName}",
+			user = "Test Test");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="LAR#exportPortlet">
-			<var name="larFileName" value="calendar_calendar_with_comments.portlet.lar" />
-			<var name="portletName" value="Calendar" />
-		</execute>
+		CalendarEvent.viewComment(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event Regular Comment",
+			eventTitle = "Calendar Event Regular Title",
+			eventType = "Regular",
+			site = "${siteName}",
+			user = "Test Test");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="CalendarEvent#tearDown" />
+		LAR.exportPortlet(
+			larFileName = "calendar_calendar_with_comments.portlet.lar",
+			portletName = "Calendar");
 
-		<execute macro="Calendar#tearDown" />
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		CalendarEvent.tearDown();
 
-		<execute macro="LAR#importPortlet">
-			<var name="larFileName" value="calendar_calendar_with_comments.portlet.lar" />
-			<var name="portletName" value="Calendar" />
-		</execute>
+		Calendar.tearDown();
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="CalendarEvent#view">
-			<var name="eventTitle" value="Calendar Event Regular Title" />
-		</execute>
+		LAR.importPortlet(
+			larFileName = "calendar_calendar_with_comments.portlet.lar",
+			portletName = "Calendar");
 
-		<execute macro="CalendarEvent#viewComment">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventComment" value="Calendar Event Regular Comment" />
-			<var name="eventTitle" value="Calendar Event Regular Title" />
-			<var name="eventType" value="Regular" />
-			<var name="user" value="Test Test" />
-		</execute>
-	</command>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-	<command name="ImportMicrosoftOutlookCalendarICS" priority="4">
-		<description message="This is a use case for LPS-53072." />
+		CalendarEvent.view(eventTitle = "Calendar Event Regular Title");
 
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+		CalendarEvent.viewComment(
+			calendarName = "${siteName}",
+			eventComment = "Calendar Event Regular Comment",
+			eventTitle = "Calendar Event Regular Title",
+			eventType = "Regular",
+			user = "Test Test");
+	}
 
-		<execute macro="CalendarNavigator#gotoCurrentSiteCalendarsManage" />
+	@description = "This is a use case for LPS-53072."
+	@priority = "4"
+	test ImportMicrosoftOutlookCalendarICS {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<execute macro="Calendar#importCalendarFile">
-			<var name="calendarFile" value="calendar_microsoft_outlook_calendar.ics" />
-			<var name="calendarName" value="${siteName}" />
-		</execute>
-	</command>
-</definition>
+		CalendarNavigator.gotoCurrentSiteCalendarsManage();
+
+		Calendar.importCalendarFile(
+			calendarFile = "calendar_microsoft_outlook_calendar.ics",
+			calendarName = "${siteName}");
+	}
+
+}

@@ -14,17 +14,17 @@
 
 package com.liferay.poshi.runner;
 
-import com.liferay.poshi.runner.logger.CommandLoggerHandler;
-import com.liferay.poshi.runner.logger.LoggerUtil;
-import com.liferay.poshi.runner.logger.SummaryLoggerHandler;
-import com.liferay.poshi.runner.logger.XMLLoggerHandler;
+import com.liferay.poshi.runner.logger.PoshiLogger;
+import com.liferay.poshi.runner.logger.SummaryLogger;
 import com.liferay.poshi.runner.selenium.LiferaySeleniumHelper;
 import com.liferay.poshi.runner.selenium.SeleniumUtil;
 import com.liferay.poshi.runner.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.dom4j.Element;
 
@@ -36,7 +36,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.MultipleFailureException;
 import org.junit.runners.model.Statement;
 
@@ -53,64 +52,80 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 @RunWith(Parameterized.class)
 public class PoshiRunner {
 
-	@Parameters(name = "{0}")
+	@Parameterized.Parameters(name = "{0}")
 	public static List<String> getList() throws Exception {
-		PoshiRunnerContext.readFiles();
-
-		List<String> classCommandNames = new ArrayList<>();
+		List<String> namespacedClassCommandNames = new ArrayList<>();
 
 		List<String> testNames = Arrays.asList(
 			PropsValues.TEST_NAME.split("\\s*,\\s*"));
 
+		PoshiRunnerContext.readFiles(_getTestClassFileIncludes(testNames));
+
 		for (String testName : testNames) {
 			PoshiRunnerValidation.validate(testName);
 
+			String namespace =
+				PoshiRunnerGetterUtil.
+					getNamespaceFromNamespacedClassCommandName(testName);
+
 			if (testName.contains("#")) {
-				classCommandNames.add(testName);
+				String classCommandName =
+					PoshiRunnerGetterUtil.
+						getClassCommandNameFromNamespacedClassCommandName(
+							testName);
+
+				namespacedClassCommandNames.add(
+					namespace + "." + classCommandName);
 			}
 			else {
-				String className = testName;
+				String className =
+					PoshiRunnerGetterUtil.
+						getClassNameFromNamespacedClassCommandName(testName);
 
 				Element rootElement = PoshiRunnerContext.getTestCaseRootElement(
-					className);
+					className, namespace);
 
 				List<Element> commandElements = rootElement.elements("command");
 
 				for (Element commandElement : commandElements) {
-					classCommandNames.add(
-						className + "#" +
+					namespacedClassCommandNames.add(
+						namespace + "." + className + "#" +
 							commandElement.attributeValue("name"));
 				}
 			}
 		}
 
-		return classCommandNames;
+		return namespacedClassCommandNames;
 	}
 
-	public PoshiRunner(String classCommandName) throws Exception {
-		_testClassCommandName = classCommandName;
+	public PoshiRunner(String namespacedClassCommandName) throws Exception {
+		_testNamespacedClassCommandName = namespacedClassCommandName;
 
-		_testClassName = PoshiRunnerGetterUtil.getClassNameFromClassCommandName(
-			_testClassCommandName);
+		_testNamespacedClassName =
+			PoshiRunnerGetterUtil.
+				getNamespacedClassNameFromNamespacedClassCommandName(
+					_testNamespacedClassCommandName);
+
+		_poshiLogger = new PoshiLogger(namespacedClassCommandName);
+
+		_poshiRunnerExecutor = new PoshiRunnerExecutor(_poshiLogger);
 	}
 
 	@Before
 	public void setUp() throws Exception {
 		System.out.println();
 		System.out.println("###");
-		System.out.println("### " + _testClassCommandName);
+		System.out.println("### " + _testNamespacedClassCommandName);
 		System.out.println("###");
 		System.out.println();
 
-		PoshiRunnerContext.setTestCaseCommandName(_testClassCommandName);
-		PoshiRunnerContext.setTestCaseName(_testClassName);
+		PoshiRunnerContext.setTestCaseNamespacedClassCommandName(
+			_testNamespacedClassCommandName);
 
 		PoshiRunnerVariablesUtil.clear();
 
 		try {
-			XMLLoggerHandler.generateXMLLog(_testClassCommandName);
-
-			LoggerUtil.startLogger();
+			SummaryLogger.startRunning();
 
 			SeleniumUtil.startSelenium();
 
@@ -130,10 +145,6 @@ public class PoshiRunner {
 
 			e.printStackTrace();
 
-			if (PropsValues.TEST_PAUSE_ON_FAILURE) {
-				LoggerUtil.pauseFailedTest();
-			}
-
 			throw e;
 		}
 	}
@@ -142,7 +153,7 @@ public class PoshiRunner {
 	public void tearDown() throws Exception {
 		LiferaySeleniumHelper.writePoshiWarnings();
 
-		LoggerUtil.createSummary();
+		SummaryLogger.createSummaryReport();
 
 		try {
 			if (!PropsValues.TEST_SKIP_TEAR_DOWN) {
@@ -153,13 +164,11 @@ public class PoshiRunner {
 			PoshiRunnerStackTraceUtil.printStackTrace(e.getMessage());
 
 			PoshiRunnerStackTraceUtil.emptyStackTrace();
-
-			if (PropsValues.TEST_PAUSE_ON_FAILURE) {
-				LoggerUtil.pauseFailedTest();
-			}
 		}
 		finally {
-			LoggerUtil.stopLogger();
+			SummaryLogger.stopRunning();
+
+			_poshiLogger.createPoshiReport();
 
 			SeleniumUtil.stopSelenium();
 		}
@@ -181,135 +190,182 @@ public class PoshiRunner {
 
 			e.printStackTrace();
 
-			if (PropsValues.TEST_PAUSE_ON_FAILURE) {
-				LoggerUtil.pauseFailedTest();
-			}
-
 			throw e;
 		}
 	}
 
 	@Rule
-	public Retry retry = new Retry(
-		3, TimeoutException.class, UnreachableBrowserException.class);
+	public RetryTestRule retryTestRule = new RetryTestRule();
 
-	private void _runClassCommandName(String classCommandName)
-		throws Exception {
+	private static String[] _getTestClassFileIncludes(List<String> testNames) {
+		Set<String> testClassFileGlobsSet = new HashSet<>();
 
-		Element rootElement = PoshiRunnerContext.getTestCaseRootElement(
-			_testClassName);
+		for (String testName : testNames) {
+			String testClassName =
+				PoshiRunnerGetterUtil.
+					getClassNameFromNamespacedClassCommandName(testName);
 
-		List<Element> varElements = rootElement.elements("var");
-
-		for (Element varElement : varElements) {
-			PoshiRunnerExecutor.runVarElement(varElement, false, false);
+			testClassFileGlobsSet.add("**/" + testClassName + ".prose");
+			testClassFileGlobsSet.add("**/" + testClassName + ".testcase");
 		}
 
-		PoshiRunnerVariablesUtil.pushCommandMap(true);
+		return testClassFileGlobsSet.toArray(new String[0]);
+	}
+
+	private void _runCommand() throws Exception {
+		_poshiLogger.logNamespacedClassCommandName(
+			_testNamespacedClassCommandName);
+
+		_runNamespacedClassCommandName(_testNamespacedClassCommandName);
+	}
+
+	private void _runNamespacedClassCommandName(
+			String namespacedClassCommandName)
+		throws Exception {
+
+		String namespace =
+			PoshiRunnerGetterUtil.getNamespaceFromNamespacedClassCommandName(
+				namespacedClassCommandName);
+
+		String classCommandName =
+			PoshiRunnerGetterUtil.
+				getClassCommandNameFromNamespacedClassCommandName(
+					namespacedClassCommandName);
 
 		Element commandElement = PoshiRunnerContext.getTestCaseCommandElement(
-			classCommandName);
+			classCommandName, namespace);
 
 		if (commandElement != null) {
 			PoshiRunnerStackTraceUtil.startStackTrace(
-				classCommandName, "test-case");
+				namespacedClassCommandName, "test-case");
 
-			XMLLoggerHandler.updateStatus(commandElement, "pending");
+			_poshiLogger.updateStatus(commandElement, "pending");
 
-			PoshiRunnerExecutor.parseElement(commandElement);
+			_poshiRunnerExecutor.runTestCaseCommandElement(
+				commandElement, namespacedClassCommandName);
 
-			XMLLoggerHandler.updateStatus(commandElement, "pass");
+			_poshiLogger.updateStatus(commandElement, "pass");
 
 			PoshiRunnerStackTraceUtil.emptyStackTrace();
 		}
 	}
 
-	private void _runCommand() throws Exception {
-		CommandLoggerHandler.logClassCommandName(_testClassCommandName);
-
-		_runClassCommandName(_testClassCommandName);
-	}
-
 	private void _runSetUp() throws Exception {
-		CommandLoggerHandler.logClassCommandName(_testClassName + "#set-up");
+		_poshiLogger.logNamespacedClassCommandName(
+			_testNamespacedClassName + "#set-up");
 
-		SummaryLoggerHandler.startMajorSteps();
+		SummaryLogger.startMajorSteps();
 
-		_runClassCommandName(_testClassName + "#set-up");
+		_runNamespacedClassCommandName(_testNamespacedClassName + "#set-up");
 	}
 
 	private void _runTearDown() throws Exception {
-		CommandLoggerHandler.logClassCommandName(_testClassName + "#tear-down");
+		_poshiLogger.logNamespacedClassCommandName(
+			_testNamespacedClassName + "#tear-down");
 
-		SummaryLoggerHandler.startMajorSteps();
+		SummaryLogger.startMajorSteps();
 
-		_runClassCommandName(_testClassName + "#tear-down");
+		_runNamespacedClassCommandName(_testNamespacedClassName + "#tear-down");
 	}
 
-	private final String _testClassCommandName;
-	private final String _testClassName;
+	private final PoshiLogger _poshiLogger;
+	private final PoshiRunnerExecutor _poshiRunnerExecutor;
+	private final String _testNamespacedClassCommandName;
+	private final String _testNamespacedClassName;
 
-	private class Retry implements TestRule {
+	private class RetryTestRule implements TestRule {
 
-		public Retry(int retryCount, Class... retryClasses) {
-			_retryCount = retryCount;
-			_retryClasses = retryClasses;
+		public Statement apply(Statement statement, Description description) {
+			return new RetryStatement(statement);
 		}
 
-		public Statement apply(
-			final Statement statement, final Description description) {
+		public class RetryStatement extends Statement {
 
-			return new Statement() {
+			public RetryStatement(Statement statement) {
+				_statement = statement;
+			}
 
-				@Override
-				public void evaluate() throws Throwable {
-					for (int i = 0; i < _retryCount; i++) {
-						try {
-							statement.evaluate();
+			@Override
+			public void evaluate() throws Throwable {
+				for (int i = 0; i <= _MAX_RETRY_COUNT; i++) {
+					try {
+						_statement.evaluate();
 
-							return;
+						return;
+					}
+					catch (Throwable t) {
+						if ((i == _MAX_RETRY_COUNT) ||
+							!_isValidRetryThrowable(t)) {
+
+							throw t;
 						}
-						catch (Throwable t) {
-							if (i == (_retryCount - 1)) {
-								throw t;
+					}
+				}
+			}
+
+			private String _getShortMessage(Throwable throwable) {
+				String message = throwable.getMessage();
+
+				if (throwable instanceof WebDriverException) {
+					int index = message.indexOf("Build info:");
+
+					message = message.substring(0, index);
+
+					message = message.trim();
+				}
+
+				return message;
+			}
+
+			private boolean _isValidRetryThrowable(Throwable throwable) {
+				List<Throwable> throwables = null;
+
+				if (throwable instanceof MultipleFailureException) {
+					MultipleFailureException mfe =
+						(MultipleFailureException)throwable;
+
+					throwables = mfe.getFailures();
+				}
+				else {
+					throwables = Arrays.asList(throwable);
+				}
+
+				for (Throwable validRetryThrowable : _validRetryThrowables) {
+					Class<?> validRetryThrowableClass =
+						validRetryThrowable.getClass();
+					String validRetryThrowableShortMessage = _getShortMessage(
+						validRetryThrowable);
+
+					for (Throwable t : throwables) {
+						if (validRetryThrowableClass.equals(t.getClass())) {
+							if ((validRetryThrowableShortMessage == null) ||
+								validRetryThrowableShortMessage.isEmpty()) {
+
+								return true;
 							}
 
-							boolean retry = false;
+							if (validRetryThrowableShortMessage.equals(
+									_getShortMessage(t))) {
 
-							List<Throwable> throwables = null;
-
-							if (t instanceof MultipleFailureException) {
-								MultipleFailureException mfe =
-									(MultipleFailureException)t;
-
-								throwables = mfe.getFailures();
-							}
-							else {
-								throwables = new ArrayList<>(1);
-
-								throwables.add(t);
-							}
-
-							for (Class retryClass : _retryClasses) {
-								for (Throwable throwable : throwables) {
-									if (retryClass.isInstance(throwable)) {
-										retry = true;
-									}
-								}
-							}
-
-							if (retry == false) {
-								throw t;
+								return true;
 							}
 						}
 					}
 				}
 
-			};
-		}
+				return false;
+			}
 
-		private final Class[] _retryClasses;
-		private final int _retryCount;
+			private static final int _MAX_RETRY_COUNT = 2;
+
+			private final Statement _statement;
+			private final Throwable[] _validRetryThrowables = {
+				new TimeoutException(), new UnreachableBrowserException(null),
+				new WebDriverException(
+					"Timed out waiting 45 seconds for Firefox to start.")
+			};
+
+		}
 
 	}
 

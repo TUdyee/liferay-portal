@@ -14,13 +14,9 @@
 
 package com.liferay.portlet.social.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
-
 import com.liferay.social.kernel.model.SocialRequest;
 
 import java.io.Externalizable;
@@ -32,12 +28,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing SocialRequest in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see SocialRequest
  * @generated
  */
-@ProviderType
-public class SocialRequestCacheModel implements CacheModel<SocialRequest>,
-	Externalizable {
+public class SocialRequestCacheModel
+	implements CacheModel<SocialRequest>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,7 +43,8 @@ public class SocialRequestCacheModel implements CacheModel<SocialRequest>,
 			return false;
 		}
 
-		SocialRequestCacheModel socialRequestCacheModel = (SocialRequestCacheModel)obj;
+		SocialRequestCacheModel socialRequestCacheModel =
+			(SocialRequestCacheModel)obj;
 
 		if (requestId == socialRequestCacheModel.requestId) {
 			return true;
@@ -102,7 +98,7 @@ public class SocialRequestCacheModel implements CacheModel<SocialRequest>,
 		SocialRequestImpl socialRequestImpl = new SocialRequestImpl();
 
 		if (uuid == null) {
-			socialRequestImpl.setUuid(StringPool.BLANK);
+			socialRequestImpl.setUuid("");
 		}
 		else {
 			socialRequestImpl.setUuid(uuid);
@@ -119,7 +115,7 @@ public class SocialRequestCacheModel implements CacheModel<SocialRequest>,
 		socialRequestImpl.setType(type);
 
 		if (extraData == null) {
-			socialRequestImpl.setExtraData(StringPool.BLANK);
+			socialRequestImpl.setExtraData("");
 		}
 		else {
 			socialRequestImpl.setExtraData(extraData);
@@ -162,10 +158,9 @@ public class SocialRequestCacheModel implements CacheModel<SocialRequest>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		if (uuid == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(uuid);
@@ -190,7 +185,7 @@ public class SocialRequestCacheModel implements CacheModel<SocialRequest>,
 		objectOutput.writeInt(type);
 
 		if (extraData == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(extraData);
@@ -214,4 +209,5 @@ public class SocialRequestCacheModel implements CacheModel<SocialRequest>,
 	public String extraData;
 	public long receiverUserId;
 	public int status;
+
 }

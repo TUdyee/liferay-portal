@@ -15,8 +15,10 @@
 package com.liferay.gradle.plugins.node.tasks;
 
 import com.liferay.gradle.plugins.node.internal.NodeExecutor;
+import com.liferay.gradle.plugins.node.internal.util.DigestUtil;
 import com.liferay.gradle.plugins.node.internal.util.FileUtil;
 import com.liferay.gradle.plugins.node.internal.util.GradleUtil;
+import com.liferay.gradle.plugins.node.internal.util.NodePluginUtil;
 import com.liferay.gradle.util.OSDetector;
 import com.liferay.gradle.util.Validator;
 import com.liferay.gradle.util.copy.StripPathSegmentsAction;
@@ -24,8 +26,13 @@ import com.liferay.gradle.util.copy.StripPathSegmentsAction;
 import java.io.File;
 import java.io.IOException;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.gradle.api.Action;
 import org.gradle.api.AntBuilder;
@@ -52,9 +59,9 @@ public class DownloadNodeTask extends DefaultTask {
 
 				@Override
 				public boolean isSatisfiedBy(Task task) {
-					File nodeDir = getNodeDir();
+					String oldDigest = DigestUtil.getDigest(_getDigestFile());
 
-					if ((nodeDir != null) && nodeDir.exists()) {
+					if (Objects.equals(oldDigest, _getDigest())) {
 						return false;
 					}
 
@@ -78,26 +85,34 @@ public class DownloadNodeTask extends DefaultTask {
 
 				@Override
 				public void execute(CopySpec copySpec) {
-					copySpec.eachFile(new StripPathSegmentsAction(1));
-					copySpec.from(project.tarTree(nodeFile));
+					String nodeFileName = nodeFile.getName();
+
+					if (nodeFileName.endsWith(".exe")) {
+						copySpec.from(nodeFile.getParentFile());
+					}
+					else {
+						copySpec.eachFile(new StripPathSegmentsAction(1));
+						copySpec.setIncludeEmptyDirs(false);
+
+						if (nodeFileName.endsWith(".zip")) {
+							copySpec.from(project.zipTree(nodeFile));
+						}
+						else {
+							copySpec.from(project.tarTree(nodeFile));
+						}
+					}
+
 					copySpec.into(nodeDir);
-					copySpec.setIncludeEmptyDirs(false);
 				}
 
 			});
 
-		if (OSDetector.isWindows()) {
-			File nodeBinDir = new File(getNodeDir(), "bin");
-
-			_download(getNodeExeUrl(), nodeBinDir);
-		}
-
 		String npmUrl = getNpmUrl();
+
+		final File npmDir = NodePluginUtil.getNpmDir(nodeDir);
 
 		if (Validator.isNotNull(npmUrl)) {
 			final File npmFile = _download(npmUrl, null);
-
-			final File npmDir = new File(nodeDir, "lib/node_modules/npm");
 
 			project.delete(npmDir);
 
@@ -114,16 +129,30 @@ public class DownloadNodeTask extends DefaultTask {
 
 				});
 		}
+
+		if (!OSDetector.isWindows()) {
+			File binDir = new File(nodeDir, "bin");
+
+			Path binDirPath = binDir.toPath();
+
+			Path linkPath = binDirPath.resolve("npm");
+
+			Files.deleteIfExists(linkPath);
+
+			File linkTargetFile = new File(npmDir, "bin/npm-cli.js");
+
+			Files.createSymbolicLink(linkPath, linkTargetFile.toPath());
+		}
+
+		String digest = _getDigest();
+		File digestFile = _getDigestFile();
+
+		FileUtil.write(digestFile, digest.getBytes(StandardCharsets.UTF_8));
 	}
 
 	@OutputDirectory
 	public File getNodeDir() {
 		return _nodeExecutor.getNodeDir();
-	}
-
-	@Input
-	public String getNodeExeUrl() {
-		return GradleUtil.toString(_nodeExeUrl);
 	}
 
 	@Input
@@ -139,10 +168,6 @@ public class DownloadNodeTask extends DefaultTask {
 
 	public void setNodeDir(Object nodeDir) {
 		_nodeExecutor.setNodeDir(nodeDir);
-	}
-
-	public void setNodeExeUrl(Object nodeExeUrl) {
-		_nodeExeUrl = nodeExeUrl;
 	}
 
 	public void setNodeUrl(Object nodeUrl) {
@@ -187,8 +212,15 @@ public class DownloadNodeTask extends DefaultTask {
 		return FileUtil.get(getProject(), url, destinationFile);
 	}
 
+	private String _getDigest() {
+		return DigestUtil.getDigest(getNodeUrl(), getNpmUrl());
+	}
+
+	private File _getDigestFile() {
+		return new File(getNodeDir(), ".digest");
+	}
+
 	private final NodeExecutor _nodeExecutor;
-	private Object _nodeExeUrl;
 	private Object _nodeUrl;
 	private Object _npmUrl;
 

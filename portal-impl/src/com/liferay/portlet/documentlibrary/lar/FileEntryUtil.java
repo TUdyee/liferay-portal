@@ -85,7 +85,7 @@ public class FileEntryUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static List<FileEntry> findByR_F(long repositoryId, long folderId) {
@@ -96,7 +96,7 @@ public class FileEntryUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static FileEntry findByR_F_T(
@@ -115,10 +115,10 @@ public class FileEntryUtil {
 		long repositoryId = DLFolderConstants.getDataRepositoryId(
 			fileEntry.getRepositoryId(), fileEntry.getFolderId());
 
-		String name = ((DLFileEntry)fileEntry.getModel()).getName();
+		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
 
 		InputStream is = DLStoreUtil.getFileAsStream(
-			fileEntry.getCompanyId(), repositoryId, name,
+			fileEntry.getCompanyId(), repositoryId, dlFileEntry.getName(),
 			fileEntry.getVersion());
 
 		if (is == null) {

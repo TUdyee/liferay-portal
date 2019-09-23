@@ -14,12 +14,9 @@
 
 package com.liferay.portlet.ratings.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.ratings.kernel.model.RatingsStats;
 
 import java.io.Externalizable;
@@ -31,12 +28,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing RatingsStats in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see RatingsStats
  * @generated
  */
-@ProviderType
-public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
-	Externalizable {
+public class RatingsStatsCacheModel
+	implements CacheModel<RatingsStats>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -47,7 +43,8 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 			return false;
 		}
 
-		RatingsStatsCacheModel ratingsStatsCacheModel = (RatingsStatsCacheModel)obj;
+		RatingsStatsCacheModel ratingsStatsCacheModel =
+			(RatingsStatsCacheModel)obj;
 
 		if (statsId == ratingsStatsCacheModel.statsId) {
 			return true;
@@ -119,8 +116,7 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(statsId);
 
 		objectOutput.writeLong(companyId);
@@ -143,4 +139,5 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 	public int totalEntries;
 	public double totalScore;
 	public double averageScore;
+
 }

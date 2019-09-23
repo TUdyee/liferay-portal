@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyUtil;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 
@@ -67,13 +66,10 @@ public class SiteMembershipChecker extends RowChecker {
 		User user = (User)obj;
 
 		try {
-			PermissionChecker permissionChecker =
-				PermissionThreadLocal.getPermissionChecker();
-
 			if (isChecked(user)) {
 				if (SiteMembershipPolicyUtil.isMembershipProtected(
-						permissionChecker, user.getUserId(),
-						_group.getGroupId()) ||
+						PermissionThreadLocal.getPermissionChecker(),
+						user.getUserId(), _group.getGroupId()) ||
 					SiteMembershipPolicyUtil.isMembershipRequired(
 						user.getUserId(), _group.getGroupId())) {
 

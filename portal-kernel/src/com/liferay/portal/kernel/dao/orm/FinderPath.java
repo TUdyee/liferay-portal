@@ -14,22 +14,22 @@
 
 package com.liferay.portal.kernel.dao.orm;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.key.CacheKeyGenerator;
 import com.liferay.portal.kernel.cache.key.CacheKeyGeneratorUtil;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
  */
-@ProviderType
 public class FinderPath {
 
 	public FinderPath(
@@ -54,8 +54,7 @@ public class FinderPath {
 		_columnBitmask = columnBitmask;
 
 		if (BaseModel.class.isAssignableFrom(_resultClass)) {
-			_cacheKeyGeneratorCacheName =
-				FinderCache.class.getName() + "#BaseModel";
+			_cacheKeyGeneratorCacheName = _BASE_MODEL_CACHE_KEY_GENERATOR_NAME;
 		}
 		else {
 			_cacheKeyGeneratorCacheName = FinderCache.class.getName();
@@ -90,7 +89,8 @@ public class FinderPath {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #encodeCacheKey(String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #encodeCacheKey(String)}
 	 */
 	@Deprecated
 	public Serializable encodeCacheKey(Object[] arguments) {
@@ -113,7 +113,8 @@ public class FinderPath {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #encodeLocalCacheKey(String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #encodeLocalCacheKey(String)}
 	 */
 	@Deprecated
 	public Serializable encodeLocalCacheKey(Object[] arguments) {
@@ -156,6 +157,25 @@ public class FinderPath {
 		return _finderCacheEnabled;
 	}
 
+	private static Map<String, String> _getEncodedTypes() {
+		Map<String, String> encodedTypes = new HashMap<>();
+
+		encodedTypes.put(
+			Boolean.class.getName(), Boolean.class.getSimpleName());
+		encodedTypes.put(Byte.class.getName(), Byte.class.getSimpleName());
+		encodedTypes.put(
+			Character.class.getName(), Character.class.getSimpleName());
+		encodedTypes.put(Double.class.getName(), Double.class.getSimpleName());
+		encodedTypes.put(Float.class.getName(), Float.class.getSimpleName());
+		encodedTypes.put(
+			Integer.class.getName(), Integer.class.getSimpleName());
+		encodedTypes.put(Long.class.getName(), Long.class.getSimpleName());
+		encodedTypes.put(Short.class.getName(), Short.class.getSimpleName());
+		encodedTypes.put(String.class.getName(), String.class.getSimpleName());
+
+		return encodedTypes;
+	}
+
 	private Serializable _getCacheKey(String[] keys) {
 		CacheKeyGenerator cacheKeyGenerator = _cacheKeyGenerator;
 
@@ -175,7 +195,7 @@ public class FinderPath {
 
 		for (String param : params) {
 			sb.append(StringPool.PERIOD);
-			sb.append(param);
+			sb.append(_encodedTypes.getOrDefault(param, param));
 		}
 
 		sb.append(_ARGS_SEPARATOR);
@@ -184,13 +204,21 @@ public class FinderPath {
 	}
 
 	private void _initLocalCacheKeyPrefix() {
-		_localCacheKeyPrefix = _cacheName.concat(StringPool.PERIOD).concat(
-			_cacheKeyPrefix);
+		_localCacheKeyPrefix = _cacheName.concat(
+			StringPool.PERIOD
+		).concat(
+			_cacheKeyPrefix
+		);
 	}
 
 	private static final String _ARGS_SEPARATOR = "_A_";
 
+	private static final String _BASE_MODEL_CACHE_KEY_GENERATOR_NAME =
+		FinderCache.class.getName() + "#BaseModel";
+
 	private static final String _PARAMS_SEPARATOR = "_P_";
+
+	private static final Map<String, String> _encodedTypes = _getEncodedTypes();
 
 	private final CacheKeyGenerator _cacheKeyGenerator;
 	private final String _cacheKeyGeneratorCacheName;

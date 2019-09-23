@@ -30,6 +30,16 @@ public interface LiferaySelenium {
 
 	public void assertAlertNotPresent() throws Exception;
 
+	public void assertAttributeNotPresent(String attribute, String locator)
+		throws Exception;
+
+	public void assertAttributePresent(String attribute, String locator)
+		throws Exception;
+
+	public void assertAttributeValue(
+			String attribute, String locator, String pattern)
+		throws Exception;
+
 	public void assertChecked(String pattern) throws Exception;
 
 	public void assertConfirmation(String pattern) throws Exception;
@@ -72,6 +82,10 @@ public interface LiferaySelenium {
 
 	public void assertNotAlert(String pattern);
 
+	public void assertNotAttributeValue(
+			String locator, String attribute, String forbiddenValue)
+		throws Exception;
+
 	public void assertNotChecked(String locator) throws Exception;
 
 	public void assertNotEditable(String locator) throws Exception;
@@ -90,6 +104,10 @@ public interface LiferaySelenium {
 
 	public void assertNotVisible(String locator) throws Exception;
 
+	public void assertNotVisibleInPage(String locator) throws Exception;
+
+	public void assertNotVisibleInViewport(String locator) throws Exception;
+
 	public void assertPartialConfirmation(String pattern) throws Exception;
 
 	public void assertPartialLocation(String pattern) throws Exception;
@@ -100,12 +118,18 @@ public interface LiferaySelenium {
 	public void assertPartialTextAceEditor(String locator, String pattern)
 		throws Exception;
 
+	public void assertPartialTextCaseInsensitive(String locator, String pattern)
+		throws Exception;
+
 	public void assertPrompt(String pattern, String value) throws Exception;
 
 	public void assertSelectedLabel(String selectLocator, String pattern)
 		throws Exception;
 
 	public void assertText(String locator, String pattern) throws Exception;
+
+	public void assertTextCaseInsensitive(String locator, String pattern)
+		throws Exception;
 
 	public void assertTextNotPresent(String pattern) throws Exception;
 
@@ -114,6 +138,10 @@ public interface LiferaySelenium {
 	public void assertValue(String locator, String pattern) throws Exception;
 
 	public void assertVisible(String locator) throws Exception;
+
+	public void assertVisibleInPage(String locator) throws Exception;
+
+	public void assertVisibleInViewport(String locator) throws Exception;
 
 	public void check(String locator);
 
@@ -200,19 +228,23 @@ public interface LiferaySelenium {
 
 	public boolean isAlertPresent();
 
+	public boolean isAttributeNotPresent(String attribute, String locator);
+
+	public boolean isAttributePresent(String attribute, String locator);
+
 	public boolean isChecked(String locator);
 
-	public boolean isConfirmation(String pattern);
+	public boolean isConfirmation(String pattern) throws Exception;
 
 	public boolean isConsoleTextNotPresent(String text) throws Exception;
 
 	public boolean isConsoleTextPresent(String text) throws Exception;
 
-	public boolean isEditable(String locator);
+	public boolean isEditable(String locator) throws Exception;
 
-	public boolean isElementNotPresent(String locator);
+	public boolean isElementNotPresent(String locator) throws Exception;
 
-	public boolean isElementPresent(String locator);
+	public boolean isElementPresent(String locator) throws Exception;
 
 	public boolean isElementPresentAfterWait(String locator) throws Exception;
 
@@ -220,25 +252,37 @@ public interface LiferaySelenium {
 
 	public boolean isNotChecked(String locator);
 
-	public boolean isNotEditable(String locator);
+	public boolean isNotEditable(String locator) throws Exception;
 
-	public boolean isNotPartialText(String locator, String value);
+	public boolean isNotPartialText(String locator, String value)
+		throws Exception;
 
-	public boolean isNotPartialTextAceEditor(String locator, String value);
+	public boolean isNotPartialTextAceEditor(String locator, String value)
+		throws Exception;
 
-	public boolean isNotSelectedLabel(String selectLocator, String pattern);
+	public boolean isNotSelectedLabel(String selectLocator, String pattern)
+		throws Exception;
 
 	public boolean isNotText(String locator, String value) throws Exception;
 
 	public boolean isNotValue(String locator, String value) throws Exception;
 
-	public boolean isNotVisible(String locator);
+	public boolean isNotVisible(String locator) throws Exception;
 
-	public boolean isPartialText(String locator, String value);
+	public boolean isNotVisibleInPage(String locator) throws Exception;
 
-	public boolean isPartialTextAceEditor(String locator, String value);
+	public boolean isNotVisibleInViewport(String locator) throws Exception;
 
-	public boolean isSelectedLabel(String selectLocator, String pattern);
+	public boolean isPartialText(String locator, String value) throws Exception;
+
+	public boolean isPartialTextAceEditor(String locator, String value)
+		throws Exception;
+
+	public boolean isPartialTextCaseInsensitive(String locator, String value)
+		throws Exception;
+
+	public boolean isSelectedLabel(String selectLocator, String pattern)
+		throws Exception;
 
 	public boolean isSikuliImagePresent(String image) throws Exception;
 
@@ -248,15 +292,26 @@ public interface LiferaySelenium {
 
 	public boolean isText(String locator, String value) throws Exception;
 
-	public boolean isTextNotPresent(String pattern);
+	public boolean isTextCaseInsensitive(String locator, String value)
+		throws Exception;
 
-	public boolean isTextPresent(String pattern);
+	public boolean isTextNotPresent(String pattern) throws Exception;
+
+	public boolean isTextPresent(String pattern) throws Exception;
 
 	public boolean isValue(String locator, String value) throws Exception;
 
-	public boolean isVisible(String locator);
+	public boolean isVisible(String locator) throws Exception;
+
+	public boolean isVisibleInPage(String locator) throws Exception;
+
+	public boolean isVisibleInViewport(String locator) throws Exception;
 
 	public void javaScriptClick(String locator);
+
+	public void javaScriptDragAndDropToObject(
+			String sourceLocator, String targetLocator)
+		throws Exception;
 
 	public void javaScriptMouseDown(String locator);
 
@@ -423,9 +478,13 @@ public interface LiferaySelenium {
 
 	public void waitForConsoleTextPresent(String text) throws Exception;
 
+	public void waitForEditable(String locator) throws Exception;
+
 	public void waitForElementNotPresent(String locator) throws Exception;
 
 	public void waitForElementPresent(String locator) throws Exception;
+
+	public void waitForNotEditable(String locator) throws Exception;
 
 	public void waitForNotPartialText(String locator, String value)
 		throws Exception;
@@ -439,10 +498,17 @@ public interface LiferaySelenium {
 
 	public void waitForNotVisible(String locator) throws Exception;
 
+	public void waitForNotVisibleInPage(String locator) throws Exception;
+
+	public void waitForNotVisibleInViewport(String locator) throws Exception;
+
 	public void waitForPartialText(String locator, String value)
 		throws Exception;
 
 	public void waitForPartialTextAceEditor(String locator, String value)
+		throws Exception;
+
+	public void waitForPartialTextCaseInsensitive(String locator, String value)
 		throws Exception;
 
 	public void waitForPopUp(String windowID, String timeout);
@@ -452,6 +518,9 @@ public interface LiferaySelenium {
 
 	public void waitForText(String locator, String value) throws Exception;
 
+	public void waitForTextCaseInsensitive(String locator, String pattern)
+		throws Exception;
+
 	public void waitForTextNotPresent(String value) throws Exception;
 
 	public void waitForTextPresent(String value) throws Exception;
@@ -459,5 +528,9 @@ public interface LiferaySelenium {
 	public void waitForValue(String locator, String value) throws Exception;
 
 	public void waitForVisible(String locator) throws Exception;
+
+	public void waitForVisibleInPage(String locator) throws Exception;
+
+	public void waitForVisibleInViewport(String locator) throws Exception;
 
 }

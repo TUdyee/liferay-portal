@@ -14,6 +14,7 @@
 
 package com.liferay.portal.service.impl;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
 import com.liferay.portal.kernel.exception.DuplicatePasswordPolicyException;
 import com.liferay.portal.kernel.exception.PasswordPolicyNameException;
@@ -30,7 +31,6 @@ import com.liferay.portal.kernel.security.ldap.LDAPSettingsUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.service.base.PasswordPolicyLocalServiceBaseImpl;
@@ -130,11 +130,9 @@ public class PasswordPolicyLocalServiceImpl
 				companyId, defaultPasswordPolicyName);
 
 		if (defaultPasswordPolicy == null) {
-			long defaultUserId = userLocalService.getDefaultUserId(companyId);
-
 			addPasswordPolicy(
-				defaultUserId, true, defaultPasswordPolicyName,
-				defaultPasswordPolicyName,
+				userLocalService.getDefaultUserId(companyId), true,
+				defaultPasswordPolicyName, defaultPasswordPolicyName,
 				PropsValues.PASSWORDS_DEFAULT_POLICY_CHANGEABLE,
 				PropsValues.PASSWORDS_DEFAULT_POLICY_CHANGE_REQUIRED,
 				PropsValues.PASSWORDS_DEFAULT_POLICY_MIN_AGE,
@@ -235,6 +233,14 @@ public class PasswordPolicyLocalServiceImpl
 
 	@Override
 	public PasswordPolicy getPasswordPolicy(
+			long companyId, boolean defaultPolicy)
+		throws PortalException {
+
+		return passwordPolicyPersistence.findByC_DP(companyId, defaultPolicy);
+	}
+
+	@Override
+	public PasswordPolicy getPasswordPolicy(
 			long companyId, long[] organizationIds)
 		throws PortalException {
 
@@ -251,9 +257,7 @@ public class PasswordPolicyLocalServiceImpl
 
 		PasswordPolicyRel passwordPolicyRel = null;
 
-		for (int i = 0; i < organizationIds.length; i++) {
-			long organizationId = organizationIds[i];
-
+		for (long organizationId : organizationIds) {
 			passwordPolicyRel = passwordPolicyRelPersistence.fetchByC_C(
 				classNameId, organizationId);
 
@@ -342,7 +346,7 @@ public class PasswordPolicyLocalServiceImpl
 		PasswordPolicy passwordPolicy =
 			passwordPolicyPersistence.findByPrimaryKey(passwordPolicyId);
 
-		if (!passwordPolicy.getDefaultPolicy()) {
+		if (!passwordPolicy.isDefaultPolicy()) {
 			validate(passwordPolicyId, passwordPolicy.getCompanyId(), name);
 
 			passwordPolicy.setName(name);

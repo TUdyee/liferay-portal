@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
 import com.liferay.source.formatter.util.FileUtil;
 
@@ -30,17 +30,17 @@ import java.util.regex.Pattern;
 public class BNDWebContextPathCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isModulesCheck() {
+	public boolean isModuleSourceCheck() {
 		return true;
 	}
 
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws Exception {
+		throws IOException {
 
 		if (fileName.endsWith("/bnd.bnd") &&
-			!absolutePath.contains("/modules/private/apps/") &&
+			!isModulesApp(absolutePath, true) &&
 			!absolutePath.contains("/testIntegration/") &&
 			!absolutePath.contains("/third-party/")) {
 
@@ -108,7 +108,7 @@ public class BNDWebContextPathCheck extends BaseFileCheck {
 		return false;
 	}
 
-	private final Pattern _jsonNamePattern = Pattern.compile(
+	private static final Pattern _jsonNamePattern = Pattern.compile(
 		"\n\\s*['\"]name['\"]:");
 
 }

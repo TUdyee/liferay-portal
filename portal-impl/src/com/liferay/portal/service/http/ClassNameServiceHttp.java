@@ -14,8 +14,6 @@
 
 package com.liferay.portal.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
@@ -26,10 +24,11 @@ import com.liferay.portal.kernel.util.MethodKey;
 
 /**
  * Provides the HTTP utility for the
- * {@link ClassNameServiceUtil} service utility. The
+ * <code>ClassNameServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -48,20 +47,20 @@ import com.liferay.portal.kernel.util.MethodKey;
  *
  * @author Brian Wing Shun Chan
  * @see ClassNameServiceSoap
- * @see HttpPrincipal
- * @see ClassNameServiceUtil
  * @generated
  */
-@ProviderType
 public class ClassNameServiceHttp {
+
 	public static com.liferay.portal.kernel.model.ClassName fetchByClassNameId(
 		HttpPrincipal httpPrincipal, long classNameId) {
-		try {
-			MethodKey methodKey = new MethodKey(ClassNameServiceUtil.class,
-					"fetchByClassNameId", _fetchByClassNameIdParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					classNameId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				ClassNameServiceUtil.class, "fetchByClassNameId",
+				_fetchByClassNameIdParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, classNameId);
 
 			Object returnObj = null;
 
@@ -69,7 +68,8 @@ public class ClassNameServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.portal.kernel.model.ClassName)returnObj;
@@ -82,10 +82,12 @@ public class ClassNameServiceHttp {
 	}
 
 	public static com.liferay.portal.kernel.model.ClassName fetchClassName(
-		HttpPrincipal httpPrincipal, java.lang.String value) {
+		HttpPrincipal httpPrincipal, String value) {
+
 		try {
-			MethodKey methodKey = new MethodKey(ClassNameServiceUtil.class,
-					"fetchClassName", _fetchClassNameParameterTypes1);
+			MethodKey methodKey = new MethodKey(
+				ClassNameServiceUtil.class, "fetchClassName",
+				_fetchClassNameParameterTypes1);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey, value);
 
@@ -95,7 +97,8 @@ public class ClassNameServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.portal.kernel.model.ClassName)returnObj;
@@ -108,10 +111,10 @@ public class ClassNameServiceHttp {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ClassNameServiceHttp.class);
-	private static final Class<?>[] _fetchByClassNameIdParameterTypes0 = new Class[] {
-			long.class
-		};
-	private static final Class<?>[] _fetchClassNameParameterTypes1 = new Class[] {
-			java.lang.String.class
-		};
+
+	private static final Class<?>[] _fetchByClassNameIdParameterTypes0 =
+		new Class[] {long.class};
+	private static final Class<?>[] _fetchClassNameParameterTypes1 =
+		new Class[] {String.class};
+
 }

@@ -14,20 +14,18 @@
 
 package com.liferay.portlet.rolesadmin.util;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.roles.admin.kernel.util.RolesAdmin;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@DoPrivileged
 public class RolesAdminImpl implements RolesAdmin {
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -64,19 +62,19 @@ public class RolesAdminImpl implements RolesAdmin {
 		int roleType = role.getType();
 
 		if (roleName.equals(RoleConstants.GUEST)) {
-			iconCssClass = "icon-user guest";
+			iconCssClass = "user";
 		}
 		else if (roleType == RoleConstants.TYPE_ORGANIZATION) {
-			iconCssClass = "icon-globe";
+			iconCssClass = "globe";
 		}
 		else if (roleType == RoleConstants.TYPE_REGULAR) {
-			iconCssClass = "icon-user";
+			iconCssClass = "user";
 		}
 		else if (roleType == RoleConstants.TYPE_SITE) {
-			iconCssClass = "icon-globe";
+			iconCssClass = "globe";
 		}
 		else if (role.isTeam()) {
-			iconCssClass = "icon-group";
+			iconCssClass = "community";
 		}
 
 		return iconCssClass;

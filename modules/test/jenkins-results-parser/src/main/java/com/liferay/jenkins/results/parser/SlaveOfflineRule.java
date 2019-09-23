@@ -124,6 +124,7 @@ public class SlaveOfflineRule {
 			int x = configuration.indexOf("=");
 
 			String name = configuration.substring(0, x);
+
 			String value = configuration.substring(x + 1);
 
 			value = value.trim();
@@ -131,15 +132,12 @@ public class SlaveOfflineRule {
 			if (value.isEmpty()) {
 				continue;
 			}
-			else if (name.equals("console")) {
-				consolePattern = Pattern.compile(value);
 
-				continue;
+			if (name.equals("console")) {
+				consolePattern = Pattern.compile(value);
 			}
 			else if (name.equals("notificationRecipients")) {
 				notificationRecipients = value;
-
-				continue;
 			}
 		}
 	}

@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.regex.Matcher;
@@ -120,7 +120,7 @@ public class JSPXSSVulnerabilitiesCheck extends BaseFileCheck {
 		}
 	}
 
-	private final Pattern _xssPattern = Pattern.compile(
+	private static final Pattern _xssPattern = Pattern.compile(
 		"\\s+([^\\s]+)\\s*=\\s*(Bean)?ParamUtil\\.getString\\(");
 
 }

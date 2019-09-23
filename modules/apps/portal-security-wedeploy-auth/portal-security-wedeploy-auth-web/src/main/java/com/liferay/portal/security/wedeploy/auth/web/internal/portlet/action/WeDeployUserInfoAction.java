@@ -16,6 +16,7 @@ package com.liferay.portal.security.wedeploy.auth.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -23,7 +24,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
-import com.liferay.portal.kernel.struts.BaseStrutsAction;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -42,24 +42,25 @@ import org.osgi.service.component.annotations.Reference;
  * @author Supritha Sundaram
  */
 @Component(
-	immediate = true, property = {"path=/portal/wedeploy/user"},
+	immediate = true, property = "path=/portal/wedeploy/user",
 	service = StrutsAction.class
 )
-public class WeDeployUserInfoAction extends BaseStrutsAction {
+public class WeDeployUserInfoAction implements StrutsAction {
 
 	@Override
 	public String execute(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		response.setContentType(ContentTypes.APPLICATION_JSON);
-		response.setHeader(
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
+		httpServletResponse.setHeader(
 			HttpHeaders.CACHE_CONTROL,
 			HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		String accessToken = ParamUtil.getString(request, "token");
+		String accessToken = ParamUtil.getString(httpServletRequest, "token");
 
 		try {
 			WeDeployAuthToken weDeployAuthToken =
@@ -69,10 +70,11 @@ public class WeDeployUserInfoAction extends BaseStrutsAction {
 			User user = _userLocalService.getUser(
 				weDeployAuthToken.getUserId());
 
-			JSONObject userJSONObject = JSONFactoryUtil.createJSONObject();
-
-			userJSONObject.put("email", user.getEmailAddress());
-			userJSONObject.put("name", user.getFullName());
+			JSONObject userJSONObject = JSONUtil.put(
+				"email", user.getEmailAddress()
+			).put(
+				"name", user.getFullName()
+			);
 
 			jsonObject.put("info", userJSONObject);
 		}
@@ -87,7 +89,7 @@ public class WeDeployUserInfoAction extends BaseStrutsAction {
 						"resource"));
 		}
 
-		ServletResponseUtil.write(response, jsonObject.toString());
+		ServletResponseUtil.write(httpServletResponse, jsonObject.toString());
 
 		return null;
 	}

@@ -14,18 +14,19 @@
 
 package com.liferay.portal.lpkg.deployer.test;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.lpkg.StaticLPKGResolver;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.lpkg.deployer.LPKGDeployer;
-import com.liferay.portal.lpkg.deployer.internal.LPKGInnerBundleLocationUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+
+import java.lang.reflect.Method;
 
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -98,8 +99,9 @@ public class LPKGDeployerTest {
 
 					if (!fileName.endsWith(".lpkg")) {
 						Assert.fail(
-							"Unexpected file " + filePath + " in " +
-								lpkgDeployerDirString);
+							StringBundler.concat(
+								"Unexpected file ", filePath, " in ",
+								lpkgDeployerDirString));
 					}
 
 					lpkgFiles.add(filePath.toFile());
@@ -120,25 +122,38 @@ public class LPKGDeployerTest {
 
 		LPKGDeployer lpkgDeployer = serviceTracker.getService();
 
+		Bundle lpkgDeployerBundle = FrameworkUtil.getBundle(
+			lpkgDeployer.getClass());
+
+		Class<?> clazz = lpkgDeployerBundle.loadClass(
+			"com.liferay.portal.lpkg.deployer.internal.LPKGLocationUtil");
+
+		Method generateInnerBundleLocationMethod = clazz.getDeclaredMethod(
+			"generateInnerBundleLocation", Bundle.class, String.class);
+		Method lpkgLocationMethod = clazz.getDeclaredMethod(
+			"getLPKGLocation", File.class);
+
 		serviceTracker.close();
 
 		Map<Bundle, List<Bundle>> deployedLPKGBundles =
 			lpkgDeployer.getDeployedLPKGBundles();
 
 		for (File lpkgFile : lpkgFiles) {
-			Bundle lpkgBundle = bundleContext.getBundle(
-				lpkgFile.getCanonicalPath());
+			String lpkgLocation = (String)lpkgLocationMethod.invoke(
+				null, lpkgFile);
+
+			Bundle lpkgBundle = bundleContext.getBundle(lpkgLocation);
 
 			Assert.assertNotNull(
-				"No matching LPKG bundle for " + lpkgFile.getCanonicalPath(),
-				lpkgBundle);
+				"No matching LPKG bundle for " + lpkgLocation, lpkgBundle);
 
 			List<Bundle> expectedAppBundles = new ArrayList<>(
 				deployedLPKGBundles.get(lpkgBundle));
 
 			Assert.assertNotNull(
-				"Registered LPKG bundles " + deployedLPKGBundles.keySet() +
-					" do not contain " + lpkgBundle,
+				StringBundler.concat(
+					"Registered LPKG bundles ", deployedLPKGBundles.keySet(),
+					" do not contain ", lpkgBundle),
 				expectedAppBundles);
 
 			Collections.sort(expectedAppBundles);
@@ -157,12 +172,15 @@ public class LPKGDeployerTest {
 				String name = zipEntry.getName();
 
 				if (name.endsWith(".jar")) {
-					if (symbolicName.equals(
-							StaticLPKGResolver.
-								getStaticLPKGBundleSymbolicName())) {
+					if (_staticLPKGBundleSymbolicNames.contains(symbolicName)) {
+						File file = new File(
+							lpkgDeployerDirString + StringPool.SLASH +
+								lpkgFile.getName());
 
-						String location =
-							"file:/" + name + "?protocol=lpkg&static=true";
+						String location = StringBundler.concat(
+							name, "?lpkgPath=",
+							lpkgLocationMethod.invoke(null, file),
+							"&protocol=lpkg&static=true");
 
 						Bundle bundle = bundleContext.getBundle(location);
 
@@ -172,9 +190,8 @@ public class LPKGDeployerTest {
 					}
 					else {
 						String location =
-							LPKGInnerBundleLocationUtil.
-								generateInnerBundleLocation(
-									lpkgBundle, StringPool.SLASH.concat(name));
+							(String)generateInnerBundleLocationMethod.invoke(
+								null, lpkgBundle, name);
 
 						Bundle bundle = bundleContext.getBundle(location);
 
@@ -187,8 +204,8 @@ public class LPKGDeployerTest {
 
 				if (name.endsWith(".war")) {
 					String location =
-						LPKGInnerBundleLocationUtil.generateInnerBundleLocation(
-							lpkgBundle, StringPool.SLASH.concat(name));
+						(String)generateInnerBundleLocationMethod.invoke(
+							null, lpkgBundle, name);
 
 					Bundle bundle = bundleContext.getBundle(location);
 
@@ -268,8 +285,9 @@ public class LPKGDeployerTest {
 					location = sb.toString();
 
 					Assert.assertNotNull(
-						"Missing WAR bundle for wrapper bundle " + bundle +
-							" with expected location " + location,
+						StringBundler.concat(
+							"Missing WAR bundle for wrapper bundle ", bundle,
+							" with expected location ", location),
 						bundleContext.getBundle(location));
 				}
 			}
@@ -278,12 +296,16 @@ public class LPKGDeployerTest {
 				Collections.sort(actualAppBundles);
 
 				Assert.assertEquals(
-					"LPKG bundle " + lpkgBundle + " expects app bundles " +
-						expectedAppBundles + " but has actual app bundles " +
-							actualAppBundles,
+					StringBundler.concat(
+						"LPKG bundle ", lpkgBundle, " expects app bundles ",
+						expectedAppBundles, " but has actual app bundles ",
+						actualAppBundles),
 					expectedAppBundles, actualAppBundles);
 			}
 		}
 	}
+
+	private static final List<String> _staticLPKGBundleSymbolicNames =
+		StaticLPKGResolver.getStaticLPKGBundleSymbolicNames();
 
 }

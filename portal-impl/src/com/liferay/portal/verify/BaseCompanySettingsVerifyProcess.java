@@ -14,6 +14,7 @@
 
 package com.liferay.portal.verify;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -125,13 +126,13 @@ public abstract class BaseCompanySettingsVerifyProcess extends VerifyProcess {
 
 				if (_log.isInfoEnabled()) {
 					_log.info(
-						"Removing preference keys " + keys + " for company " +
-							company.getCompanyId());
+						StringBundler.concat(
+							"Removing preference keys ", keys, " for company ",
+							company.getCompanyId()));
 				}
 
 				companyLocalService.removePreferences(
-					company.getCompanyId(),
-					keys.toArray(new String[keys.size()]));
+					company.getCompanyId(), keys.toArray(new String[0]));
 			}
 		}
 	}

@@ -14,8 +14,8 @@
 
 package com.liferay.portal.kernel.io;
 
-import com.liferay.portal.kernel.util.CentralizedThreadLocal;
-import com.liferay.portal.kernel.util.ClassLoaderPool;
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.lang.ClassLoaderPool;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -71,20 +71,20 @@ import java.util.Arrays;
  * For ordinary Objects, all primary type wrappers are encoded to their raw
  * values with one byte type headers. This is much more efficient than
  * ObjectOutputStream's serialization format for primary type wrappers. Strings
- * are output in the same way as {@link #writeString(java.lang.String)}, but
- * also with one byte type headers. Objects are serialized by a new
- * ObjectOutputStream, so no reference handler can be used across Object
- * serialization. This is done intentionally to isolate each object. The
- * Serializer is highly optimized for serializing primary types, but is not as
- * good as ObjectOutputStream for serializing complex objects.
+ * are output in the same way as {@link #writeString(String)}, but also with one
+ * byte type headers. Objects are serialized by a new ObjectOutputStream, so no
+ * reference handler can be used across Object serialization. This is done
+ * intentionally to isolate each object. The Serializer is highly optimized for
+ * serializing primary types, but is not as good as ObjectOutputStream for
+ * serializing complex objects.
  * </p>
  *
  * <p>
  * On object serialization, the Serializer uses the {@link ClassLoaderPool} to
- * look up the servlet context name corresponding to the object's ClassLoader.
- * The servlet context name is written to the serialization stream. On object
+ * look up the context name corresponding to the object's ClassLoader. The
+ * context name is written to the serialization stream. On object
  * deserialization, the {@link Deserializer} uses the ClassLoaderPool to look up
- * the ClassLoader corresponding to the servlet context name read from the
+ * the ClassLoader corresponding to the context name read from the
  * deserialization stream. ObjectOutputStream and ObjectInputStream lack these
  * features, making Serializer and Deserializer better choices for
  * ClassLoader-aware Object serialization/deserialization, especially when
@@ -190,9 +190,8 @@ public class Serializer {
 		else if (serializable instanceof Class) {
 			Class<?> clazz = (Class<?>)serializable;
 
-			ClassLoader classLoader = clazz.getClassLoader();
-
-			String contextName = ClassLoaderPool.getContextName(classLoader);
+			String contextName = ClassLoaderPool.getContextName(
+				clazz.getClassLoader());
 
 			writeByte(SerializationConstants.TC_CLASS);
 			writeString(contextName);
@@ -265,6 +264,7 @@ public class Serializer {
 
 			if ((c == 0) || (c > 127)) {
 				asciiCode = false;
+
 				break;
 			}
 		}
@@ -420,8 +420,7 @@ public class Serializer {
 	 * <p>
 	 * The queue is small enough to simply use a linear scan search for
 	 * maintaining its order. The entire queue data is held by a {@link
-	 * SoftReference}, so when necessary, GC can release the whole
-	 * buffer cache.
+	 * SoftReference}, so when necessary, GC can release the whole buffer cache.
 	 * </p>
 	 */
 	protected static class BufferQueue {
@@ -513,9 +512,7 @@ public class Serializer {
 
 		@Override
 		public void write(byte[] bytes, int offset, int length) {
-			byte[] buffer = getBuffer(length);
-
-			System.arraycopy(bytes, offset, buffer, index, length);
+			System.arraycopy(bytes, offset, getBuffer(length), index, length);
 
 			index += length;
 		}

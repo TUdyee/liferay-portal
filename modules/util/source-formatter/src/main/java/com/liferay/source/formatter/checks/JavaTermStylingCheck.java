@@ -39,13 +39,13 @@ public class JavaTermStylingCheck extends BaseJavaTermCheck {
 
 			int pos = fileContent.indexOf(matcher.group()) + 1;
 
-			int lineCount = getLineCount(fileContent, pos);
+			int lineNumber = getLineNumber(fileContent, pos);
 
 			addMessage(
 				fileName,
 				"Create a new var for '" + StringUtil.trim(matcher.group(1)) +
 					"' for better readability",
-				lineCount);
+				lineNumber);
 		}
 
 		return javaTerm.getContent();
@@ -56,7 +56,7 @@ public class JavaTermStylingCheck extends BaseJavaTermCheck {
 		return new String[] {JAVA_CONSTRUCTOR, JAVA_METHOD};
 	}
 
-	private final Pattern _lineBreakPattern = Pattern.compile(
+	private static final Pattern _lineBreakPattern = Pattern.compile(
 		"\n(.*)\\(\n((.+,\n)*.*\\)) \\+\n");
 
 }

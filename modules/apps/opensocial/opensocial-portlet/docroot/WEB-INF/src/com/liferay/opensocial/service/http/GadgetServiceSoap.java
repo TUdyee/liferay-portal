@@ -14,10 +14,7 @@
 
 package com.liferay.opensocial.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.opensocial.service.GadgetServiceUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
@@ -25,19 +22,20 @@ import java.rmi.RemoteException;
 
 /**
  * Provides the SOAP utility for the
- * {@link GadgetServiceUtil} service utility. The
- * static methods of this class calls the same methods of the service utility.
- * However, the signatures are different because it is difficult for SOAP to
- * support certain types.
+ * <code>GadgetServiceUtil</code> service
+ * utility. The static methods of this class call the same methods of the
+ * service utility. However, the signatures are different because it is
+ * difficult for SOAP to support certain types.
  *
  * <p>
  * ServiceBuilder follows certain rules in translating the methods. For example,
- * if the method in the service utility returns a {@link java.util.List}, that
- * is translated to an array of {@link com.liferay.opensocial.model.GadgetSoap}.
- * If the method in the service utility returns a
- * {@link com.liferay.opensocial.model.Gadget}, that is translated to a
- * {@link com.liferay.opensocial.model.GadgetSoap}. Methods that SOAP cannot
- * safely wire are skipped.
+ * if the method in the service utility returns a <code>java.util.List</code>,
+ * that is translated to an array of
+ * <code>com.liferay.opensocial.model.GadgetSoap</code>. If the method in the
+ * service utility returns a
+ * <code>com.liferay.opensocial.model.Gadget</code>, that is translated to a
+ * <code>com.liferay.opensocial.model.GadgetSoap</code>. Methods that SOAP
+ * cannot safely wire are skipped.
  * </p>
  *
  * <p>
@@ -59,22 +57,22 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see GadgetServiceHttp
- * @see com.liferay.opensocial.model.GadgetSoap
- * @see GadgetServiceUtil
  * @generated
  */
-@ProviderType
 public class GadgetServiceSoap {
-	public static com.liferay.opensocial.model.GadgetSoap addGadget(
-		long companyId, java.lang.String url,
-		java.lang.String portletCategoryNames,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws RemoteException {
-		try {
-			com.liferay.opensocial.model.Gadget returnValue = GadgetServiceUtil.addGadget(companyId,
-					url, portletCategoryNames, serviceContext);
 
-			return com.liferay.opensocial.model.GadgetSoap.toSoapModel(returnValue);
+	public static com.liferay.opensocial.model.GadgetSoap addGadget(
+			long companyId, String url, String portletCategoryNames,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws RemoteException {
+
+		try {
+			com.liferay.opensocial.model.Gadget returnValue =
+				GadgetServiceUtil.addGadget(
+					companyId, url, portletCategoryNames, serviceContext);
+
+			return com.liferay.opensocial.model.GadgetSoap.toSoapModel(
+				returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -83,9 +81,11 @@ public class GadgetServiceSoap {
 		}
 	}
 
-	public static void deleteGadget(long gadgetId,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public static void deleteGadget(
+			long gadgetId,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws RemoteException {
+
 		try {
 			GadgetServiceUtil.deleteGadget(gadgetId, serviceContext);
 		}
@@ -96,13 +96,14 @@ public class GadgetServiceSoap {
 		}
 	}
 
-	public static void updateGadget(long gadgetId,
-		java.lang.String portletCategoryNames,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public static void updateGadget(
+			long gadgetId, String portletCategoryNames,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws RemoteException {
+
 		try {
-			GadgetServiceUtil.updateGadget(gadgetId, portletCategoryNames,
-				serviceContext);
+			GadgetServiceUtil.updateGadget(
+				gadgetId, portletCategoryNames, serviceContext);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -112,4 +113,5 @@ public class GadgetServiceSoap {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(GadgetServiceSoap.class);
+
 }

@@ -16,11 +16,17 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.IOException;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,8 +43,17 @@ import org.json.JSONObject;
 public class BatchBuild extends BaseBuild {
 
 	@Override
+	public void addTimelineData(BaseBuild.TimelineData timelineData) {
+		addDownstreamBuildsTimelineData(timelineData);
+	}
+
+	@Override
 	public String getAppServer() {
 		return getEnvironment("app.server");
+	}
+
+	public String getBatchName() {
+		return batchName;
 	}
 
 	@Override
@@ -68,24 +83,26 @@ public class BatchBuild extends BaseBuild {
 			return messageElement;
 		}
 
+		Map<Build, Element> downstreamBuildFailureMessages =
+			getDownstreamBuildMessages("ABORTED", "FAILURE", "UNSTABLE");
+
 		List<Element> failureElements = new ArrayList<>();
 		List<Element> upstreamJobFailureElements = new ArrayList<>();
 
-		for (Build downstreamBuild : getDownstreamBuilds(null)) {
-			String downstreamBuildResult = downstreamBuild.getResult();
+		for (Map.Entry<Build, Element> entry :
+				downstreamBuildFailureMessages.entrySet()) {
 
-			if (downstreamBuildResult.equals("SUCCESS")) {
-				continue;
-			}
-
-			Element failureElement = downstreamBuild.getGitHubMessageElement();
+			Build failedDownstreamBuild = entry.getKey();
 
 			Element upstreamJobFailureElement =
-				downstreamBuild.getGitHubMessageUpstreamJobFailureElement();
+				failedDownstreamBuild.
+					getGitHubMessageUpstreamJobFailureElement();
 
 			if (upstreamJobFailureElement != null) {
 				upstreamJobFailureElements.add(upstreamJobFailureElement);
 			}
+
+			Element failureElement = entry.getValue();
 
 			if (failureElement == null) {
 				continue;
@@ -126,8 +143,82 @@ public class BatchBuild extends BaseBuild {
 	}
 
 	@Override
+	public Long getInvokedTime() {
+		if (invokedTime != null) {
+			return invokedTime;
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("\\s*\\[echo\\]\\s*");
+
+		sb.append(Pattern.quote(getJobName()));
+
+		String jobVariant = getJobVariant();
+
+		if ((jobVariant != null) && !jobVariant.isEmpty()) {
+			sb.append("/");
+
+			sb.append(Pattern.quote(jobVariant));
+		}
+
+		sb.append("\\s*invoked time: (?<invokedTime>[^\\n]*)");
+
+		Pattern pattern = Pattern.compile(sb.toString());
+
+		Build parentBuild = getParentBuild();
+
+		String parentConsoleText = parentBuild.getConsoleText();
+
+		for (String line : parentConsoleText.split("\n")) {
+			Matcher matcher = pattern.matcher(line);
+
+			if (!matcher.find()) {
+				continue;
+			}
+
+			Properties buildProperties = null;
+
+			try {
+				buildProperties = JenkinsResultsParserUtil.getBuildProperties();
+			}
+			catch (IOException ioe) {
+				throw new RuntimeException(
+					"Unable to get build properties", ioe);
+			}
+
+			SimpleDateFormat sdf = new SimpleDateFormat(
+				buildProperties.getProperty("jenkins.report.date.format"));
+
+			Date date = null;
+
+			try {
+				date = sdf.parse(matcher.group("invokedTime"));
+			}
+			catch (ParseException pe) {
+				throw new RuntimeException("Unable to get invoked time", pe);
+			}
+
+			invokedTime = date.getTime();
+
+			return invokedTime;
+		}
+
+		return getStartTime();
+	}
+
+	@Override
 	public String getJDK() {
 		return getEnvironment("java.jdk");
+	}
+
+	@Override
+	public Map<String, String> getMetricLabels() {
+		Map<String, String> metricLabels = super.getMetricLabels();
+
+		metricLabels.put("job_type", batchName);
+
+		return metricLabels;
 	}
 
 	@Override
@@ -140,62 +231,126 @@ public class BatchBuild extends BaseBuild {
 		String status = getStatus();
 
 		if (!status.equals("completed")) {
-			return null;
+			return Collections.emptyList();
+		}
+
+		JSONObject testReportJSONObject = getTestReportJSONObject();
+
+		JSONArray childReportsJSONArray = testReportJSONObject.optJSONArray(
+			"childReports");
+
+		if (childReportsJSONArray == null) {
+			return Collections.emptyList();
 		}
 
 		List<TestResult> testResults = new ArrayList<>();
 
-		JSONObject testReportJSONObject = getTestReportJSONObject();
-
-		JSONArray childReportsJSONArray = testReportJSONObject.getJSONArray(
-			"childReports");
-
 		for (int i = 0; i < childReportsJSONArray.length(); i++) {
 			JSONObject childReportJSONObject =
-				childReportsJSONArray.getJSONObject(i);
+				childReportsJSONArray.optJSONObject(i);
 
-			JSONObject childJSONObject = childReportJSONObject.getJSONObject(
+			if (childReportJSONObject == null) {
+				continue;
+			}
+
+			JSONObject childJSONObject = childReportJSONObject.optJSONObject(
 				"child");
 
-			String axisBuildURL = childJSONObject.getString("url");
-
-			Matcher axisBuildURLMatcher = null;
-
-			if (fromArchive) {
-				axisBuildURLMatcher = AxisBuild.archiveBuildURLPattern.matcher(
-					axisBuildURL);
-			}
-			else {
-				axisBuildURLMatcher = AxisBuild.buildURLPattern.matcher(
-					axisBuildURL);
+			if (childJSONObject == null) {
+				continue;
 			}
 
-			axisBuildURLMatcher.find();
+			String axisBuildURL = childJSONObject.optString("url");
 
-			String axisVariable = axisBuildURLMatcher.group("axisVariable");
+			if (axisBuildURL == null) {
+				continue;
+			}
 
-			JSONObject resultJSONObject = childReportJSONObject.getJSONObject(
+			JSONObject resultJSONObject = childReportJSONObject.optJSONObject(
 				"result");
+
+			if (resultJSONObject == null) {
+				continue;
+			}
 
 			JSONArray suitesJSONArray = resultJSONObject.getJSONArray("suites");
 
+			if (suitesJSONArray == null) {
+				continue;
+			}
+
+			Matcher axisBuildURLMatcher;
+
+			if (fromArchive) {
+				Pattern archiveBuildURLPattern =
+					AxisBuild.archiveBuildURLPattern;
+
+				axisBuildURLMatcher = archiveBuildURLPattern.matcher(
+					axisBuildURL);
+
+				if (!axisBuildURLMatcher.find()) {
+					throw new RuntimeException(
+						JenkinsResultsParserUtil.combine(
+							"Unable to match archived axis build URL ",
+							axisBuildURL, " with archived build URL pattern.",
+							archiveBuildURLPattern.pattern()));
+				}
+			}
+			else {
+				MultiPattern buildURLMultiPattern =
+					AxisBuild.buildURLMultiPattern;
+
+				axisBuildURLMatcher = buildURLMultiPattern.find(axisBuildURL);
+
+				if (axisBuildURLMatcher == null) {
+					continue;
+				}
+			}
+
+			String axisVariable = axisBuildURLMatcher.group("axisVariable");
+
+			AxisBuild axisBuild = getAxisBuild(axisVariable);
+
+			if (axisBuild == null) {
+				continue;
+			}
+
 			testResults.addAll(
-				TestResult.getTestResults(
-					getAxisBuild(axisVariable), suitesJSONArray, testStatus));
+				getTestResults(axisBuild, suitesJSONArray, testStatus));
 		}
 
 		return testResults;
 	}
 
 	@Override
+	public long getTotalDuration() {
+		long totalDuration = super.getTotalDuration();
+
+		return totalDuration - getDuration();
+	}
+
+	@Override
+	public int getTotalSlavesUsedCount() {
+		return getTotalSlavesUsedCount(null, false);
+	}
+
+	@Override
+	public int getTotalSlavesUsedCount(
+		String status, boolean modifiedBuildsOnly) {
+
+		return getTotalSlavesUsedCount(status, modifiedBuildsOnly, true);
+	}
+
+	@Override
 	public void update() {
 		super.update();
 
-		String status = getStatus();
-
-		if (badBuildNumbers.size() >= MAX_REINVOCATIONS) {
+		if (badBuildNumbers.size() >= REINVOCATIONS_SIZE_MAX) {
 			return;
 		}
+
+		String status = getStatus();
+		String result = getResult();
 
 		if ((status.equals("completed") && result.equals("SUCCESS")) ||
 			fromArchive) {
@@ -238,13 +393,26 @@ public class BatchBuild extends BaseBuild {
 
 	protected BatchBuild(String url, TopLevelBuild topLevelBuild) {
 		super(url, topLevelBuild);
-	}
 
-	@Override
-	protected List<String> findDownstreamBuildsInConsoleText(
-		String consoleText) {
+		String jobVariant = getJobVariant();
 
-		return Collections.emptyList();
+		if ((jobVariant != null) && !jobVariant.isEmpty()) {
+			Matcher matcher = _jobVariantPattern.matcher(jobVariant);
+
+			if (!matcher.matches()) {
+				throw new RuntimeException(
+					JenkinsResultsParserUtil.combine(
+						"Unable to find batch name of batch build from ",
+						"job variant '", jobVariant,
+						"'. Job variant must match pattern '",
+						_jobVariantPattern.pattern(), "'."));
+			}
+
+			batchName = matcher.group("batchName");
+		}
+		else {
+			batchName = null;
+		}
 	}
 
 	protected AxisBuild getAxisBuild(String axisVariable) {
@@ -324,11 +492,15 @@ public class BatchBuild extends BaseBuild {
 				"env.option." + environmentType + "." + name + "." +
 					environmentMajorVersion.replace(".", ""));
 		}
-		else {
-			return buildProperties.getProperty(
-				"env.option." + environmentType + "." + name +
-					environmentMajorVersion.replace(".", ""));
-		}
+
+		return buildProperties.getProperty(
+			"env.option." + environmentType + "." + name +
+				environmentMajorVersion.replace(".", ""));
+	}
+
+	@Override
+	protected ExecutorService getExecutorService() {
+		return _executorService;
 	}
 
 	@Override
@@ -341,6 +513,7 @@ public class BatchBuild extends BaseBuild {
 		return getGitHubMessageJobResultsElement(false);
 	}
 
+	@Override
 	protected Element getGitHubMessageJobResultsElement(
 		boolean showCommonFailuresCount) {
 
@@ -356,15 +529,13 @@ public class BatchBuild extends BaseBuild {
 
 			if (isCompareToUpstream()) {
 				for (TestResult testResult : getTestResults(null)) {
-					String testStatus = testResult.getStatus();
-
-					if (testStatus.equals("PASSED") ||
-						testStatus.equals("SKIPPED")) {
-
+					if (!testResult.isFailing()) {
 						continue;
 					}
 
-					if (isTestFailingInUpstreamJob(testResult)) {
+					if (UpstreamFailureUtil.isTestFailingInUpstreamJob(
+							testResult)) {
+
 						upstreamFailCount++;
 					}
 				}
@@ -381,24 +552,60 @@ public class BatchBuild extends BaseBuild {
 		return Dom4JUtil.getNewElement(
 			"div", null, Dom4JUtil.getNewElement("h6", null, "Job Results:"),
 			Dom4JUtil.getNewElement(
-				"p", null, Integer.toString(successCount),
+				"p", null, String.valueOf(successCount),
 				JenkinsResultsParserUtil.getNounForm(
 					successCount, " Tests", " Test"),
 				" Passed.", Dom4JUtil.getNewElement("br"),
-				Integer.toString(failCount),
+				String.valueOf(failCount),
 				JenkinsResultsParserUtil.getNounForm(
 					failCount, " Tests", " Test"),
 				" Failed.", getFailureMessageElement()));
 	}
 
+	@Override
+	protected String getJenkinsReportBuildInfoCellElementTagName() {
+		return "th";
+	}
+
+	@Override
+	protected List<Element> getJenkinsReportTableRowElements(
+		String result, String status) {
+
+		List<Element> tableRowElements = new ArrayList<>();
+
+		tableRowElements.add(getJenkinsReportTableRowElement());
+
+		List<Build> downstreamBuilds = getDownstreamBuilds(null);
+
+		Collections.sort(
+			downstreamBuilds, new BaseBuild.BuildDisplayNameComparator());
+
+		for (Build downstreamBuild : downstreamBuilds) {
+			if (!(downstreamBuild instanceof AxisBuild)) {
+				continue;
+			}
+
+			AxisBuild downstreamAxisBuild = (AxisBuild)downstreamBuild;
+
+			tableRowElements.addAll(
+				downstreamAxisBuild.getJenkinsReportTableRowElements(
+					downstreamAxisBuild.getResult(),
+					downstreamAxisBuild.getStatus()));
+		}
+
+		return tableRowElements;
+	}
+
+	@Override
 	protected int getTestCountByStatus(String status) {
 		JSONObject testReportJSONObject = getTestReportJSONObject();
 
 		int failCount = testReportJSONObject.getInt("failCount");
-		int skipCount = testReportJSONObject.getInt("skipCount");
-		int totalCount = testReportJSONObject.getInt("totalCount");
 
 		if (status.equals("SUCCESS")) {
+			int totalCount = testReportJSONObject.getInt("totalCount");
+			int skipCount = testReportJSONObject.getInt("skipCount");
+
 			return totalCount - skipCount - failCount;
 		}
 
@@ -409,7 +616,13 @@ public class BatchBuild extends BaseBuild {
 		throw new IllegalArgumentException("Invalid status: " + status);
 	}
 
+	protected final String batchName;
 	protected final Pattern majorVersionPattern = Pattern.compile(
 		"((\\d+)\\.?(\\d+?)).*");
+
+	private static ExecutorService _executorService =
+		JenkinsResultsParserUtil.getNewThreadPoolExecutor(20, true);
+	private static final Pattern _jobVariantPattern = Pattern.compile(
+		"(?<batchName>[^/]+)(/.*)?");
 
 }

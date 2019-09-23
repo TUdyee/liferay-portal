@@ -14,23 +14,21 @@
 
 package com.liferay.sync.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.service.http.TunnelUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
-
 import com.liferay.sync.service.SyncDeviceServiceUtil;
 
 /**
  * Provides the HTTP utility for the
- * {@link SyncDeviceServiceUtil} service utility. The
+ * <code>SyncDeviceServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -49,22 +47,22 @@ import com.liferay.sync.service.SyncDeviceServiceUtil;
  *
  * @author Brian Wing Shun Chan
  * @see SyncDeviceServiceSoap
- * @see HttpPrincipal
- * @see SyncDeviceServiceUtil
  * @generated
  */
-@ProviderType
 public class SyncDeviceServiceHttp {
-	public static com.liferay.sync.model.SyncDevice registerSyncDevice(
-		HttpPrincipal httpPrincipal, java.lang.String type, long buildNumber,
-		int featureSet, java.lang.String uuid)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(SyncDeviceServiceUtil.class,
-					"registerSyncDevice", _registerSyncDeviceParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, type,
-					buildNumber, featureSet, uuid);
+	public static com.liferay.sync.model.SyncDevice registerSyncDevice(
+			HttpPrincipal httpPrincipal, String type, long buildNumber,
+			int featureSet, String uuid)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				SyncDeviceServiceUtil.class, "registerSyncDevice",
+				_registerSyncDeviceParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, type, buildNumber, featureSet, uuid);
 
 			Object returnObj = null;
 
@@ -72,11 +70,15 @@ public class SyncDeviceServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.sync.model.SyncDevice)returnObj;
@@ -88,12 +90,14 @@ public class SyncDeviceServiceHttp {
 		}
 	}
 
-	public static void unregisterSyncDevice(HttpPrincipal httpPrincipal,
-		java.lang.String uuid)
+	public static void unregisterSyncDevice(
+			HttpPrincipal httpPrincipal, String uuid)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		try {
-			MethodKey methodKey = new MethodKey(SyncDeviceServiceUtil.class,
-					"unregisterSyncDevice", _unregisterSyncDeviceParameterTypes1);
+			MethodKey methodKey = new MethodKey(
+				SyncDeviceServiceUtil.class, "unregisterSyncDevice",
+				_unregisterSyncDeviceParameterTypes1);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey, uuid);
 
@@ -101,11 +105,15 @@ public class SyncDeviceServiceHttp {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -115,12 +123,12 @@ public class SyncDeviceServiceHttp {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(SyncDeviceServiceHttp.class);
-	private static final Class<?>[] _registerSyncDeviceParameterTypes0 = new Class[] {
-			java.lang.String.class, long.class, int.class,
-			java.lang.String.class
-		};
-	private static final Class<?>[] _unregisterSyncDeviceParameterTypes1 = new Class[] {
-			java.lang.String.class
-		};
+	private static Log _log = LogFactoryUtil.getLog(
+		SyncDeviceServiceHttp.class);
+
+	private static final Class<?>[] _registerSyncDeviceParameterTypes0 =
+		new Class[] {String.class, long.class, int.class, String.class};
+	private static final Class<?>[] _unregisterSyncDeviceParameterTypes1 =
+		new Class[] {String.class};
+
 }

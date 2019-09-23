@@ -14,7 +14,7 @@
 
 package com.liferay.portal.security.xml;
 
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -43,6 +43,7 @@ public class StripDoctypeXMLReaderTest {
 
 		StringBundler sb = new StringBundler();
 		int length;
+
 		while ((length = stripDoctypeFilter.read(bytes, 0, bytes.length)) > 0) {
 			sb.append(new String(bytes, 0, length));
 		}
@@ -66,6 +67,7 @@ public class StripDoctypeXMLReaderTest {
 
 		StringBundler sb = new StringBundler();
 		int length;
+
 		while ((length = stripDoctypeFilter.read(chars, 0, chars.length)) > 0) {
 			sb.append(new String(chars, 0, length));
 		}

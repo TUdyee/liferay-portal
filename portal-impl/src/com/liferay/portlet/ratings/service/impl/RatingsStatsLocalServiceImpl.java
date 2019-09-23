@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.ratings.service.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -50,8 +51,9 @@ public class RatingsStatsLocalServiceImpl
 		catch (SystemException se) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"Add failed, fetch {classNameId=" + classNameId +
-						", classPK=" + classPK + "}");
+					StringBundler.concat(
+						"Add failed, fetch {classNameId=", classNameId,
+						", classPK=", classPK, "}"));
 			}
 
 			stats = ratingsStatsPersistence.fetchByC_C(
@@ -74,7 +76,7 @@ public class RatingsStatsLocalServiceImpl
 		}
 		catch (NoSuchStatsException nsse) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(nsse);
+				_log.warn(nsse, nsse);
 			}
 		}
 
@@ -83,9 +85,8 @@ public class RatingsStatsLocalServiceImpl
 
 	@Override
 	public RatingsStats fetchStats(String className, long classPK) {
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		return ratingsStatsPersistence.fetchByC_C(classNameId, classPK);
+		return ratingsStatsPersistence.fetchByC_C(
+			classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
@@ -94,23 +95,21 @@ public class RatingsStatsLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
 	public List<RatingsStats> getStats(String className, List<Long> classPKs) {
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		return ratingsStatsFinder.findByC_C(classNameId, classPKs);
+		return ratingsStatsFinder.findByC_C(
+			classNameLocalService.getClassNameId(className), classPKs);
 	}
 
 	@Override
 	public RatingsStats getStats(String className, long classPK)
 		throws PortalException {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		return ratingsStatsPersistence.findByC_C(classNameId, classPK);
+		return ratingsStatsPersistence.findByC_C(
+			classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
@@ -119,8 +118,8 @@ public class RatingsStatsLocalServiceImpl
 
 		Map<Long, RatingsStats> ratingsStats = new HashMap<>();
 
-		for (RatingsStats stats : ratingsStatsPersistence.findByC_C(
-				classNameId, classPKs)) {
+		for (RatingsStats stats :
+				ratingsStatsPersistence.findByC_C(classNameId, classPKs)) {
 
 			ratingsStats.put(stats.getClassPK(), stats);
 		}

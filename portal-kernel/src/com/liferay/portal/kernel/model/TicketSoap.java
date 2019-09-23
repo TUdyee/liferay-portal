@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,8 +26,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class TicketSoap implements Serializable {
+
 	public static TicketSoap toSoapModel(Ticket model) {
 		TicketSoap soapModel = new TicketSoap();
 
@@ -185,4 +183,5 @@ public class TicketSoap implements Serializable {
 	private int _type;
 	private String _extraInfo;
 	private Date _expirationDate;
+
 }

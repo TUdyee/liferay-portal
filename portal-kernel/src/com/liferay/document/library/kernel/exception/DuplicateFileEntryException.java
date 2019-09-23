@@ -14,14 +14,11 @@
 
 package com.liferay.document.library.kernel.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DuplicateFileEntryException extends PortalException {
 
 	public DuplicateFileEntryException() {

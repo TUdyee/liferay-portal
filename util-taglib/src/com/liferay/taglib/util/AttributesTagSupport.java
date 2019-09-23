@@ -14,7 +14,7 @@
 
 package com.liferay.taglib.util;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class AttributesTagSupport
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public Map<String, Object> getScopedAttributes() {
@@ -66,7 +66,7 @@ public class AttributesTagSupport
 	}
 
 	public void setNamespacedAttribute(
-		HttpServletRequest request, String key, Object value) {
+		HttpServletRequest httpServletRequest, String key, Object value) {
 
 		if (value instanceof Boolean) {
 			value = String.valueOf(value);
@@ -75,11 +75,11 @@ public class AttributesTagSupport
 			value = String.valueOf(value);
 		}
 
-		request.setAttribute(_encodeKey(key), value);
+		httpServletRequest.setAttribute(_encodeKey(key), value);
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setScopedAttribute(String name, Object value) {
@@ -93,9 +93,8 @@ public class AttributesTagSupport
 		if (_attributeNamespace.length() == 0) {
 			return key;
 		}
-		else {
-			return _attributeNamespace.concat(key);
-		}
+
+		return _attributeNamespace.concat(key);
 	}
 
 	private String _attributeNamespace = StringPool.BLANK;

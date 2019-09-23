@@ -14,14 +14,11 @@
 
 package com.liferay.portal.security.wedeploy.auth.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Supritha Sundaram
  */
-@ProviderType
 public class WeDeployAuthTokenExpiredException extends PortalException {
 
 	public WeDeployAuthTokenExpiredException() {

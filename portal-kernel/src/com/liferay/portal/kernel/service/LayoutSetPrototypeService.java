@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -30,6 +28,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the remote service interface for LayoutSetPrototype. Methods of this
  * service are expected to have security checks based on the propagated JAAS
@@ -37,35 +37,26 @@ import java.util.Map;
  *
  * @author Brian Wing Shun Chan
  * @see LayoutSetPrototypeServiceUtil
- * @see com.liferay.portal.service.base.LayoutSetPrototypeServiceBaseImpl
- * @see com.liferay.portal.service.impl.LayoutSetPrototypeServiceImpl
  * @generated
  */
 @AccessControlled
 @JSONWebService
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface LayoutSetPrototypeService extends BaseService {
-	/*
-	 * NOTE FOR DEVELOPERS:
-	 *
-	 * Never modify or reference this interface directly. Always use {@link LayoutSetPrototypeServiceUtil} to access the layout set prototype remote service. Add custom service methods to {@link com.liferay.portal.service.impl.LayoutSetPrototypeServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
-	 */
-	public LayoutSetPrototype addLayoutSetPrototype(
-		Map<Locale, java.lang.String> nameMap,
-		Map<Locale, java.lang.String> descriptionMap, boolean active,
-		boolean layoutsUpdateable, ServiceContext serviceContext)
-		throws PortalException;
 
 	/**
-	* @deprecated As of 7.0.0, replaced by {@link #addLayoutSetPrototype(Map,
-	Map, boolean, boolean, ServiceContext)}
-	*/
-	@java.lang.Deprecated
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link LayoutSetPrototypeServiceUtil} to access the layout set prototype remote service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutSetPrototypeServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	public LayoutSetPrototype addLayoutSetPrototype(
-		Map<Locale, java.lang.String> nameMap, java.lang.String description,
-		boolean active, boolean layoutsUpdateable, ServiceContext serviceContext)
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			boolean active, boolean layoutsUpdateable,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void deleteLayoutSetPrototype(long layoutSetPrototypeId)
@@ -80,36 +71,26 @@ public interface LayoutSetPrototypeService extends BaseService {
 		throws PortalException;
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
-	public java.lang.String getOSGiServiceIdentifier();
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
+	public String getOSGiServiceIdentifier();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<LayoutSetPrototype> search(long companyId,
-		java.lang.Boolean active, OrderByComparator<LayoutSetPrototype> obc)
+	public List<LayoutSetPrototype> search(
+			long companyId, Boolean active,
+			OrderByComparator<LayoutSetPrototype> obc)
 		throws PortalException;
 
 	public LayoutSetPrototype updateLayoutSetPrototype(
-		long layoutSetPrototypeId, Map<Locale, java.lang.String> nameMap,
-		Map<Locale, java.lang.String> descriptionMap, boolean active,
-		boolean layoutsUpdateable, ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	* @deprecated As of 7.0.0, replaced by {@link
-	#updateLayoutSetPrototype(long, Map, Map, boolean, boolean,
-	ServiceContext)}
-	*/
-	@java.lang.Deprecated
-	public LayoutSetPrototype updateLayoutSetPrototype(
-		long layoutSetPrototypeId, Map<Locale, java.lang.String> nameMap,
-		java.lang.String description, boolean active,
-		boolean layoutsUpdateable, ServiceContext serviceContext)
+			long layoutSetPrototypeId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, boolean active,
+			boolean layoutsUpdateable, ServiceContext serviceContext)
 		throws PortalException;
 
 	public LayoutSetPrototype updateLayoutSetPrototype(
-		long layoutSetPrototypeId, java.lang.String settings)
+			long layoutSetPrototypeId, String settings)
 		throws PortalException;
+
 }

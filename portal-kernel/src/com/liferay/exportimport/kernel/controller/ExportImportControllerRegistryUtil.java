@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.controller;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -35,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author Daniel Kocsis
  */
-@ProviderType
 public class ExportImportControllerRegistryUtil {
 
 	public static ExportController getExportController(String className) {

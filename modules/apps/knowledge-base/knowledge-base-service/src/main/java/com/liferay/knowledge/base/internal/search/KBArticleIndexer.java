@@ -20,10 +20,8 @@ import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
 import com.liferay.knowledge.base.service.KBFolderLocalService;
-import com.liferay.knowledge.base.service.permission.KBArticlePermission;
 import com.liferay.knowledge.base.util.KnowledgeBaseUtil;
-import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
@@ -45,10 +43,10 @@ import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -90,9 +88,9 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 	public boolean hasPermission(
 			PermissionChecker permissionChecker, String entryClassName,
 			long entryClassPK, String actionId)
-		throws Exception {
+		throws PortalException {
 
-		return KBArticlePermission.contains(
+		return _kbArticleModelResourcePermission.contains(
 			permissionChecker, entryClassPK, ActionKeys.VIEW);
 	}
 
@@ -112,12 +110,9 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 	public Hits search(SearchContext searchContext) throws SearchException {
 		Hits hits = super.search(searchContext);
 
-		String[] queryTerms = hits.getQueryTerms();
-
-		String keywords = searchContext.getKeywords();
-
-		queryTerms = ArrayUtil.append(
-			queryTerms, KnowledgeBaseUtil.splitKeywords(keywords));
+		String[] queryTerms = ArrayUtil.append(
+			GetterUtil.getStringValues(hits.getQueryTerms()),
+			KnowledgeBaseUtil.splitKeywords(searchContext.getKeywords()));
 
 		hits.setQueryTerms(queryTerms);
 
@@ -137,9 +132,11 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 		document.addText(
 			Field.CONTENT, HtmlUtil.extractText(kbArticle.getContent()));
 		document.addText(Field.DESCRIPTION, kbArticle.getDescription());
+		document.addKeyword(Field.FOLDER_ID, kbArticle.getKbFolderId());
 		document.addText(Field.TITLE, kbArticle.getTitle());
-
 		document.addKeyword("folderNames", getKBFolderNames(kbArticle));
+		document.addKeyword(
+			"parentMessageId", kbArticle.getParentResourcePrimKey());
 		document.addKeyword("titleKeyword", kbArticle.getTitle(), true);
 
 		return document;
@@ -211,7 +208,7 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 			kbFolderId = kbFolder.getParentKBFolderId();
 		}
 
-		return kbFolderNames.toArray(new String[kbFolderNames.size()]);
+		return kbFolderNames.toArray(new String[0]);
 	}
 
 	protected void reindexAttachments(KBArticle kbArticle)
@@ -252,38 +249,27 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 			kbArticleLocalService.getIndexableActionableDynamicQuery();
 
 		indexableActionableDynamicQuery.setAddCriteriaMethod(
-			new ActionableDynamicQuery.AddCriteriaMethod() {
+			dynamicQuery -> {
+				Property property = PropertyFactoryUtil.forName("status");
 
-				@Override
-				public void addCriteria(DynamicQuery dynamicQuery) {
-					Property property = PropertyFactoryUtil.forName("status");
-
-					dynamicQuery.add(
-						property.eq(WorkflowConstants.STATUS_APPROVED));
-				}
-
+				dynamicQuery.add(
+					property.eq(WorkflowConstants.STATUS_APPROVED));
 			});
 		indexableActionableDynamicQuery.setCompanyId(companyId);
 		indexableActionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<KBArticle>() {
-
-				@Override
-				public void performAction(KBArticle kbArticle) {
-					try {
-						Document document = getDocument(kbArticle);
-
-						indexableActionableDynamicQuery.addDocuments(document);
-					}
-					catch (PortalException pe) {
-						if (_log.isWarnEnabled()) {
-							_log.warn(
-								"Unable to index knowledge base article " +
-									kbArticle.getKbArticleId(),
-								pe);
-						}
+			(KBArticle kbArticle) -> {
+				try {
+					indexableActionableDynamicQuery.addDocuments(
+						getDocument(kbArticle));
+				}
+				catch (PortalException pe) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to index knowledge base article " +
+								kbArticle.getKbArticleId(),
+							pe);
 					}
 				}
-
 			});
 		indexableActionableDynamicQuery.setSearchEngineId(getSearchEngineId());
 
@@ -301,5 +287,11 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		KBArticleIndexer.class);
+
+	@Reference(
+		target = "(model.class.name=com.liferay.knowledge.base.model.KBArticle)"
+	)
+	private ModelResourcePermission<KBArticle>
+		_kbArticleModelResourcePermission;
 
 }

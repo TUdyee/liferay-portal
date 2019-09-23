@@ -14,12 +14,14 @@
 
 package com.liferay.gradle.plugins.defaults;
 
+import com.liferay.gradle.plugins.defaults.internal.util.GradlePluginsDefaultsUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
 import com.liferay.gradle.util.Validator;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -68,31 +70,18 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 		}
 
 		try {
+			Path projectPathRootDirPath = rootDirPath;
+
+			if (_isPortalRootDirPath(rootDirPath)) {
+				projectPathRootDirPath = rootDirPath.resolve("modules");
+			}
+
 			_includeProjects(
-				settings, rootDirPath, rootDirPath, projectPathPrefix);
+				settings, projectPathRootDirPath, projectPathPrefix);
 		}
 		catch (IOException ioe) {
 			throw new UncheckedIOException(ioe);
 		}
-	}
-
-	private String[] _getBuildProfileFileNames(Settings settings) {
-		String buildProfile = System.getProperty("build.profile");
-
-		if (Validator.isNull(buildProfile)) {
-			return null;
-		}
-
-		String suffix = "private";
-
-		if (GradleUtil.getProperty(settings, "liferay.releng.public", true)) {
-			suffix = "public";
-		}
-
-		return new String[] {
-			_BUILD_PROFILE_FILE_NAME_PREFIX + buildProfile + "-" + suffix,
-			_BUILD_PROFILE_FILE_NAME_PREFIX + buildProfile
-		};
 	}
 
 	private Set<Path> _getDirPaths(String key, Path rootDirPath) {
@@ -143,6 +132,13 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 			return ProjectDirType.MODULE;
 		}
 
+		Path applicationPropertiesPath = dirPath.resolve(
+			"src/main/resources/application.properties");
+
+		if (Files.exists(applicationPropertiesPath)) {
+			return ProjectDirType.SPRING_BOOT;
+		}
+
 		if (Files.exists(dirPath.resolve("gulpfile.js"))) {
 			return ProjectDirType.THEME;
 		}
@@ -170,32 +166,45 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 	}
 
 	private void _includeProjects(
-			final Settings settings, final Path rootDirPath,
-			final Path projectPathRootDirPath, final String projectPathPrefix)
+			final Settings settings, final Path projectPathRootDirPath,
+			final String projectPathPrefix)
 		throws IOException {
 
-		final String[] buildProfileFileNames = _getBuildProfileFileNames(
-			settings);
+		final Set<String> buildProfileFileNames =
+			GradlePluginsDefaultsUtil.getBuildProfileFileNames(
+				System.getProperty("build.profile"),
+				GradleUtil.getProperty(
+					settings, "liferay.releng.public", true));
 		final Set<Path> excludedDirPaths = _getDirPaths(
-			"build.exclude.dirs", rootDirPath);
+			"build.exclude.dirs", projectPathRootDirPath);
 		final Set<Path> includedDirPaths = _getDirPaths(
-			"build.include.dirs", rootDirPath);
+			"build.include.dirs", projectPathRootDirPath);
 		final Set<ProjectDirType> excludedProjectDirTypes = _getFlags(
 			"build.exclude.", ProjectDirType.class);
 
 		Files.walkFileTree(
-			rootDirPath,
+			projectPathRootDirPath, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+			10,
 			new SimpleFileVisitor<Path>() {
 
 				@Override
 				public FileVisitResult preVisitDirectory(
 					Path dirPath, BasicFileAttributes basicFileAttributes) {
 
-					if (dirPath.equals(rootDirPath)) {
+					if (dirPath.equals(projectPathRootDirPath)) {
 						return FileVisitResult.CONTINUE;
 					}
 
 					if (excludedDirPaths.contains(dirPath)) {
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+
+					String dirName = String.valueOf(dirPath.getFileName());
+
+					if (dirName.equals("build") ||
+						dirName.equals("node_modules") ||
+						dirName.equals("node_modules_cache")) {
+
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 
@@ -241,6 +250,18 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 			});
 	}
 
+	private boolean _isPortalRootDirPath(Path dirPath) {
+		if (!Files.exists(dirPath.resolve("modules"))) {
+			return false;
+		}
+
+		if (!Files.exists(dirPath.resolve("portal-impl"))) {
+			return false;
+		}
+
+		return true;
+	}
+
 	private boolean _startsWith(Path path, Iterable<Path> parentPaths) {
 		for (Path parentPath : parentPaths) {
 			if (path.startsWith(parentPath)) {
@@ -251,11 +272,9 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 		return false;
 	}
 
-	private static final String _BUILD_PROFILE_FILE_NAME_PREFIX = ".lfrbuild-";
-
 	private static enum ProjectDirType {
 
-		ANT_PLUGIN, MODULE, THEME, UNKNOWN
+		ANT_PLUGIN, MODULE, SPRING_BOOT, THEME, UNKNOWN
 
 	}
 

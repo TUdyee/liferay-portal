@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.security.auth.AuthenticatedUserUUIDStoreUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.PortalSessionContext;
 import com.liferay.portal.kernel.util.BasePortalLifecycle;
+import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -48,7 +49,7 @@ public class PortalSessionDestroyer extends BasePortalLifecycle {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #PortalSessionDestroyer(HttpSession)}
 	 */
 	@Deprecated
@@ -101,10 +102,13 @@ public class PortalSessionDestroyer extends BasePortalLifecycle {
 				long companyId = CompanyLocalServiceUtil.getCompanyIdByUserId(
 					userId);
 
-				jsonObject.put("companyId", companyId);
-
-				jsonObject.put("sessionId", _httpSession.getId());
-				jsonObject.put("userId", userId);
+				jsonObject.put(
+					"companyId", companyId
+				).put(
+					"sessionId", _httpSession.getId()
+				).put(
+					"userId", userId
+				);
 
 				MessageBusUtil.sendMessage(
 					DestinationNames.LIVE_USERS, jsonObject.toString());
@@ -112,7 +116,7 @@ public class PortalSessionDestroyer extends BasePortalLifecycle {
 
 			if (PropsValues.AUTH_USER_UUID_STORE_ENABLED) {
 				String userUUID = (String)_httpSession.getAttribute(
-					WebKeys.USER_UUID);
+					CookieKeys.USER_UUID);
 
 				if (Validator.isNotNull(userUUID)) {
 					AuthenticatedUserUUIDStoreUtil.unregister(userUUID);

@@ -14,13 +14,11 @@
 
 package com.liferay.portal.kernel.portlet;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpUtil;
-import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.PredicateFilter;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -33,6 +31,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import javax.portlet.ActionRequest;
@@ -159,6 +158,14 @@ public class PortletRequestModel implements Serializable {
 
 	public String getPortletNamespace() {
 		return _portletNamespace;
+	}
+
+	public PortletRequest getPortletRequest() {
+		return _portletRequest;
+	}
+
+	public PortletResponse getPortletResponse() {
+		return _portletResponse;
 	}
 
 	public Map<String, Object> getPortletScopeSessioAttributes() {
@@ -670,23 +677,16 @@ public class PortletRequestModel implements Serializable {
 	protected Map<String, Object> filterInvalidAttributes(
 		Map<String, Object> map) {
 
-		PredicateFilter<Map.Entry<String, Object>> predicateFilter =
-			new PredicateFilter<Map.Entry<String, Object>>() {
+		map = new HashMap<>(map);
 
-				@Override
-				public boolean filter(Map.Entry<String, Object> entry) {
-					if (_isValidAttributeName(entry.getKey()) &&
-						_isValidAttributeValue(entry.getValue())) {
+		Set<Map.Entry<String, Object>> entrySet = map.entrySet();
 
-						return true;
-					}
+		entrySet.removeIf(
+			entry ->
+				!_isValidAttributeName(entry.getKey()) ||
+				!_isValidAttributeValue(entry.getValue()));
 
-					return false;
-				}
-
-			};
-
-		return MapUtil.filter(map, predicateFilter);
+		return map;
 	}
 
 	private static boolean _isValidAttributeName(String name) {
@@ -700,9 +700,8 @@ public class PortletRequestModel implements Serializable {
 
 			return false;
 		}
-		else {
-			return true;
-		}
+
+		return true;
 	}
 
 	private static boolean _isValidAttributeValue(Object obj) {

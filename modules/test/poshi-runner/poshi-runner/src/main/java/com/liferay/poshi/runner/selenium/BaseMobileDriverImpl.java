@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openqa.selenium.DeviceRotation;
 import org.openqa.selenium.ScreenOrientation;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -155,15 +156,8 @@ public abstract class BaseMobileDriverImpl
 	}
 
 	@Override
-	public String getElementValue(String locator, String timeout)
-		throws Exception {
-
+	public String getElementValue(String locator, String timeout) {
 		WebElement webElement = getWebElement(locator, timeout);
-
-		if (webElement == null) {
-			throw new Exception(
-				"Element is not present at \"" + locator + "\"");
-		}
 
 		if (!isInViewport(locator)) {
 			swipeWebElementIntoView(locator);
@@ -212,13 +206,8 @@ public abstract class BaseMobileDriverImpl
 	}
 
 	@Override
-	public String getText(String locator, String timeout) throws Exception {
+	public String getText(String locator, String timeout) {
 		WebElement webElement = getWebElement(locator, timeout);
-
-		if (webElement == null) {
-			throw new Exception(
-				"Element is not present at \"" + locator + "\"");
-		}
 
 		if (!isInViewport(locator)) {
 			swipeWebElementIntoView(locator);
@@ -280,9 +269,8 @@ public abstract class BaseMobileDriverImpl
 
 			return false;
 		}
-		else {
-			return true;
-		}
+
+		return true;
 	}
 
 	@Override
@@ -306,11 +294,10 @@ public abstract class BaseMobileDriverImpl
 
 			return isInViewport(locator);
 		}
-		else {
-			scrollWebElementIntoView(webElement);
 
-			return webElement.isDisplayed();
-		}
+		scrollWebElementIntoView(webElement);
+
+		return webElement.isDisplayed();
 	}
 
 	@Override
@@ -431,8 +418,16 @@ public abstract class BaseMobileDriverImpl
 		_mobileDriver.resetApp();
 	}
 
+	public void rotate(DeviceRotation deviceRotation) {
+		_mobileDriver.rotate(deviceRotation);
+	}
+
 	public void rotate(ScreenOrientation orientation) {
 		_mobileDriver.rotate(orientation);
+	}
+
+	public DeviceRotation rotation() {
+		return _mobileDriver.rotation();
 	}
 
 	public void runAppInBackground(int seconds) {
@@ -554,9 +549,7 @@ public abstract class BaseMobileDriverImpl
 	}
 
 	protected void swipeWebElementIntoView(String locator) {
-		WebElement webElement = getWebElement(locator, "1");
-
-		scrollWebElementIntoView(webElement);
+		scrollWebElementIntoView(getWebElement(locator));
 	}
 
 	protected void tap(String locator) {

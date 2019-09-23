@@ -14,8 +14,11 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.tools.ToolsUtil;
+import com.liferay.source.formatter.checks.util.JSPSourceUtil;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +26,7 @@ import java.util.regex.Pattern;
 /**
  * @author Hugo Huijser
  */
-public class JSPStylingCheck extends BaseFileCheck {
+public class JSPStylingCheck extends StylingCheck {
 
 	@Override
 	protected String doProcess(
@@ -31,11 +34,13 @@ public class JSPStylingCheck extends BaseFileCheck {
 
 		_checkChaining(fileName, content);
 
-		_checkLineBreak(fileName, content);
+		content = _formatLineBreak(fileName, content);
 
 		content = _fixEmptyJavaSourceTag(content);
 
 		content = _fixIncorrectClosingTag(content);
+
+		content = _fixIncorrectSingleLineJavaSource(content);
 
 		content = StringUtil.replace(
 			content,
@@ -51,24 +56,28 @@ public class JSPStylingCheck extends BaseFileCheck {
 				"confirm(\"<%= UnicodeLanguageUtil.", ";\n"
 			});
 
-		int pos = content.indexOf("debugger.");
+		content = content.replaceAll("'<%= (\"[^.(\\[\"]+\") %>'", "$1");
 
-		if (pos != -1) {
-			addMessage(
-				fileName, "Do not use debugger", getLineCount(content, pos));
-		}
+		_checkIllegalSyntax(
+			fileName, content, "=>", "Do not use arrow function",
+			"arrow_functions.markdown");
+		_checkIllegalSyntax(
+			fileName, content, "console.log(", "Do not use console.log");
+		_checkIllegalSyntax(
+			fileName, content, "debugger.", "Do not use debugger");
 
 		if (!fileName.endsWith("test.jsp")) {
-			pos = content.indexOf("System.out.print");
-
-			if (pos != -1) {
-				addMessage(
-					fileName, "Do not call 'System.out.print'",
-					getLineCount(content, pos));
-			}
+			_checkIllegalSyntax(
+				fileName, content, "System.out.print",
+				"Do not call 'System.out.print'");
 		}
 
-		return content;
+		return formatStyling(content);
+	}
+
+	@Override
+	protected boolean isJavaSource(String content, int pos) {
+		return JSPSourceUtil.isJavaSource(content, pos, true);
 	}
 
 	private void _checkChaining(String fileName, String content) {
@@ -76,18 +85,35 @@ public class JSPStylingCheck extends BaseFileCheck {
 
 		if (matcher.find()) {
 			addMessage(
-				fileName, "Avoid chaining on 'getClass'",
-				getLineCount(content, matcher.start()));
+				fileName, "Avoid chaining on 'getClass'", "chaining.markdown",
+				getLineNumber(content, matcher.start()));
 		}
 	}
 
-	private void _checkLineBreak(String fileName, String content) {
-		Matcher matcher = _incorrectLineBreakPattern.matcher(content);
+	private void _checkIllegalSyntax(
+		String fileName, String content, String syntax, String message) {
 
-		if (matcher.find()) {
-			addMessage(
-				fileName, "There should be a line break after '}'",
-				getLineCount(content, matcher.start(1)));
+		_checkIllegalSyntax(fileName, content, syntax, message, null);
+	}
+
+	private void _checkIllegalSyntax(
+		String fileName, String content, String syntax, String message,
+		String markdownFileName) {
+
+		int pos = -1;
+
+		while (true) {
+			pos = content.indexOf(syntax, pos + 1);
+
+			if (pos == -1) {
+				return;
+			}
+
+			if (!ToolsUtil.isInsideQuotes(content, pos)) {
+				addMessage(
+					fileName, message, markdownFileName,
+					getLineNumber(content, pos));
+			}
 		}
 	}
 
@@ -114,13 +140,70 @@ public class JSPStylingCheck extends BaseFileCheck {
 		return content;
 	}
 
-	private final Pattern _chainingPattern = Pattern.compile(
+	private String _fixIncorrectSingleLineJavaSource(String content) {
+		Matcher matcher = _incorrectSingleLineJavaSourcePattern.matcher(
+			content);
+
+		while (matcher.find()) {
+			String javaSource = matcher.group(3);
+
+			if (javaSource.contains("<%")) {
+				continue;
+			}
+
+			String indent = matcher.group(1);
+
+			StringBundler sb = new StringBundler(6);
+
+			sb.append("<%\n");
+			sb.append(indent);
+			sb.append(StringUtil.trim(javaSource));
+			sb.append("\n");
+			sb.append(indent);
+			sb.append("%>");
+
+			return StringUtil.replaceFirst(
+				content, matcher.group(2), sb.toString(), matcher.start());
+		}
+
+		return content;
+	}
+
+	private String _formatLineBreak(String fileName, String content) {
+		Matcher matcher = _incorrectLineBreakPattern1.matcher(content);
+
+		while (matcher.find()) {
+			if (!JSPSourceUtil.isJSSource(content, matcher.start(1))) {
+				addMessage(
+					fileName, "There should be a line break after '}'",
+					getLineNumber(content, matcher.start(1)));
+			}
+		}
+
+		matcher = _incorrectLineBreakPattern2.matcher(content);
+
+		while (matcher.find()) {
+			if (JSPSourceUtil.isJavaSource(content, matcher.start())) {
+				return StringUtil.replaceFirst(
+					content, matcher.group(1), StringPool.SPACE,
+					matcher.start());
+			}
+		}
+
+		return content;
+	}
+
+	private static final Pattern _chainingPattern = Pattern.compile(
 		"\\WgetClass\\(\\)\\.");
-	private final Pattern _emptyJavaSourceTagPattern = Pattern.compile(
-		"\n\t*<%\n+\t*%>\n");
-	private final Pattern _incorrectClosingTagPattern = Pattern.compile(
+	private static final Pattern _emptyJavaSourceTagPattern = Pattern.compile(
+		"\n\t*<%\\!?\n+\t*%>(\n|\\Z)");
+	private static final Pattern _incorrectClosingTagPattern = Pattern.compile(
 		"\n(\t*)\t((?!<\\w).)* />\n");
-	private final Pattern _incorrectLineBreakPattern = Pattern.compile(
+	private static final Pattern _incorrectLineBreakPattern1 = Pattern.compile(
 		"[\n\t]\\} ?(catch|else|finally) ");
+	private static final Pattern _incorrectLineBreakPattern2 = Pattern.compile(
+		"=(\n\\s*).*;\n");
+	private static final Pattern _incorrectSingleLineJavaSourcePattern =
+		Pattern.compile("(\t*)(<% (.*) %>)\n");
 
 }

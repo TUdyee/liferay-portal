@@ -14,15 +14,14 @@
 
 package com.liferay.portal.sharepoint.methods;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.sharepoint.Property;
 import com.liferay.portal.sharepoint.ResponseElement;
 import com.liferay.portal.sharepoint.SharepointRequest;
 import com.liferay.portal.sharepoint.SharepointStorage;
-import com.liferay.portal.sharepoint.Tree;
 
 import java.io.InputStream;
 
@@ -71,9 +70,8 @@ public class GetDocumentMethodImpl extends BaseMethodImpl {
 
 		elements.add(new Property("message", StringPool.BLANK));
 
-		Tree documentTree = storage.getDocumentTree(sharepointRequest);
-
-		Property documentProperty = new Property("document", documentTree);
+		Property documentProperty = new Property(
+			"document", storage.getDocumentTree(sharepointRequest));
 
 		elements.add(documentProperty);
 

@@ -26,13 +26,6 @@
 	</div>
 
 	<div class="wiki-content">
-		<@liferay_ui["social-bookmarks"]
-			displayStyle="normal"
-			target="_blank"
-			title=entry.getTitle()
-			url=viewURL
-		/>
-
 		${formattedContent}
 	</div>
 
@@ -250,6 +243,6 @@
 
 <#macro getRelatedAssets>
 	<#if assetEntry?? && wikiPortletInstanceConfiguration.enableRelatedAssets()>
-		<@liferay_ui["asset-links"] assetEntryId=assetEntry.getEntryId() />
+		<@liferay_asset["asset-links"] assetEntryId=assetEntry.getEntryId() />
 	</#if>
 </#macro>

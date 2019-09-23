@@ -14,8 +14,6 @@
 
 package com.liferay.ratings.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,33 +23,40 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see RatingsEntryService
  * @generated
  */
-@ProviderType
-public class RatingsEntryServiceWrapper implements RatingsEntryService,
-	ServiceWrapper<RatingsEntryService> {
+public class RatingsEntryServiceWrapper
+	implements RatingsEntryService, ServiceWrapper<RatingsEntryService> {
+
 	public RatingsEntryServiceWrapper(RatingsEntryService ratingsEntryService) {
 		_ratingsEntryService = ratingsEntryService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link RatingsEntryServiceUtil} to access the ratings entry remote service. Add custom service methods to <code>com.liferay.portlet.ratings.service.impl.RatingsEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
-	public void deleteEntry(java.lang.String className, long classPK)
+	public void deleteEntry(String className, long classPK)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_ratingsEntryService.deleteEntry(className, classPK);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _ratingsEntryService.getOSGiServiceIdentifier();
 	}
 
 	@Override
 	public com.liferay.ratings.kernel.model.RatingsEntry updateEntry(
-		java.lang.String className, long classPK, double score)
+			String className, long classPK, double score)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _ratingsEntryService.updateEntry(className, classPK, score);
 	}
 
@@ -66,4 +71,5 @@ public class RatingsEntryServiceWrapper implements RatingsEntryService,
 	}
 
 	private RatingsEntryService _ratingsEntryService;
+
 }

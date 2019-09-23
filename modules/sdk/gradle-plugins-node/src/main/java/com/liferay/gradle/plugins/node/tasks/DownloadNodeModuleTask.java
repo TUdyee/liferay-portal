@@ -31,7 +31,7 @@ import org.gradle.api.tasks.OutputDirectory;
 /**
  * @author Andrea Di Giorgi
  */
-public class DownloadNodeModuleTask extends ExecuteNpmTask {
+public class DownloadNodeModuleTask extends ExecutePackageManagerTask {
 
 	public DownloadNodeModuleTask() {
 		onlyIf(
@@ -70,9 +70,7 @@ public class DownloadNodeModuleTask extends ExecuteNpmTask {
 
 	@OutputDirectory
 	public File getModuleDir() {
-		File nodeModulesDir = new File(getWorkingDir(), "node_modules");
-
-		return new File(nodeModulesDir, getModuleName());
+		return new File(getNodeModulesDir(), getModuleName());
 	}
 
 	@Input
@@ -97,7 +95,13 @@ public class DownloadNodeModuleTask extends ExecuteNpmTask {
 	protected List<String> getCompleteArgs() {
 		List<String> completeArgs = super.getCompleteArgs();
 
-		completeArgs.add("install");
+		if (isUseNpm()) {
+			completeArgs.add("install");
+		}
+		else {
+			completeArgs.add("add");
+		}
+
 		completeArgs.add(getModuleName() + "@" + getModuleVersion());
 
 		return completeArgs;

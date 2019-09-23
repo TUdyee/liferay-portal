@@ -15,7 +15,6 @@
 package com.liferay.portal.security.wedeploy.auth.service.persistence.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
@@ -29,7 +28,6 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.security.wedeploy.auth.exception.NoSuchTokenException;
 import com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthToken;
@@ -39,15 +37,6 @@ import com.liferay.portal.security.wedeploy.auth.service.persistence.WeDeployAut
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.junit.runner.RunWith;
 
 import java.io.Serializable;
 
@@ -59,16 +48,27 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 /**
  * @generated
  */
 @RunWith(Arquillian.class)
 public class WeDeployAuthTokenPersistenceTest {
+
 	@ClassRule
 	@Rule
-	public static final AggregateTestRule aggregateTestRule = new AggregateTestRule(new LiferayIntegrationTestRule(),
-			PersistenceTestRule.INSTANCE,
-			new TransactionalTestRule(Propagation.REQUIRED,
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), PersistenceTestRule.INSTANCE,
+			new TransactionalTestRule(
+				Propagation.REQUIRED,
 				"com.liferay.portal.security.wedeploy.auth.service"));
 
 	@Before
@@ -108,7 +108,9 @@ public class WeDeployAuthTokenPersistenceTest {
 
 		_persistence.remove(newWeDeployAuthToken);
 
-		WeDeployAuthToken existingWeDeployAuthToken = _persistence.fetchByPrimaryKey(newWeDeployAuthToken.getPrimaryKey());
+		WeDeployAuthToken existingWeDeployAuthToken =
+			_persistence.fetchByPrimaryKey(
+				newWeDeployAuthToken.getPrimaryKey());
 
 		Assert.assertNull(existingWeDeployAuthToken);
 	}
@@ -142,45 +144,52 @@ public class WeDeployAuthTokenPersistenceTest {
 
 		_weDeployAuthTokens.add(_persistence.update(newWeDeployAuthToken));
 
-		WeDeployAuthToken existingWeDeployAuthToken = _persistence.findByPrimaryKey(newWeDeployAuthToken.getPrimaryKey());
+		WeDeployAuthToken existingWeDeployAuthToken =
+			_persistence.findByPrimaryKey(newWeDeployAuthToken.getPrimaryKey());
 
-		Assert.assertEquals(existingWeDeployAuthToken.getWeDeployAuthTokenId(),
+		Assert.assertEquals(
+			existingWeDeployAuthToken.getWeDeployAuthTokenId(),
 			newWeDeployAuthToken.getWeDeployAuthTokenId());
-		Assert.assertEquals(existingWeDeployAuthToken.getCompanyId(),
+		Assert.assertEquals(
+			existingWeDeployAuthToken.getCompanyId(),
 			newWeDeployAuthToken.getCompanyId());
-		Assert.assertEquals(existingWeDeployAuthToken.getUserId(),
+		Assert.assertEquals(
+			existingWeDeployAuthToken.getUserId(),
 			newWeDeployAuthToken.getUserId());
-		Assert.assertEquals(existingWeDeployAuthToken.getUserName(),
+		Assert.assertEquals(
+			existingWeDeployAuthToken.getUserName(),
 			newWeDeployAuthToken.getUserName());
-		Assert.assertEquals(Time.getShortTimestamp(
-				existingWeDeployAuthToken.getCreateDate()),
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingWeDeployAuthToken.getCreateDate()),
 			Time.getShortTimestamp(newWeDeployAuthToken.getCreateDate()));
-		Assert.assertEquals(Time.getShortTimestamp(
-				existingWeDeployAuthToken.getModifiedDate()),
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingWeDeployAuthToken.getModifiedDate()),
 			Time.getShortTimestamp(newWeDeployAuthToken.getModifiedDate()));
-		Assert.assertEquals(existingWeDeployAuthToken.getClientId(),
+		Assert.assertEquals(
+			existingWeDeployAuthToken.getClientId(),
 			newWeDeployAuthToken.getClientId());
-		Assert.assertEquals(existingWeDeployAuthToken.getToken(),
+		Assert.assertEquals(
+			existingWeDeployAuthToken.getToken(),
 			newWeDeployAuthToken.getToken());
-		Assert.assertEquals(existingWeDeployAuthToken.getType(),
+		Assert.assertEquals(
+			existingWeDeployAuthToken.getType(),
 			newWeDeployAuthToken.getType());
 	}
 
 	@Test
 	public void testCountByT_T() throws Exception {
-		_persistence.countByT_T(StringPool.BLANK, RandomTestUtil.nextInt());
+		_persistence.countByT_T("", RandomTestUtil.nextInt());
 
-		_persistence.countByT_T(StringPool.NULL, 0);
+		_persistence.countByT_T("null", 0);
 
 		_persistence.countByT_T((String)null, 0);
 	}
 
 	@Test
 	public void testCountByCI_T_T() throws Exception {
-		_persistence.countByCI_T_T(StringPool.BLANK, StringPool.BLANK,
-			RandomTestUtil.nextInt());
+		_persistence.countByCI_T_T("", "", RandomTestUtil.nextInt());
 
-		_persistence.countByCI_T_T(StringPool.NULL, StringPool.NULL, 0);
+		_persistence.countByCI_T_T("null", "null", 0);
 
 		_persistence.countByCI_T_T((String)null, (String)null, 0);
 	}
@@ -189,7 +198,8 @@ public class WeDeployAuthTokenPersistenceTest {
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		WeDeployAuthToken newWeDeployAuthToken = addWeDeployAuthToken();
 
-		WeDeployAuthToken existingWeDeployAuthToken = _persistence.findByPrimaryKey(newWeDeployAuthToken.getPrimaryKey());
+		WeDeployAuthToken existingWeDeployAuthToken =
+			_persistence.findByPrimaryKey(newWeDeployAuthToken.getPrimaryKey());
 
 		Assert.assertEquals(existingWeDeployAuthToken, newWeDeployAuthToken);
 	}
@@ -203,22 +213,25 @@ public class WeDeployAuthTokenPersistenceTest {
 
 	@Test
 	public void testFindAll() throws Exception {
-		_persistence.findAll(QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			getOrderByComparator());
+		_persistence.findAll(
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, getOrderByComparator());
 	}
 
 	protected OrderByComparator<WeDeployAuthToken> getOrderByComparator() {
-		return OrderByComparatorFactoryUtil.create("WeDeployAuth_WeDeployAuthToken",
-			"weDeployAuthTokenId", true, "companyId", true, "userId", true,
-			"userName", true, "createDate", true, "modifiedDate", true,
-			"clientId", true, "token", true, "type", true);
+		return OrderByComparatorFactoryUtil.create(
+			"WeDeployAuth_WeDeployAuthToken", "weDeployAuthTokenId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "modifiedDate", true, "clientId", true, "token", true, "type",
+			true);
 	}
 
 	@Test
 	public void testFetchByPrimaryKeyExisting() throws Exception {
 		WeDeployAuthToken newWeDeployAuthToken = addWeDeployAuthToken();
 
-		WeDeployAuthToken existingWeDeployAuthToken = _persistence.fetchByPrimaryKey(newWeDeployAuthToken.getPrimaryKey());
+		WeDeployAuthToken existingWeDeployAuthToken =
+			_persistence.fetchByPrimaryKey(
+				newWeDeployAuthToken.getPrimaryKey());
 
 		Assert.assertEquals(existingWeDeployAuthToken, newWeDeployAuthToken);
 	}
@@ -227,7 +240,8 @@ public class WeDeployAuthTokenPersistenceTest {
 	public void testFetchByPrimaryKeyMissing() throws Exception {
 		long pk = RandomTestUtil.nextLong();
 
-		WeDeployAuthToken missingWeDeployAuthToken = _persistence.fetchByPrimaryKey(pk);
+		WeDeployAuthToken missingWeDeployAuthToken =
+			_persistence.fetchByPrimaryKey(pk);
 
 		Assert.assertNull(missingWeDeployAuthToken);
 	}
@@ -235,6 +249,7 @@ public class WeDeployAuthTokenPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereAllPrimaryKeysExist()
 		throws Exception {
+
 		WeDeployAuthToken newWeDeployAuthToken1 = addWeDeployAuthToken();
 		WeDeployAuthToken newWeDeployAuthToken2 = addWeDeployAuthToken();
 
@@ -243,18 +258,22 @@ public class WeDeployAuthTokenPersistenceTest {
 		primaryKeys.add(newWeDeployAuthToken1.getPrimaryKey());
 		primaryKeys.add(newWeDeployAuthToken2.getPrimaryKey());
 
-		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(2, weDeployAuthTokens.size());
-		Assert.assertEquals(newWeDeployAuthToken1,
+		Assert.assertEquals(
+			newWeDeployAuthToken1,
 			weDeployAuthTokens.get(newWeDeployAuthToken1.getPrimaryKey()));
-		Assert.assertEquals(newWeDeployAuthToken2,
+		Assert.assertEquals(
+			newWeDeployAuthToken2,
 			weDeployAuthTokens.get(newWeDeployAuthToken2.getPrimaryKey()));
 	}
 
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereNoPrimaryKeysExist()
 		throws Exception {
+
 		long pk1 = RandomTestUtil.nextLong();
 
 		long pk2 = RandomTestUtil.nextLong();
@@ -264,7 +283,8 @@ public class WeDeployAuthTokenPersistenceTest {
 		primaryKeys.add(pk1);
 		primaryKeys.add(pk2);
 
-		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertTrue(weDeployAuthTokens.isEmpty());
 	}
@@ -272,6 +292,7 @@ public class WeDeployAuthTokenPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereSomePrimaryKeysExist()
 		throws Exception {
+
 		WeDeployAuthToken newWeDeployAuthToken = addWeDeployAuthToken();
 
 		long pk = RandomTestUtil.nextLong();
@@ -281,36 +302,39 @@ public class WeDeployAuthTokenPersistenceTest {
 		primaryKeys.add(newWeDeployAuthToken.getPrimaryKey());
 		primaryKeys.add(pk);
 
-		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(1, weDeployAuthTokens.size());
-		Assert.assertEquals(newWeDeployAuthToken,
+		Assert.assertEquals(
+			newWeDeployAuthToken,
 			weDeployAuthTokens.get(newWeDeployAuthToken.getPrimaryKey()));
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithNoPrimaryKeys()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithNoPrimaryKeys() throws Exception {
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
-		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertTrue(weDeployAuthTokens.isEmpty());
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithOnePrimaryKey()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithOnePrimaryKey() throws Exception {
 		WeDeployAuthToken newWeDeployAuthToken = addWeDeployAuthToken();
 
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
 		primaryKeys.add(newWeDeployAuthToken.getPrimaryKey());
 
-		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WeDeployAuthToken> weDeployAuthTokens =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(1, weDeployAuthTokens.size());
-		Assert.assertEquals(newWeDeployAuthToken,
+		Assert.assertEquals(
+			newWeDeployAuthToken,
 			weDeployAuthTokens.get(newWeDeployAuthToken.getPrimaryKey()));
 	}
 
@@ -318,15 +342,20 @@ public class WeDeployAuthTokenPersistenceTest {
 	public void testActionableDynamicQuery() throws Exception {
 		final IntegerWrapper count = new IntegerWrapper();
 
-		ActionableDynamicQuery actionableDynamicQuery = WeDeployAuthTokenLocalServiceUtil.getActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			WeDeployAuthTokenLocalServiceUtil.getActionableDynamicQuery();
 
-		actionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<WeDeployAuthToken>() {
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod
+				<WeDeployAuthToken>() {
+
 				@Override
 				public void performAction(WeDeployAuthToken weDeployAuthToken) {
 					Assert.assertNotNull(weDeployAuthToken);
 
 					count.increment();
 				}
+
 			});
 
 		actionableDynamicQuery.performActions();
@@ -335,17 +364,19 @@ public class WeDeployAuthTokenPersistenceTest {
 	}
 
 	@Test
-	public void testDynamicQueryByPrimaryKeyExisting()
-		throws Exception {
+	public void testDynamicQueryByPrimaryKeyExisting() throws Exception {
 		WeDeployAuthToken newWeDeployAuthToken = addWeDeployAuthToken();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(WeDeployAuthToken.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			WeDeployAuthToken.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("weDeployAuthTokenId",
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"weDeployAuthTokenId",
 				newWeDeployAuthToken.getWeDeployAuthTokenId()));
 
-		List<WeDeployAuthToken> result = _persistence.findWithDynamicQuery(dynamicQuery);
+		List<WeDeployAuthToken> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
 
 		Assert.assertEquals(1, result.size());
 
@@ -356,32 +387,35 @@ public class WeDeployAuthTokenPersistenceTest {
 
 	@Test
 	public void testDynamicQueryByPrimaryKeyMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(WeDeployAuthToken.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			WeDeployAuthToken.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("weDeployAuthTokenId",
-				RandomTestUtil.nextLong()));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"weDeployAuthTokenId", RandomTestUtil.nextLong()));
 
-		List<WeDeployAuthToken> result = _persistence.findWithDynamicQuery(dynamicQuery);
+		List<WeDeployAuthToken> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
 
 		Assert.assertEquals(0, result.size());
 	}
 
 	@Test
-	public void testDynamicQueryByProjectionExisting()
-		throws Exception {
+	public void testDynamicQueryByProjectionExisting() throws Exception {
 		WeDeployAuthToken newWeDeployAuthToken = addWeDeployAuthToken();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(WeDeployAuthToken.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			WeDeployAuthToken.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.setProjection(ProjectionFactoryUtil.property(
-				"weDeployAuthTokenId"));
+		dynamicQuery.setProjection(
+			ProjectionFactoryUtil.property("weDeployAuthTokenId"));
 
-		Object newWeDeployAuthTokenId = newWeDeployAuthToken.getWeDeployAuthTokenId();
+		Object newWeDeployAuthTokenId =
+			newWeDeployAuthToken.getWeDeployAuthTokenId();
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("weDeployAuthTokenId",
-				new Object[] { newWeDeployAuthTokenId }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in(
+				"weDeployAuthTokenId", new Object[] {newWeDeployAuthTokenId}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -389,19 +423,22 @@ public class WeDeployAuthTokenPersistenceTest {
 
 		Object existingWeDeployAuthTokenId = result.get(0);
 
-		Assert.assertEquals(existingWeDeployAuthTokenId, newWeDeployAuthTokenId);
+		Assert.assertEquals(
+			existingWeDeployAuthTokenId, newWeDeployAuthTokenId);
 	}
 
 	@Test
 	public void testDynamicQueryByProjectionMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(WeDeployAuthToken.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			WeDeployAuthToken.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.setProjection(ProjectionFactoryUtil.property(
-				"weDeployAuthTokenId"));
+		dynamicQuery.setProjection(
+			ProjectionFactoryUtil.property("weDeployAuthTokenId"));
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("weDeployAuthTokenId",
-				new Object[] { RandomTestUtil.nextLong() }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in(
+				"weDeployAuthTokenId",
+				new Object[] {RandomTestUtil.nextLong()}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -414,29 +451,39 @@ public class WeDeployAuthTokenPersistenceTest {
 
 		_persistence.clearCache();
 
-		WeDeployAuthToken existingWeDeployAuthToken = _persistence.findByPrimaryKey(newWeDeployAuthToken.getPrimaryKey());
+		WeDeployAuthToken existingWeDeployAuthToken =
+			_persistence.findByPrimaryKey(newWeDeployAuthToken.getPrimaryKey());
 
-		Assert.assertTrue(Objects.equals(existingWeDeployAuthToken.getToken(),
-				ReflectionTestUtil.invoke(existingWeDeployAuthToken,
-					"getOriginalToken", new Class<?>[0])));
-		Assert.assertEquals(Integer.valueOf(existingWeDeployAuthToken.getType()),
-			ReflectionTestUtil.<Integer>invoke(existingWeDeployAuthToken,
-				"getOriginalType", new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
+				existingWeDeployAuthToken.getToken(),
+				ReflectionTestUtil.invoke(
+					existingWeDeployAuthToken, "getOriginalToken",
+					new Class<?>[0])));
+		Assert.assertEquals(
+			Integer.valueOf(existingWeDeployAuthToken.getType()),
+			ReflectionTestUtil.<Integer>invoke(
+				existingWeDeployAuthToken, "getOriginalType", new Class<?>[0]));
 
-		Assert.assertTrue(Objects.equals(
+		Assert.assertTrue(
+			Objects.equals(
 				existingWeDeployAuthToken.getClientId(),
-				ReflectionTestUtil.invoke(existingWeDeployAuthToken,
-					"getOriginalClientId", new Class<?>[0])));
-		Assert.assertTrue(Objects.equals(existingWeDeployAuthToken.getToken(),
-				ReflectionTestUtil.invoke(existingWeDeployAuthToken,
-					"getOriginalToken", new Class<?>[0])));
-		Assert.assertEquals(Integer.valueOf(existingWeDeployAuthToken.getType()),
-			ReflectionTestUtil.<Integer>invoke(existingWeDeployAuthToken,
-				"getOriginalType", new Class<?>[0]));
+				ReflectionTestUtil.invoke(
+					existingWeDeployAuthToken, "getOriginalClientId",
+					new Class<?>[0])));
+		Assert.assertTrue(
+			Objects.equals(
+				existingWeDeployAuthToken.getToken(),
+				ReflectionTestUtil.invoke(
+					existingWeDeployAuthToken, "getOriginalToken",
+					new Class<?>[0])));
+		Assert.assertEquals(
+			Integer.valueOf(existingWeDeployAuthToken.getType()),
+			ReflectionTestUtil.<Integer>invoke(
+				existingWeDeployAuthToken, "getOriginalType", new Class<?>[0]));
 	}
 
-	protected WeDeployAuthToken addWeDeployAuthToken()
-		throws Exception {
+	protected WeDeployAuthToken addWeDeployAuthToken() throws Exception {
 		long pk = RandomTestUtil.nextLong();
 
 		WeDeployAuthToken weDeployAuthToken = _persistence.create(pk);
@@ -462,7 +509,9 @@ public class WeDeployAuthTokenPersistenceTest {
 		return weDeployAuthToken;
 	}
 
-	private List<WeDeployAuthToken> _weDeployAuthTokens = new ArrayList<WeDeployAuthToken>();
+	private List<WeDeployAuthToken> _weDeployAuthTokens =
+		new ArrayList<WeDeployAuthToken>();
 	private WeDeployAuthTokenPersistence _persistence;
 	private ClassLoader _dynamicQueryClassLoader;
+
 }

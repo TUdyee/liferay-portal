@@ -63,9 +63,8 @@ public class AppServer {
 		if (OSDetector.isWindows()) {
 			return ".bat";
 		}
-		else {
-			return ".sh";
-		}
+
+		return ".sh";
 	}
 
 	public File getLibGlobalDir() {
@@ -162,6 +161,7 @@ public class AppServer {
 		_startExecutable = startExecutable;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void setStartExecutableArgs(Iterable<?> startExecutableArgs) {
 		_startExecutableArgs.clear();
 
@@ -172,6 +172,7 @@ public class AppServer {
 		_stopExecutable = stopExecutable;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void setStopExecutableArgs(Iterable<?> stopExecutableArgs) {
 		_stopExecutableArgs.clear();
 

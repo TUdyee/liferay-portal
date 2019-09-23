@@ -14,8 +14,6 @@
 
 package com.liferay.social.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,10 +25,11 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class SocialActivityCounterSoap implements Serializable {
+
 	public static SocialActivityCounterSoap toSoapModel(
 		SocialActivityCounter model) {
+
 		SocialActivityCounterSoap soapModel = new SocialActivityCounterSoap();
 
 		soapModel.setActivityCounterId(model.getActivityCounterId());
@@ -45,14 +44,16 @@ public class SocialActivityCounterSoap implements Serializable {
 		soapModel.setGraceValue(model.getGraceValue());
 		soapModel.setStartPeriod(model.getStartPeriod());
 		soapModel.setEndPeriod(model.getEndPeriod());
-		soapModel.setActive(model.getActive());
+		soapModel.setActive(model.isActive());
 
 		return soapModel;
 	}
 
 	public static SocialActivityCounterSoap[] toSoapModels(
 		SocialActivityCounter[] models) {
-		SocialActivityCounterSoap[] soapModels = new SocialActivityCounterSoap[models.length];
+
+		SocialActivityCounterSoap[] soapModels =
+			new SocialActivityCounterSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -63,10 +64,12 @@ public class SocialActivityCounterSoap implements Serializable {
 
 	public static SocialActivityCounterSoap[][] toSoapModels(
 		SocialActivityCounter[][] models) {
+
 		SocialActivityCounterSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new SocialActivityCounterSoap[models.length][models[0].length];
+			soapModels =
+				new SocialActivityCounterSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new SocialActivityCounterSoap[0][0];
@@ -81,13 +84,16 @@ public class SocialActivityCounterSoap implements Serializable {
 
 	public static SocialActivityCounterSoap[] toSoapModels(
 		List<SocialActivityCounter> models) {
-		List<SocialActivityCounterSoap> soapModels = new ArrayList<SocialActivityCounterSoap>(models.size());
+
+		List<SocialActivityCounterSoap> soapModels =
+			new ArrayList<SocialActivityCounterSoap>(models.size());
 
 		for (SocialActivityCounter model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new SocialActivityCounterSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new SocialActivityCounterSoap[soapModels.size()]);
 	}
 
 	public SocialActivityCounterSoap() {
@@ -222,4 +228,5 @@ public class SocialActivityCounterSoap implements Serializable {
 	private int _startPeriod;
 	private int _endPeriod;
 	private boolean _active;
+
 }

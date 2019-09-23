@@ -14,14 +14,11 @@
 
 package com.liferay.portal.security.wedeploy.auth.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Supritha Sundaram
  */
-@ProviderType
 public class NoSuchAppException extends NoSuchModelException {
 
 	public NoSuchAppException() {

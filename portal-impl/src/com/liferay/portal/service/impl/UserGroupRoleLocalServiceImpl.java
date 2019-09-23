@@ -14,6 +14,7 @@
 
 package com.liferay.portal.service.impl;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchUserGroupRoleException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -23,7 +24,6 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.service.persistence.UserGroupRolePK;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.service.base.UserGroupRoleLocalServiceBaseImpl;
 
 import java.util.ArrayList;
@@ -250,10 +250,8 @@ public class UserGroupRoleLocalServiceImpl
 			return true;
 		}
 
-		if (inherit) {
-			if (roleFinder.countByU_G_R(userId, groupId, roleId) > 0) {
-				return true;
-			}
+		if (inherit && (roleFinder.countByU_G_R(userId, groupId, roleId) > 0)) {
+			return true;
 		}
 
 		return false;
@@ -273,9 +271,7 @@ public class UserGroupRoleLocalServiceImpl
 
 		User user = userPersistence.findByPrimaryKey(userId);
 
-		long companyId = user.getCompanyId();
-
-		Role role = rolePersistence.fetchByC_N(companyId, roleName);
+		Role role = rolePersistence.fetchByC_N(user.getCompanyId(), roleName);
 
 		if (role == null) {
 			return false;

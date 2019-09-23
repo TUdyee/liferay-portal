@@ -27,13 +27,11 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.service.base.LayoutSetPrototypeLocalServiceBaseImpl;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -107,32 +105,11 @@ public class LayoutSetPrototypeLocalServiceImpl
 
 			layoutLocalService.addLayout(
 				userId, group.getGroupId(), true,
-				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, "home", null, null,
+				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, "Home", null, null,
 				LayoutConstants.TYPE_PORTLET, false, "/home", serviceContext);
 		}
 
 		return layoutSetPrototype;
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #addLayoutSetPrototype(long,
-	 *             long, Map, Map, boolean, boolean, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public LayoutSetPrototype addLayoutSetPrototype(
-			long userId, long companyId, Map<Locale, String> nameMap,
-			String description, boolean active, boolean layoutsUpdateable,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getDefault(), description);
-
-		return addLayoutSetPrototype(
-			userId, companyId, nameMap, descriptionMap, active,
-			layoutsUpdateable, serviceContext);
 	}
 
 	@Override
@@ -146,16 +123,17 @@ public class LayoutSetPrototypeLocalServiceImpl
 
 		// Group
 
-		if (!CompanyThreadLocal.isDeleteInProcess() &&
-			(layoutSetPersistence.countByLayoutSetPrototypeUuid(
-				layoutSetPrototype.getUuid()) > 0)) {
+		if (!CompanyThreadLocal.isDeleteInProcess()) {
+			long count = layoutSetPersistence.countByC_L(
+				layoutSetPrototype.getCompanyId(),
+				layoutSetPrototype.getUuid());
 
-			throw new RequiredLayoutSetPrototypeException();
+			if (count > 0) {
+				throw new RequiredLayoutSetPrototypeException();
+			}
 		}
 
-		Group group = layoutSetPrototype.getGroup();
-
-		groupLocalService.deleteGroup(group);
+		groupLocalService.deleteGroup(layoutSetPrototype.getGroup());
 
 		// Resources
 
@@ -234,10 +212,9 @@ public class LayoutSetPrototypeLocalServiceImpl
 			return layoutSetPrototypePersistence.findByC_A(
 				companyId, active, start, end, obc);
 		}
-		else {
-			return layoutSetPrototypePersistence.findByCompanyId(
-				companyId, start, end, obc);
-		}
+
+		return layoutSetPrototypePersistence.findByCompanyId(
+			companyId, start, end, obc);
 	}
 
 	@Override
@@ -245,9 +222,8 @@ public class LayoutSetPrototypeLocalServiceImpl
 		if (active != null) {
 			return layoutSetPrototypePersistence.countByC_A(companyId, active);
 		}
-		else {
-			return layoutSetPrototypePersistence.countByCompanyId(companyId);
-		}
+
+		return layoutSetPrototypePersistence.countByCompanyId(companyId);
 	}
 
 	@Override
@@ -280,28 +256,6 @@ public class LayoutSetPrototypeLocalServiceImpl
 		layoutSetPrototypePersistence.update(layoutSetPrototype);
 
 		return layoutSetPrototype;
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
-	 *             #updateLayoutSetPrototype(long, Map, Map, boolean, boolean,
-	 *             ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public LayoutSetPrototype updateLayoutSetPrototype(
-			long layoutSetPrototypeId, Map<Locale, String> nameMap,
-			String description, boolean active, boolean layoutsUpdateable,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getDefault(), description);
-
-		return updateLayoutSetPrototype(
-			layoutSetPrototypeId, nameMap, descriptionMap, active,
-			layoutsUpdateable, serviceContext);
 	}
 
 	@Override

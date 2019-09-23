@@ -4,7 +4,7 @@ The Source Formatter Gradle plugin lets you format project files using the
 [Liferay Source Formatter](https://github.com/liferay/liferay-portal/tree/master/modules/util/source-formatter)
 tool.
 
-The plugin has been successfully tested with Gradle 2.5 up to 3.3.
+The plugin has been successfully tested with Gradle 4.10.2.
 
 ## Usage
 
@@ -13,12 +13,12 @@ To use the plugin, include it in your build script:
 ```gradle
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.source.formatter", version: "2.2.12"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.source.formatter", version: "2.3.443"
 	}
 
 	repositories {
 		maven {
-			url "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+			url "https://repository-cdn.liferay.com/nexus/content/groups/public"
 		}
 	}
 }
@@ -33,7 +33,7 @@ transitive dependencies. The Liferay CDN repository hosts them all:
 ```gradle
 repositories {
 	maven {
-		url "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+		url "https://repository-cdn.liferay.com/nexus/content/groups/public"
 	}
 }
 ```
@@ -58,7 +58,7 @@ check {
 ```
 
 The same can be achieved by adding the following snippet to the `build.gradle`
-file in the root directory of a [*Liferay Workspace*](https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/creating-a-liferay-workspace):
+file in the root directory of a [*Liferay Workspace*](https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/liferay-workspace):
 
 ```gradle
 subprojects {
@@ -93,6 +93,7 @@ Property Name | Type | Default Value | Description
 `autoFix` | `boolean` | `false` | Whether to automatically fix source formatting errors. It sets the `source.auto.fix` argument.
 `baseDir` | `File` |  | The Source Formatter base directory. It sets the `source.base.dir` argument. *(Read-only)*
 `baseDirName` | `String` | `"./"` | The name of the Source Formatter base directory, relative to the project directory.
+`fileExtensions` | `List<String>` | `[]` | The file extensions to format. If empty, all file extensions will be formatted. It sets the `source.file.extensions` argument.
 `files` | `List<File>` | | The list of files to format. It sets the `source.files` argument. *(Read-only)*
 `fileNames` | `List<String>` | `null` | The file names to format, relative to the project directory. If `null`, all files contained in `baseDir` will be formatted.
 `formatCurrentBranch` | `boolean` | `false` | Whether to format only the files contained in `baseDir` that are added or modified in the current Git branch. It sets the `format.current.branch` argument.
@@ -121,16 +122,18 @@ manually adding a dependency to the `sourceFormatter` configuration:
 
 ```gradle
 dependencies {
-	sourceFormatter group: "com.liferay", name: "com.liferay.source.formatter", version: "1.0.470"
+	sourceFormatter group: "com.liferay", name: "com.liferay.source.formatter", version: "1.0.916"
 }
 ```
 
 ### System Properties
 
-It is possible to set the default values of the `formatCurrentBranch`,
-`formatLatestAuthor`, and `formatLocalChanges` properties for a
-`FormatSourceTask` task via system properties:
+It is possible to set the default values of the `fileExtensions`, `fileNames`,
+`formatCurrentBranch`, `formatLatestAuthor`, and `formatLocalChanges`
+properties for a `FormatSourceTask` task via system properties:
 
+- `-D${task.name}.file.extensions=java,xml`
+- `-D${task.name}.file.names=README.markdown,src/main/resources/hello.txt`
 - `-D${task.name}.format.current.branch=true`
 - `-D${task.name}.format.latest.author=true`
 - `-D${task.name}.format.local.changes=true`

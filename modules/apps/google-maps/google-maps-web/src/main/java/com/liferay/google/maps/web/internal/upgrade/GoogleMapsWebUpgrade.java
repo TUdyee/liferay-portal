@@ -37,12 +37,12 @@ public class GoogleMapsWebUpgrade implements UpgradeStepRegistrator {
 
 				@Override
 				protected String getBundleSymbolicName() {
-					return "com.liferay.youtube.web";
+					return "com.liferay.google.maps.web";
 				}
 
 				@Override
 				protected String[] getPortletIds() {
-					return new String[] {"1_WAR_youtubeportlet"};
+					return new String[] {"1_WAR_googlemapsportlet"};
 				}
 
 			};
@@ -54,13 +54,9 @@ public class GoogleMapsWebUpgrade implements UpgradeStepRegistrator {
 			throw new RuntimeException(ue);
 		}
 
-		registry.register(
-			"com.liferay.google.maps.web", "0.0.0", "1.0.0",
-			new DummyUpgradeStep());
+		registry.register("0.0.0", "1.0.0", new DummyUpgradeStep());
 
-		registry.register(
-			"com.liferay.google.maps.web", "0.0.1", "1.0.0",
-			new UpgradePortletId());
+		registry.register("0.0.1", "1.0.0", new UpgradePortletId());
 	}
 
 	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.dao.search;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.DeterminateKeyGenerator;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -22,7 +23,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
@@ -81,7 +81,7 @@ public class SearchContainer<R> {
 		PortletURL iteratorURL, List<String> headerNames,
 		String emptyResultsMessage) {
 
-		this (
+		this(
 			portletRequest, displayTerms, searchTerms, curParam, cur, delta,
 			iteratorURL, headerNames, emptyResultsMessage, StringPool.BLANK);
 	}
@@ -118,10 +118,10 @@ public class SearchContainer<R> {
 		}
 
 		if (!_curParam.equals(DEFAULT_CUR_PARAM)) {
-			_deltaParam =
-				DEFAULT_DELTA_PARAM +
-					StringUtil.replace(
-						_curParam, DEFAULT_CUR_PARAM, StringPool.BLANK);
+			String s = StringUtil.replace(
+				_curParam, DEFAULT_CUR_PARAM, StringPool.BLANK);
+
+			_deltaParam = DEFAULT_DELTA_PARAM + s;
 		}
 
 		setDelta(ParamUtil.getInteger(portletRequest, _deltaParam, delta));
@@ -148,6 +148,12 @@ public class SearchContainer<R> {
 		if (Validator.isNotNull(cssClass)) {
 			_cssClass = cssClass;
 		}
+
+		String keywords = ParamUtil.getString(portletRequest, "keywords");
+
+		if (Validator.isNotNull(keywords)) {
+			_search = true;
+		}
 	}
 
 	public SearchContainer(
@@ -156,7 +162,7 @@ public class SearchContainer<R> {
 		PortletURL iteratorURL, List<String> headerNames,
 		String emptyResultsMessage) {
 
-		this (
+		this(
 			portletRequest, displayTerms, searchTerms, curParam, 0, delta,
 			iteratorURL, headerNames, emptyResultsMessage);
 	}
@@ -214,13 +220,16 @@ public class SearchContainer<R> {
 		return _headerNames;
 	}
 
-	public String getId(HttpServletRequest request, String namespace) {
+	public String getId(
+		HttpServletRequest httpServletRequest, String namespace) {
+
 		if (_uniqueId) {
 			return _id;
 		}
 
 		if (Validator.isNotNull(_id)) {
-			_id = PortalUtil.getUniqueElementId(request, namespace, _id);
+			_id = PortalUtil.getUniqueElementId(
+				httpServletRequest, namespace, _id);
 			_uniqueId = true;
 
 			return _id;
@@ -244,7 +253,8 @@ public class SearchContainer<R> {
 
 			id = id.concat("SearchContainer");
 
-			_id = PortalUtil.getUniqueElementId(request, namespace, id);
+			_id = PortalUtil.getUniqueElementId(
+				httpServletRequest, namespace, id);
 
 			_uniqueId = true;
 
@@ -328,6 +338,10 @@ public class SearchContainer<R> {
 		return _start;
 	}
 
+	public String getSummary() {
+		return _summary;
+	}
+
 	public int getTotal() {
 		return _total;
 	}
@@ -365,10 +379,6 @@ public class SearchContainer<R> {
 	}
 
 	public boolean isSearch() {
-		if (_searchTerms != null) {
-			return _searchTerms.isSearch();
-		}
-
 		return _search;
 	}
 
@@ -482,6 +492,10 @@ public class SearchContainer<R> {
 		_search = search;
 	}
 
+	public void setSummary(String summary) {
+		_summary = summary;
+	}
+
 	public void setTotal(int total) {
 		_total = total;
 
@@ -578,6 +592,7 @@ public class SearchContainer<R> {
 	private boolean _search;
 	private final DisplayTerms _searchTerms;
 	private int _start;
+	private String _summary;
 	private int _total;
 	private String _totalVar;
 	private boolean _uniqueId;

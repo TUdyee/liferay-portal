@@ -14,21 +14,20 @@
 
 package com.liferay.adaptive.media.blogs.web.internal.optimizer;
 
+import com.liferay.adaptive.media.constants.AMOptimizeImagesBackgroundTaskConstants;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
 import com.liferay.adaptive.media.image.counter.AMImageCounter;
 import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
 import com.liferay.adaptive.media.image.optimizer.AMImageOptimizer;
 import com.liferay.adaptive.media.image.processor.AMImageProcessor;
-import com.liferay.adaptive.media.web.constants.AMOptimizeImagesBackgroundTaskConstants;
-import com.liferay.blogs.kernel.model.BlogsEntry;
+import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusMessageSender;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -49,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sergio González
  */
 @Component(
-	immediate = true, property = {"adaptive.media.key=blogs"},
+	immediate = true, property = "adaptive.media.key=blogs",
 	service = AMImageOptimizer.class
 )
 public class BlogsAMImageOptimizer implements AMImageOptimizer {
@@ -91,56 +90,43 @@ public class BlogsAMImageOptimizer implements AMImageOptimizer {
 			_dlFileEntryLocalService.getActionableDynamicQuery();
 
 		actionableDynamicQuery.setAddCriteriaMethod(
-			new ActionableDynamicQuery.AddCriteriaMethod() {
+			dynamicQuery -> {
+				Property companyIdProperty = PropertyFactoryUtil.forName(
+					"companyId");
 
-				@Override
-				public void addCriteria(DynamicQuery dynamicQuery) {
-					Property companyIdProperty = PropertyFactoryUtil.forName(
-						"companyId");
+				dynamicQuery.add(companyIdProperty.eq(companyId));
 
-					dynamicQuery.add(companyIdProperty.eq(companyId));
+				Property classNameIdProperty = PropertyFactoryUtil.forName(
+					"classNameId");
 
-					Property classNameIdProperty = PropertyFactoryUtil.forName(
-						"classNameId");
+				long classNameId = _classNameLocalService.getClassNameId(
+					BlogsEntry.class.getName());
 
-					long classNameId = _classNameLocalService.getClassNameId(
-						BlogsEntry.class.getName());
+				dynamicQuery.add(classNameIdProperty.eq(classNameId));
 
-					dynamicQuery.add(classNameIdProperty.eq(classNameId));
+				Property mimeTypeProperty = PropertyFactoryUtil.forName(
+					"mimeType");
 
-					Property mimeTypeProperty = PropertyFactoryUtil.forName(
-						"mimeType");
-
-					dynamicQuery.add(
-						mimeTypeProperty.in(
-							_amImageMimeTypeProvider.getSupportedMimeTypes()));
-				}
-
+				dynamicQuery.add(
+					mimeTypeProperty.in(
+						_amImageMimeTypeProvider.getSupportedMimeTypes()));
 			});
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<DLFileEntry>() {
+			(DLFileEntry dlFileEntry) -> {
+				FileEntry fileEntry = new LiferayFileEntry(dlFileEntry);
 
-				@Override
-				public void performAction(DLFileEntry dlFileEntry)
-					throws PortalException {
+				try {
+					_amImageProcessor.process(
+						fileEntry.getFileVersion(), configurationEntryUuid);
 
-					FileEntry fileEntry = new LiferayFileEntry(dlFileEntry);
-
-					try {
-						_amImageProcessor.process(
-							fileEntry.getFileVersion(), configurationEntryUuid);
-
-						_sendStatusMessage(
-							atomicCounter.incrementAndGet(), total);
-					}
-					catch (PortalException pe) {
-						_log.error(
-							"Unable to process file entry " +
-								fileEntry.getFileEntryId(),
-							pe);
-					}
+					_sendStatusMessage(atomicCounter.incrementAndGet(), total);
 				}
-
+				catch (PortalException pe) {
+					_log.error(
+						"Unable to process file entry " +
+							fileEntry.getFileEntryId(),
+						pe);
+				}
 			});
 
 		try {

@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.configuration;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalServiceUtil;
@@ -37,7 +35,6 @@ import javax.portlet.PortletRequest;
 /**
  * @author Levente Hudák
  */
-@ProviderType
 public class ExportImportConfigurationHelper {
 
 	public static ExportImportConfiguration
@@ -148,7 +145,7 @@ public class ExportImportConfigurationHelper {
 		String description = ParamUtil.getString(portletRequest, "description");
 
 		Map<String, Serializable> settingsMap =
-			ExportImportConfigurationSettingsMapFactory.buildSettingsMap(
+			ExportImportConfigurationSettingsMapFactoryUtil.buildSettingsMap(
 				portletRequest, groupId, type);
 
 		Map<String, String[]> parameterMap =
@@ -184,7 +181,7 @@ public class ExportImportConfigurationHelper {
 		String description = ParamUtil.getString(portletRequest, "description");
 
 		Map<String, Serializable> settingsMap =
-			ExportImportConfigurationSettingsMapFactory.buildSettingsMap(
+			ExportImportConfigurationSettingsMapFactoryUtil.buildSettingsMap(
 				portletRequest, groupId, type);
 
 		return ExportImportConfigurationLocalServiceUtil.

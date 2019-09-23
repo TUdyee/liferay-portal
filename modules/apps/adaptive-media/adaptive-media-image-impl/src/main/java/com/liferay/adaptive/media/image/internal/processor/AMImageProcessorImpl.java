@@ -17,20 +17,20 @@ package com.liferay.adaptive.media.image.internal.processor;
 import com.liferay.adaptive.media.exception.AMRuntimeException;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
-import com.liferay.adaptive.media.image.internal.util.ImageProcessor;
-import com.liferay.adaptive.media.image.internal.util.RenderedImageUtil;
 import com.liferay.adaptive.media.image.model.AMImageEntry;
 import com.liferay.adaptive.media.image.processor.AMImageProcessor;
+import com.liferay.adaptive.media.image.scaler.AMImageScaledImage;
+import com.liferay.adaptive.media.image.scaler.AMImageScaler;
+import com.liferay.adaptive.media.image.scaler.AMImageScalerTracker;
 import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
+import com.liferay.adaptive.media.image.validator.AMImageValidator;
 import com.liferay.adaptive.media.processor.AMProcessor;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 
-import java.awt.image.RenderedImage;
-
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.util.Optional;
 
@@ -48,25 +48,17 @@ import org.osgi.service.component.annotations.Reference;
 public final class AMImageProcessorImpl implements AMImageProcessor {
 
 	@Override
-	public void cleanUp(FileVersion fileVersion) {
-		try {
-			if (!_imageProcessor.isMimeTypeSupported(
-					fileVersion.getMimeType())) {
-
-				return;
-			}
-
-			_amImageEntryLocalService.deleteAMImageEntryFileVersion(
-				fileVersion);
+	public void cleanUp(FileVersion fileVersion) throws PortalException {
+		if (!_amImageValidator.isValid(fileVersion)) {
+			return;
 		}
-		catch (PortalException pe) {
-			throw new AMRuntimeException.IOException(pe);
-		}
+
+		_amImageEntryLocalService.deleteAMImageEntryFileVersion(fileVersion);
 	}
 
 	@Override
-	public void process(FileVersion fileVersion) {
-		if (!_imageProcessor.isMimeTypeSupported(fileVersion.getMimeType())) {
+	public void process(FileVersion fileVersion) throws PortalException {
+		if (!_amImageValidator.isValid(fileVersion)) {
 			return;
 		}
 
@@ -74,16 +66,18 @@ public final class AMImageProcessorImpl implements AMImageProcessor {
 			_amImageConfigurationHelper.getAMImageConfigurationEntries(
 				fileVersion.getCompanyId());
 
-		amImageConfigurationEntries.forEach(
-			amImageConfigurationEntry -> process(
-				fileVersion, amImageConfigurationEntry.getUUID()));
+		for (AMImageConfigurationEntry amImageConfigurationEntry :
+				amImageConfigurationEntries) {
+
+			process(fileVersion, amImageConfigurationEntry.getUUID());
+		}
 	}
 
 	@Override
-	public void process(
-		FileVersion fileVersion, String configurationEntryUuid) {
+	public void process(FileVersion fileVersion, String configurationEntryUuid)
+		throws PortalException {
 
-		if (!_imageProcessor.isMimeTypeSupported(fileVersion.getMimeType())) {
+		if (!_amImageValidator.isValid(fileVersion)) {
 			return;
 		}
 
@@ -114,43 +108,42 @@ public final class AMImageProcessorImpl implements AMImageProcessor {
 					amImageEntry.getAmImageEntryId());
 			}
 
-			RenderedImage renderedImage = _imageProcessor.scaleImage(
+			AMImageScaler amImageScaler =
+				_amImageScalerTracker.getAMImageScaler(
+					fileVersion.getMimeType());
+
+			if (amImageScaler == null) {
+				return;
+			}
+
+			AMImageScaledImage amImageScaledImage = amImageScaler.scaleImage(
 				fileVersion, amImageConfigurationEntry);
 
-			byte[] bytes = RenderedImageUtil.getRenderedImageContentStream(
-				renderedImage, fileVersion.getMimeType());
+			try (InputStream inputStream =
+					amImageScaledImage.getInputStream()) {
 
-			_amImageEntryLocalService.addAMImageEntry(
-				amImageConfigurationEntry, fileVersion,
-				renderedImage.getWidth(), renderedImage.getHeight(),
-				new UnsyncByteArrayInputStream(bytes), bytes.length);
+				_amImageEntryLocalService.addAMImageEntry(
+					amImageConfigurationEntry, fileVersion,
+					amImageScaledImage.getHeight(),
+					amImageScaledImage.getWidth(), inputStream,
+					amImageScaledImage.getSize());
+			}
 		}
-		catch (IOException | PortalException e) {
-			throw new AMRuntimeException.IOException(e);
+		catch (IOException ioe) {
+			throw new AMRuntimeException.IOException(ioe);
 		}
 	}
 
-	@Reference(unbind = "-")
-	public void setAMImageConfigurationHelper(
-		AMImageConfigurationHelper amImageConfigurationHelper) {
-
-		_amImageConfigurationHelper = amImageConfigurationHelper;
-	}
-
-	@Reference(unbind = "-")
-	public void setAMImageEntryLocalService(
-		AMImageEntryLocalService amImageEntryLocalService) {
-
-		_amImageEntryLocalService = amImageEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	public void setImageProcessor(ImageProcessor imageProcessor) {
-		_imageProcessor = imageProcessor;
-	}
-
+	@Reference
 	private AMImageConfigurationHelper _amImageConfigurationHelper;
+
+	@Reference
 	private AMImageEntryLocalService _amImageEntryLocalService;
-	private ImageProcessor _imageProcessor;
+
+	@Reference
+	private AMImageScalerTracker _amImageScalerTracker;
+
+	@Reference
+	private AMImageValidator _amImageValidator;
 
 }

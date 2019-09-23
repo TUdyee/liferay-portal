@@ -106,10 +106,9 @@ public class PortletResourcesUtil {
 
 			PortletApp portletApp = portlet.getPortletApp();
 
-			ServletContext servletContext = portletApp.getServletContext();
-
 			if (portletApp.isWARFile()) {
-				_servletContexts.put(serviceReference, servletContext);
+				_servletContexts.put(
+					serviceReference, portletApp.getServletContext());
 			}
 
 			return portlet;

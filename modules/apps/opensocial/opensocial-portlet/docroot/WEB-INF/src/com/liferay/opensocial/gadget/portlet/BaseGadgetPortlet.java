@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
@@ -87,10 +87,8 @@ public abstract class BaseGadgetPortlet extends MVCPortlet {
 			themeDisplay.getCompanyId(), Layout.class.getName(),
 			ShindigUtil.getTableOpenSocial());
 
-		String namespace = renderResponse.getNamespace();
-
 		String columnName = ShindigUtil.getColumnUserPrefs(
-			namespace, themeDisplay);
+			renderResponse.getNamespace(), themeDisplay);
 
 		ExpandoColumn expandoColumn = ExpandoColumnLocalServiceUtil.getColumn(
 			expandoTable.getTableId(), columnName);
@@ -132,11 +130,6 @@ public abstract class BaseGadgetPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
-		Portlet portlet = PortletLocalServiceUtil.getPortletById(
-			themeDisplay.getCompanyId(), portletDisplay.getId());
-
 		Gadget gadget = getGadget(renderRequest);
 
 		if (gadget == null) {
@@ -144,6 +137,11 @@ public abstract class BaseGadgetPortlet extends MVCPortlet {
 		}
 
 		GadgetSpec gadgetSpec = ShindigUtil.getGadgetSpec(gadget.getUrl());
+
+		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+		Portlet portlet = PortletLocalServiceUtil.getPortletById(
+			themeDisplay.getCompanyId(), portletDisplay.getId());
 
 		overrideConfiguration(gadgetSpec, portlet, portletDisplay);
 
@@ -170,9 +168,8 @@ public abstract class BaseGadgetPortlet extends MVCPortlet {
 		if (gadget != null) {
 			return gadget.getName();
 		}
-		else {
-			return super.getTitle(renderRequest);
-		}
+
+		return super.getTitle(renderRequest);
 	}
 
 	protected String getView(

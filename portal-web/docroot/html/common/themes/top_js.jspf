@@ -110,7 +110,7 @@
 		Liferay.Data.NAV_SELECTOR_MOBILE = '#navigationCollapse';
 
 		Liferay.Data.isCustomizationView = function() {
-			return <%= (layoutTypePortlet.isCustomizable() && LayoutPermissionUtil.contains(permissionChecker, layout, ActionKeys.CUSTOMIZE)) %>;
+			return <%= layoutTypePortlet.isCustomizable() && LayoutPermissionUtil.contains(permissionChecker, layout, ActionKeys.CUSTOMIZE) %>;
 		};
 
 		Liferay.Data.notices = [
@@ -161,11 +161,9 @@
 				Layout controlPanelLayout = themeDisplay.getControlPanelLayout();
 				%>
 
-				<c:if test="<%= controlPanelLayout.getGroupId() != scopeGroup.getGroupId() %>">
-					getLayoutRelativeControlPanelURL: function() {
-						return '<%= PortalUtil.getLayoutRelativeURL(new VirtualLayout(controlPanelLayout, scopeGroup), themeDisplay) %>';
-					},
-				</c:if>
+				getLayoutRelativeControlPanelURL: function() {
+					return '<%= PortalUtil.getLayoutRelativeURL(new VirtualLayout(controlPanelLayout, scopeGroup), themeDisplay) %>';
+				},
 
 				getLayoutRelativeURL: function() {
 					return '<%= PortalUtil.getLayoutRelativeURL(layout, themeDisplay) %>';
@@ -183,12 +181,20 @@
 					return '<%= layout.isPrivateLayout() %>';
 				},
 				isVirtualLayout: function() {
-					return <%= (layout instanceof VirtualLayout) %>;
+					return <%= layout instanceof VirtualLayout %>;
 				},
 			</c:if>
 
 			getBCP47LanguageId: function() {
 				return '<%= LanguageUtil.getBCP47LanguageId(request) %>';
+			},
+			getCanonicalURL: function() {
+
+				<%
+				String completeURL = PortalUtil.getCurrentCompleteURL(request);
+				%>
+
+				return '<%= PortalUtil.getCanonicalURL(completeURL, themeDisplay, layout, false, false) %>';
 			},
 			getCDNBaseURL: function() {
 				return '<%= themeDisplay.getCDNBaseURL() %>';
@@ -262,6 +268,9 @@
 			getURLHome: function() {
 				return '<%= HtmlUtil.escapeJS(themeDisplay.getURLHome()) %>';
 			},
+			getUserEmailAddress: function() {
+				return '<%= themeDisplay.isSignedIn() ? user.getEmailAddress() : StringPool.BLANK %>';
+			},
 			getUserId: function() {
 				return '<%= themeDisplay.getUserId() %>';
 			},
@@ -270,9 +279,6 @@
 			},
 			isAddSessionIdToURL: function() {
 				return <%= themeDisplay.isAddSessionIdToURL() %>;
-			},
-			isFreeformLayout: function() {
-				return <%= themeDisplay.isFreeformLayout() %>;
 			},
 			isImpersonated: function() {
 				return <%= themeDisplay.isImpersonated() %>;
@@ -300,7 +306,7 @@
 			%>
 
 			getAvailableLangPath: function() {
-				return '<%= PortalUtil.getStaticResourceURL(request, "available_languages.jsp", jsLastModified) %>';
+				return '<%= PortalUtil.getStaticResourceURL(request, "available_languages.jsp", LanguageUtil.getLastModified()) %>';
 			},
 			getCombine: function() {
 				return <%= themeDisplay.isThemeJsFastLoad() %>;
@@ -367,15 +373,6 @@
 	// ]]>
 </script>
 
-<c:if test="<%= PortalWebResourcesUtil.getPortalWebResources(PortalWebResourceConstants.RESOURCE_TYPE_JS_LOADER_MODULES) != null %>">
-
-	<%
-	long jsLoaderModulesLastModified = PortalWebResourcesUtil.getLastModified(PortalWebResourceConstants.RESOURCE_TYPE_JS_LOADER_MODULES);
-	%>
-
-	<script src="<%= HtmlUtil.escape(themeDisplay.getCDNDynamicResourcesHost() + PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_JS_LOADER_MODULES) + "/js_loader_modules?t=" + jsLoaderModulesLastModified) %>" type="text/javascript"></script>
-</c:if>
-
 <liferay-util:dynamic-include key="/html/common/themes/top_js.jspf#resources" />
 
 <c:if test="<%= PortalWebResourcesUtil.getPortalWebResources(PortalWebResourceConstants.RESOURCE_TYPE_JS_BUNDLE_CONFIG) != null %>">
@@ -384,7 +381,7 @@
 	long jsBundleConfigLastModified = PortalWebResourcesUtil.getLastModified(PortalWebResourceConstants.RESOURCE_TYPE_JS_BUNDLE_CONFIG);
 	%>
 
-	<script src="<%= HtmlUtil.escape(themeDisplay.getCDNDynamicResourcesHost() + PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_JS_BUNDLE_CONFIG) + "/js_bundle_config?t=" + jsBundleConfigLastModified) %>" type="text/javascript"></script>
+	<script data-senna-track="temporary" src="<%= HtmlUtil.escape(themeDisplay.getCDNDynamicResourcesHost() + PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_JS_BUNDLE_CONFIG) + "/js_bundle_config?t=" + jsBundleConfigLastModified) %>" type="text/javascript"></script>
 </c:if>
 
 <script data-senna-track="temporary" type="text/javascript">
@@ -498,18 +495,40 @@ private static String _getDateFormatPattern(Locale locale) {
 	String dateFormatPattern = _dateFormatPatterns.get(languageId);
 
 	if (dateFormatPattern == null) {
+		boolean endDelimiter = false;
+
+		String delimiterString = StringPool.FORWARD_SLASH;
+
 		SimpleDateFormat simpleDateFormat = (SimpleDateFormat)DateFormat.getDateInstance(DateFormat.SHORT, locale);
 
 		dateFormatPattern = simpleDateFormat.toPattern();
 
-		if (dateFormatPattern.indexOf("y") == 0) {
-			dateFormatPattern = "%Y/%m/%d";
+		for (char dateDelimiter : _DATE_DELIMITERS) {
+			if (dateFormatPattern.indexOf(dateDelimiter) != -1) {
+				delimiterString = String.valueOf(dateDelimiter);
+
+				endDelimiter = dateFormatPattern.endsWith(delimiterString);
+
+				break;
+			}
 		}
-		else if (dateFormatPattern.indexOf("d") == 0) {
-			dateFormatPattern = "%d/%m/%Y";
+
+		int dayOrder = dateFormatPattern.indexOf('d');
+		int monthOrder = dateFormatPattern.indexOf('M');
+		int yearOrder = dateFormatPattern.indexOf('y');
+
+		if ((yearOrder < dayOrder) && (yearOrder < monthOrder)) {
+			dateFormatPattern = StringBundler.concat("%Y", delimiterString, "%m", delimiterString, "%d");
+		}
+		else if (dayOrder < monthOrder) {
+			dateFormatPattern = StringBundler.concat("%d", delimiterString, "%m", delimiterString, "%Y");
 		}
 		else {
-			dateFormatPattern = "%m/%d/%Y";
+			dateFormatPattern = StringBundler.concat("%m", delimiterString, "%d", delimiterString, "%Y");
+		}
+
+		if (endDelimiter) {
+			dateFormatPattern += delimiterString;
 		}
 
 		_dateFormatPatterns.put(languageId, dateFormatPattern);
@@ -517,6 +536,10 @@ private static String _getDateFormatPattern(Locale locale) {
 
 	return dateFormatPattern;
 }
+
+private static final char[] _DATE_DELIMITERS = {
+	CharPool.DASH, CharPool.FORWARD_SLASH, CharPool.PERIOD
+};
 
 private static final Map<String, String> _dateFormatPatterns = new ConcurrentHashMap<>();
 %>

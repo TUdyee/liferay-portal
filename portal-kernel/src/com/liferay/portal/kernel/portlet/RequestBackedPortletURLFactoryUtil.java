@@ -37,9 +37,10 @@ import javax.servlet.http.HttpServletRequest;
 public class RequestBackedPortletURLFactoryUtil {
 
 	public static RequestBackedPortletURLFactory create(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
-		return new HttpServletRequestRequestBackedPortletURLFactory(request);
+		return new HttpServletRequestRequestBackedPortletURLFactory(
+			httpServletRequest);
 	}
 
 	public static RequestBackedPortletURLFactory create(
@@ -120,8 +121,9 @@ public class RequestBackedPortletURLFactoryUtil {
 
 			Layout controlPanelLayout = null;
 
-			ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)_httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			if (themeDisplay != null) {
 				controlPanelLayout = themeDisplay.getControlPanelLayout();
@@ -132,7 +134,7 @@ public class RequestBackedPortletURLFactoryUtil {
 			}
 
 			LiferayPortletURL liferayPortletURL = PortletURLFactoryUtil.create(
-				_request, portletId,
+				_httpServletRequest, portletId,
 				_getControlPanelLayout(controlPanelLayout, group), lifecycle);
 
 			return _populateControlPanelPortletURL(
@@ -161,11 +163,13 @@ public class RequestBackedPortletURLFactoryUtil {
 
 		@Override
 		public PortletURL createPortletURL(String portletId, String lifecycle) {
-			ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)_httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			return PortletURLFactoryUtil.create(
-				_request, portletId, themeDisplay.getPlid(), lifecycle);
+				_httpServletRequest, portletId, themeDisplay.getPlid(),
+				lifecycle);
 		}
 
 		@Override
@@ -179,12 +183,12 @@ public class RequestBackedPortletURLFactoryUtil {
 		}
 
 		private HttpServletRequestRequestBackedPortletURLFactory(
-			HttpServletRequest request) {
+			HttpServletRequest httpServletRequest) {
 
-			_request = request;
+			_httpServletRequest = httpServletRequest;
 		}
 
-		private final HttpServletRequest _request;
+		private final HttpServletRequest _httpServletRequest;
 
 	}
 

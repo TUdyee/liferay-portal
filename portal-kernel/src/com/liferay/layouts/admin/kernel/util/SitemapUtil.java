@@ -16,7 +16,6 @@ package com.liferay.layouts.admin.kernel.util;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.security.pacl.permission.PortalRuntimePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.xml.Element;
@@ -27,7 +26,9 @@ import java.util.Map;
 
 /**
  * @author Raymond Augé
+ * @deprecated As of Mueller (7.2.x), replaced by {@link com.liferay.layout.admin.kernel.util.SitemapUtil}
  */
+@Deprecated
 public class SitemapUtil {
 
 	public static void addURLElement(
@@ -53,8 +54,6 @@ public class SitemapUtil {
 	}
 
 	public static Sitemap getSitemap() {
-		PortalRuntimePermission.checkGetBeanProperty(SitemapUtil.class);
-
 		return _sitemap;
 	}
 
@@ -75,8 +74,6 @@ public class SitemapUtil {
 	}
 
 	public void setSitemap(Sitemap sitemap) {
-		PortalRuntimePermission.checkSetBeanProperty(getClass());
-
 		_sitemap = sitemap;
 	}
 

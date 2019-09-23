@@ -17,12 +17,12 @@
 
 package com.liferay.tasks.social;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ClassResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.social.kernel.model.BaseSocialActivityInterpreter;
 import com.liferay.social.kernel.model.SocialActivity;
 import com.liferay.tasks.model.TasksEntry;
@@ -101,33 +101,29 @@ public class TasksActivityInterpreter extends BaseSocialActivityInterpreter {
 			if ((userId != receiverUserId) && (receiverUserId != 0)) {
 				return "activity-tasks-add-entry-for";
 			}
-			else {
-				return "activity-tasks-add-entry";
-			}
+
+			return "activity-tasks-add-entry";
 		}
 		else if (activityType == TasksActivityKeys.REOPEN_ENTRY) {
 			if ((userId != receiverUserId) && (receiverUserId != 0)) {
 				return "activity-tasks-reopen-entry-for";
 			}
-			else {
-				return "activity-tasks-reopen-entry";
-			}
+
+			return "activity-tasks-reopen-entry";
 		}
 		else if (activityType == TasksActivityKeys.RESOLVE_ENTRY) {
 			if ((userId != receiverUserId) && (receiverUserId != 0)) {
 				return "activity-tasks-resolve-entry-for";
 			}
-			else {
-				return "activity-tasks-resolve-entry";
-			}
+
+			return "activity-tasks-resolve-entry";
 		}
 		else if (activityType == TasksActivityKeys.UPDATE_ENTRY) {
 			if ((userId != receiverUserId) && (receiverUserId != 0)) {
 				return "activity-tasks-update-entry-for";
 			}
-			else {
-				return "activity-tasks-update-entry";
-			}
+
+			return "activity-tasks-update-entry";
 		}
 
 		return StringPool.BLANK;

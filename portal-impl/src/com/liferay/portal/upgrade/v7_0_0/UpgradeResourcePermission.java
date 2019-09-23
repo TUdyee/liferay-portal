@@ -14,12 +14,12 @@
 
 package com.liferay.portal.upgrade.v7_0_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.model.PortletConstants;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -139,14 +139,16 @@ public class UpgradeResourcePermission extends UpgradeProcess {
 		String inClause = sb.toString();
 
 		_updatePrimKeyIds(
-			"update ResourcePermission set primKeyId = 0 where name = ? and " +
-				"(primKey like '%_LAYOUT_%' or primKey " + inClause + ")",
+			StringBundler.concat(
+				"update ResourcePermission set primKeyId = 0 where name = ? ",
+				"and (primKey like '%_LAYOUT_%' or primKey ", inClause, ")"),
 			name, primKeys);
 
 		_updatePrimKeyIds(
-			"update ResourcePermission set primKeyId = CAST_LONG(primKey" +
-				") where name = ? and (primKey not like '%_LAYOUT_%' and " +
-					"primKey not " + inClause + ")",
+			StringBundler.concat(
+				"update ResourcePermission set primKeyId = CAST_LONG(primKey",
+				") where name = ? and (primKey not like '%_LAYOUT_%' and ",
+				"primKey not ", inClause, ")"),
 			name, primKeys);
 	}
 

@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,44 +23,59 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see ExportImportConfigurationService
  * @generated
  */
-@ProviderType
 public class ExportImportConfigurationServiceWrapper
 	implements ExportImportConfigurationService,
-		ServiceWrapper<ExportImportConfigurationService> {
+			   ServiceWrapper<ExportImportConfigurationService> {
+
 	public ExportImportConfigurationServiceWrapper(
 		ExportImportConfigurationService exportImportConfigurationService) {
+
 		_exportImportConfigurationService = exportImportConfigurationService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link ExportImportConfigurationServiceUtil} to access the export import configuration remote service. Add custom service methods to <code>com.liferay.portlet.exportimport.service.impl.ExportImportConfigurationServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
 	public void deleteExportImportConfiguration(
-		long exportImportConfigurationId)
+			long exportImportConfigurationId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_exportImportConfigurationService.deleteExportImportConfiguration(exportImportConfigurationId);
+
+		_exportImportConfigurationService.deleteExportImportConfiguration(
+			exportImportConfigurationId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _exportImportConfigurationService.getOSGiServiceIdentifier();
 	}
 
 	@Override
-	public com.liferay.exportimport.kernel.model.ExportImportConfiguration moveExportImportConfigurationToTrash(
-		long exportImportConfigurationId)
+	public com.liferay.exportimport.kernel.model.ExportImportConfiguration
+			moveExportImportConfigurationToTrash(
+				long exportImportConfigurationId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _exportImportConfigurationService.moveExportImportConfigurationToTrash(exportImportConfigurationId);
+
+		return _exportImportConfigurationService.
+			moveExportImportConfigurationToTrash(exportImportConfigurationId);
 	}
 
 	@Override
-	public com.liferay.exportimport.kernel.model.ExportImportConfiguration restoreExportImportConfigurationFromTrash(
-		long exportImportConfigurationId)
+	public com.liferay.exportimport.kernel.model.ExportImportConfiguration
+			restoreExportImportConfigurationFromTrash(
+				long exportImportConfigurationId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _exportImportConfigurationService.restoreExportImportConfigurationFromTrash(exportImportConfigurationId);
+
+		return _exportImportConfigurationService.
+			restoreExportImportConfigurationFromTrash(
+				exportImportConfigurationId);
 	}
 
 	@Override
@@ -73,8 +86,10 @@ public class ExportImportConfigurationServiceWrapper
 	@Override
 	public void setWrappedService(
 		ExportImportConfigurationService exportImportConfigurationService) {
+
 		_exportImportConfigurationService = exportImportConfigurationService;
 	}
 
 	private ExportImportConfigurationService _exportImportConfigurationService;
+
 }

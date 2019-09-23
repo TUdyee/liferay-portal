@@ -14,18 +14,17 @@
 
 package com.liferay.portal.security.wedeploy.auth.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for WeDeployAuthApp. Methods of this
@@ -34,34 +33,34 @@ import com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp;
  *
  * @author Supritha Sundaram
  * @see WeDeployAuthAppServiceUtil
- * @see com.liferay.portal.security.wedeploy.auth.service.base.WeDeployAuthAppServiceBaseImpl
- * @see com.liferay.portal.security.wedeploy.auth.service.impl.WeDeployAuthAppServiceImpl
  * @generated
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(property =  {
-	"json.web.service.context.name=wedeployauth", "json.web.service.context.path=WeDeployAuthApp"}, service = WeDeployAuthAppService.class)
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface WeDeployAuthAppService extends BaseService {
-	/*
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link WeDeployAuthAppServiceUtil} to access the we deploy auth app remote service. Add custom service methods to {@link com.liferay.portal.security.wedeploy.auth.service.impl.WeDeployAuthAppServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify or reference this interface directly. Always use {@link WeDeployAuthAppServiceUtil} to access the we deploy auth app remote service. Add custom service methods to <code>com.liferay.portal.security.wedeploy.auth.service.impl.WeDeployAuthAppServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public WeDeployAuthApp addWeDeployAuthApp(java.lang.String name,
-		java.lang.String redirectURI, ServiceContext serviceContext)
+	public WeDeployAuthApp addWeDeployAuthApp(
+			String name, String redirectURI, ServiceContext serviceContext)
 		throws PortalException;
 
 	public WeDeployAuthApp deleteWeDeployAuthApp(long weDeployAuthAppId)
 		throws PortalException;
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
-	public java.lang.String getOSGiServiceIdentifier();
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
+	public String getOSGiServiceIdentifier();
+
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -25,11 +23,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.service.http.PortletPreferencesServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portal.service.http.PortletPreferencesServiceSoap
  * @generated
  */
-@ProviderType
 public class PortletPreferencesSoap implements Serializable {
+
 	public static PortletPreferencesSoap toSoapModel(PortletPreferences model) {
 		PortletPreferencesSoap soapModel = new PortletPreferencesSoap();
 
@@ -47,7 +44,9 @@ public class PortletPreferencesSoap implements Serializable {
 
 	public static PortletPreferencesSoap[] toSoapModels(
 		PortletPreferences[] models) {
-		PortletPreferencesSoap[] soapModels = new PortletPreferencesSoap[models.length];
+
+		PortletPreferencesSoap[] soapModels =
+			new PortletPreferencesSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -58,10 +57,12 @@ public class PortletPreferencesSoap implements Serializable {
 
 	public static PortletPreferencesSoap[][] toSoapModels(
 		PortletPreferences[][] models) {
+
 		PortletPreferencesSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new PortletPreferencesSoap[models.length][models[0].length];
+			soapModels =
+				new PortletPreferencesSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new PortletPreferencesSoap[0][0];
@@ -76,13 +77,16 @@ public class PortletPreferencesSoap implements Serializable {
 
 	public static PortletPreferencesSoap[] toSoapModels(
 		List<PortletPreferences> models) {
-		List<PortletPreferencesSoap> soapModels = new ArrayList<PortletPreferencesSoap>(models.size());
+
+		List<PortletPreferencesSoap> soapModels =
+			new ArrayList<PortletPreferencesSoap>(models.size());
 
 		for (PortletPreferences model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new PortletPreferencesSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new PortletPreferencesSoap[soapModels.size()]);
 	}
 
 	public PortletPreferencesSoap() {
@@ -168,4 +172,5 @@ public class PortletPreferencesSoap implements Serializable {
 	private long _plid;
 	private String _portletId;
 	private String _preferences;
+
 }

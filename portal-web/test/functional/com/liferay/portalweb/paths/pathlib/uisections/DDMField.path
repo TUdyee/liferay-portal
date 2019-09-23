@@ -14,18 +14,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>DATE</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//input</td>
+	<td>COLOR_PICKER_COLOR</td>
+	<td>//a[@class='palette-item-inner'][@title='#${key_colorCode}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DDM_INPUT</td>
 	<td>//div[contains(@data-fieldname,'${key_fieldDefaultValue}')]//input</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DECIMAL</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -39,33 +34,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>IMAGE</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//input[contains(@type,'file')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>IMAGE_PREVIEW_PNG</td>
 	<td>portal/screenshots/ddm/spaceport_image_preview.png</td>
 	<td></td>
 </tr>
 <tr>
-	<td>INTEGER</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//input</td>
-	<td></td>
-</tr>
-<tr>
-	<td>LINK_TO_PAGE</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//select</td>
-	<td></td>
-</tr>
-<tr>
 	<td>NESTED</td>
 	<td>//div[@data-fieldname='${key_fieldName}']/div[@data-fieldname='${key_nestedFieldName}']//input</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NUMBER</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -76,11 +51,6 @@
 <tr>
 	<td>SELECT</td>
 	<td>//div[@data-fieldname='${key_fieldName}']//select</td>
-	<td></td>
-</tr>
-<tr>
-	<td>TEXT</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//input</td>
 	<td></td>
 </tr>
 <tr>

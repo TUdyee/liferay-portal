@@ -14,6 +14,7 @@
 
 package com.liferay.gradle.plugins.workspace;
 
+import com.liferay.gradle.plugins.workspace.configurators.ExtProjectConfigurator;
 import com.liferay.gradle.plugins.workspace.configurators.ModulesProjectConfigurator;
 import com.liferay.gradle.plugins.workspace.configurators.PluginsProjectConfigurator;
 import com.liferay.gradle.plugins.workspace.configurators.RootProjectConfigurator;
@@ -45,6 +46,7 @@ public class WorkspaceExtension {
 	public WorkspaceExtension(Settings settings) {
 		_gradle = settings.getGradle();
 
+		_projectConfigurators.add(new ExtProjectConfigurator(settings));
 		_projectConfigurators.add(new ModulesProjectConfigurator(settings));
 		_projectConfigurators.add(new PluginsProjectConfigurator(settings));
 		_projectConfigurators.add(new ThemesProjectConfigurator(settings));
@@ -71,12 +73,18 @@ public class WorkspaceExtension {
 		_configsDir = _getProperty(
 			settings, "configs.dir",
 			BundleSupportConstants.DEFAULT_CONFIGS_DIR_NAME);
+		_dockerImageLiferay = _getProperty(
+			settings, "docker.image.liferay", _DOCKER_IMAGE_LIFERAY);
+		_dockerDir = _getProperty(settings, "docker.dir", _DOCKER_DIR);
 		_environment = _getProperty(
 			settings, "environment",
 			BundleSupportConstants.DEFAULT_ENVIRONMENT);
 		_homeDir = _getProperty(
 			settings, "home.dir",
 			BundleSupportConstants.DEFAULT_LIFERAY_HOME_DIR_NAME);
+		_targetPlatformVersion = _getProperty(
+			settings, "target.platform.version", (String)null);
+
 		_rootProjectConfigurator = new RootProjectConfigurator(settings);
 	}
 
@@ -109,6 +117,14 @@ public class WorkspaceExtension {
 		return GradleUtil.toFile(_gradle.getRootProject(), _configsDir);
 	}
 
+	public File getDockerDir() {
+		return GradleUtil.toFile(_gradle.getRootProject(), _dockerDir);
+	}
+
+	public String getDockerImageLiferay() {
+		return GradleUtil.toString(_dockerImageLiferay);
+	}
+
 	public String getEnvironment() {
 		return GradleUtil.toString(_environment);
 	}
@@ -123,6 +139,10 @@ public class WorkspaceExtension {
 
 	public Plugin<Project> getRootProjectConfigurator() {
 		return _rootProjectConfigurator;
+	}
+
+	public String getTargetPlatformVersion() {
+		return GradleUtil.toString(_targetPlatformVersion);
 	}
 
 	public boolean isBundleTokenDownload() {
@@ -179,12 +199,24 @@ public class WorkspaceExtension {
 		_configsDir = configsDir;
 	}
 
+	public void setDockerDir(Object dockerDir) {
+		_dockerDir = dockerDir;
+	}
+
+	public void setDockerImageLiferay(Object dockerImageLiferay) {
+		_dockerImageLiferay = dockerImageLiferay;
+	}
+
 	public void setEnvironment(Object environment) {
 		_environment = environment;
 	}
 
 	public void setHomeDir(Object homeDir) {
 		_homeDir = homeDir;
+	}
+
+	public void setTargetPlatformVersion(Object targetPlatformVersion) {
+		_targetPlatformVersion = targetPlatformVersion;
 	}
 
 	private boolean _getProperty(
@@ -234,6 +266,12 @@ public class WorkspaceExtension {
 
 	private static final String _BUNDLE_TOKEN_PASSWORD_FILE = null;
 
+	private static final File _DOCKER_DIR = new File(
+		Project.DEFAULT_BUILD_DIR_NAME + File.separator + "docker");
+
+	private static final String _DOCKER_IMAGE_LIFERAY =
+		"liferay/portal:7.1.1-ga2";
+
 	private Object _bundleCacheDir;
 	private Object _bundleDistRootDirName;
 	private Object _bundleTokenDownload;
@@ -243,11 +281,14 @@ public class WorkspaceExtension {
 	private Object _bundleTokenPasswordFile;
 	private Object _bundleUrl;
 	private Object _configsDir;
+	private Object _dockerDir;
+	private Object _dockerImageLiferay;
 	private Object _environment;
 	private final Gradle _gradle;
 	private Object _homeDir;
 	private final Set<ProjectConfigurator> _projectConfigurators =
 		new HashSet<>();
 	private final Plugin<Project> _rootProjectConfigurator;
+	private Object _targetPlatformVersion;
 
 }

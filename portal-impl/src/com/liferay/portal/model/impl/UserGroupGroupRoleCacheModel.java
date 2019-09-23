@@ -14,14 +14,12 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.UserGroupGroupRole;
 import com.liferay.portal.kernel.service.persistence.UserGroupGroupRolePK;
-import com.liferay.portal.kernel.util.HashUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -32,12 +30,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing UserGroupGroupRole in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see UserGroupGroupRole
  * @generated
  */
-@ProviderType
-public class UserGroupGroupRoleCacheModel implements CacheModel<UserGroupGroupRole>,
-	Externalizable, MVCCModel {
+public class UserGroupGroupRoleCacheModel
+	implements CacheModel<UserGroupGroupRole>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,11 +45,13 @@ public class UserGroupGroupRoleCacheModel implements CacheModel<UserGroupGroupRo
 			return false;
 		}
 
-		UserGroupGroupRoleCacheModel userGroupGroupRoleCacheModel = (UserGroupGroupRoleCacheModel)obj;
+		UserGroupGroupRoleCacheModel userGroupGroupRoleCacheModel =
+			(UserGroupGroupRoleCacheModel)obj;
 
 		if (userGroupGroupRolePK.equals(
-					userGroupGroupRoleCacheModel.userGroupGroupRolePK) &&
-				(mvccVersion == userGroupGroupRoleCacheModel.mvccVersion)) {
+				userGroupGroupRoleCacheModel.userGroupGroupRolePK) &&
+			(mvccVersion == userGroupGroupRoleCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -97,7 +96,8 @@ public class UserGroupGroupRoleCacheModel implements CacheModel<UserGroupGroupRo
 
 	@Override
 	public UserGroupGroupRole toEntityModel() {
-		UserGroupGroupRoleImpl userGroupGroupRoleImpl = new UserGroupGroupRoleImpl();
+		UserGroupGroupRoleImpl userGroupGroupRoleImpl =
+			new UserGroupGroupRoleImpl();
 
 		userGroupGroupRoleImpl.setMvccVersion(mvccVersion);
 		userGroupGroupRoleImpl.setUserGroupId(userGroupId);
@@ -122,13 +122,12 @@ public class UserGroupGroupRoleCacheModel implements CacheModel<UserGroupGroupRo
 
 		companyId = objectInput.readLong();
 
-		userGroupGroupRolePK = new UserGroupGroupRolePK(userGroupId, groupId,
-				roleId);
+		userGroupGroupRolePK = new UserGroupGroupRolePK(
+			userGroupId, groupId, roleId);
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		objectOutput.writeLong(userGroupId);
@@ -146,4 +145,5 @@ public class UserGroupGroupRoleCacheModel implements CacheModel<UserGroupGroupRo
 	public long roleId;
 	public long companyId;
 	public transient UserGroupGroupRolePK userGroupGroupRolePK;
+
 }

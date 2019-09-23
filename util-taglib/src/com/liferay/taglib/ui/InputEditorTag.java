@@ -50,7 +50,7 @@ import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.function.Function;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -65,9 +65,9 @@ import javax.servlet.http.HttpServletResponse;
 public class InputEditorTag extends BaseValidatorTagSupport {
 
 	public static Editor getEditor(
-		HttpServletRequest request, String editorName) {
+		HttpServletRequest httpServletRequest, String editorName) {
 
-		if (!BrowserSnifferUtil.isRtf(request)) {
+		if (!BrowserSnifferUtil.isRtf(httpServletRequest)) {
 			return _serviceTrackerMap.getService("simple");
 		}
 
@@ -82,9 +82,89 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 		return _serviceTrackerMap.getService(editorName);
 	}
 
+	public Map<String, String> getConfigParams() {
+		return _configParams;
+	}
+
+	public String getContents() {
+		return _contents;
+	}
+
+	public String getCssClass() {
+		return _cssClass;
+	}
+
+	public Map<String, String> getFileBrowserParams() {
+		return _fileBrowserParams;
+	}
+
+	public String getHeight() {
+		return _height;
+	}
+
+	public String getInlineEditSaveURL() {
+		return _inlineEditSaveURL;
+	}
+
 	@Override
 	public String getInputName() {
 		return getConfigKey();
+	}
+
+	public String getName() {
+		return _name;
+	}
+
+	public String getOnBlurMethod() {
+		return _onBlurMethod;
+	}
+
+	public String getOnChangeMethod() {
+		return _onChangeMethod;
+	}
+
+	public String getOnFocusMethod() {
+		return _onFocusMethod;
+	}
+
+	public String getOnInitMethod() {
+		return _onInitMethod;
+	}
+
+	public String getPlaceholder() {
+		return _placeholder;
+	}
+
+	public String getWidth() {
+		return _width;
+	}
+
+	public boolean isAllowBrowseDocuments() {
+		return _allowBrowseDocuments;
+	}
+
+	public boolean isAutoCreate() {
+		return _autoCreate;
+	}
+
+	public boolean isInlineEdit() {
+		return _inlineEdit;
+	}
+
+	public boolean isRequired() {
+		return _required;
+	}
+
+	public boolean isResizable() {
+		return _resizable;
+	}
+
+	public boolean isShowSource() {
+		return _showSource;
+	}
+
+	public boolean isSkipEditorLoading() {
+		return _skipEditorLoading;
 	}
 
 	public void setAllowBrowseDocuments(boolean allowBrowseDocuments) {
@@ -120,7 +200,8 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #setEditorName(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #setEditorName(String)}
 	 */
 	@Deprecated
 	public void setEditorImpl(String editorImpl) {
@@ -140,7 +221,8 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #setContents(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #setContents(String)}
 	 */
 	@Deprecated
 	public void setInitMethod(String initMethod) {
@@ -205,6 +287,8 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 
 	@Override
 	protected void cleanUp() {
+		super.cleanUp();
+
 		_allowBrowseDocuments = true;
 		_autoCreate = true;
 		_configKey = null;
@@ -220,13 +304,13 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 		_inlineEdit = false;
 		_inlineEditSaveURL = null;
 		_name = "editor";
-		_onChangeMethod = null;
 		_onBlurMethod = null;
+		_onChangeMethod = null;
 		_onFocusMethod = null;
 		_onInitMethod = null;
 		_placeholder = null;
-		_resizable = true;
 		_required = false;
+		_resizable = true;
 		_showSource = true;
 		_skipEditorLoading = false;
 		_toolbarSet = _TOOLBAR_SET_DEFAULT;
@@ -306,12 +390,12 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 		return data;
 	}
 
-	protected Editor getEditor(HttpServletRequest request) {
-		return getEditor(request, _editorName);
+	protected Editor getEditor(HttpServletRequest httpServletRequest) {
+		return getEditor(httpServletRequest, _editorName);
 	}
 
-	protected String getEditorName(HttpServletRequest request) {
-		Editor editor = getEditor(request);
+	protected String getEditorName(HttpServletRequest httpServletRequest) {
+		Editor editor = getEditor(httpServletRequest);
 
 		return editor.getName();
 	}
@@ -364,80 +448,83 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 	}
 
 	@Override
-	protected void includePage(String page, HttpServletResponse response)
+	protected void includePage(
+			String page, HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		servletContext = PortalWebResourcesUtil.getServletContext(
 			getEditorResourceType());
 
-		super.includePage(page, response);
+		super.includePage(page, httpServletResponse);
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:allowBrowseDocuments",
 			String.valueOf(_allowBrowseDocuments));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:autoCreate", String.valueOf(_autoCreate));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:configParams", _configParams);
-		request.setAttribute("liferay-ui:input-editor:contents", _contents);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-editor:contents", _contents);
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:contentsLanguageId",
 			getContentsLanguageId());
-		request.setAttribute("liferay-ui:input-editor:cssClass", _cssClass);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-editor:cssClass", _cssClass);
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:cssClasses", getCssClasses());
-		request.setAttribute(
-			"liferay-ui:input-editor:editorName", getEditorName(request));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-editor:editorName",
+			getEditorName(httpServletRequest));
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:fileBrowserParams", _fileBrowserParams);
-		request.setAttribute("liferay-ui:input-editor:height", _height);
-		request.setAttribute("liferay-ui:input-editor:initMethod", _initMethod);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-editor:height", _height);
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-editor:initMethod", _initMethod);
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:inlineEdit", String.valueOf(_inlineEdit));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:inlineEditSaveURL", _inlineEditSaveURL);
-		request.setAttribute("liferay-ui:input-editor:name", _name);
-		request.setAttribute(
+		httpServletRequest.setAttribute("liferay-ui:input-editor:name", _name);
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:onBlurMethod", _onBlurMethod);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:onChangeMethod", _onChangeMethod);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:onFocusMethod", _onFocusMethod);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:onInitMethod", _onInitMethod);
-
-		ResourceBundle resourceBundle = TagResourceBundleUtil.getResourceBundle(
-			pageContext);
 
 		if (Validator.isNull(_placeholder)) {
 			_placeholder = LanguageUtil.get(
-				resourceBundle, "write-your-content-here");
+				TagResourceBundleUtil.getResourceBundle(pageContext),
+				"write-your-content-here");
 		}
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:placeholder", _placeholder);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:required", String.valueOf(_required));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:resizable", String.valueOf(_resizable));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:showSource", String.valueOf(_showSource));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:skipEditorLoading",
 			String.valueOf(_skipEditorLoading));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:toolbarSet", getToolbarSet());
-		request.setAttribute("liferay-ui:input-editor:width", _width);
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-editor:width", _width);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-editor:data",
-			ProxyUtil.newProxyInstance(
-				ClassLoader.getSystemClassLoader(), new Class<?>[] {Map.class},
-				new LazyDataInvocationHandler()));
+			_mapProxyProviderFunction.apply(new LazyDataInvocationHandler()));
 	}
 
 	private static final String _EDITOR_WYSIWYG_DEFAULT = PropsUtil.get(
@@ -445,8 +532,12 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 
 	private static final String _TOOLBAR_SET_DEFAULT = "liferay";
 
+	private static final Function<InvocationHandler, Map<?, ?>>
+		_mapProxyProviderFunction = ProxyUtil.getProxyProviderFunction(
+			Map.class);
+
 	private static final ServiceTrackerMap<String, Editor> _serviceTrackerMap =
-		ServiceTrackerCollections.singleValueMap(
+		ServiceTrackerCollections.openSingleValueMap(
 			Editor.class, null,
 			new ServiceReferenceMapper<String, Editor>() {
 
@@ -463,10 +554,6 @@ public class InputEditorTag extends BaseValidatorTagSupport {
 				}
 
 			});
-
-	static {
-		_serviceTrackerMap.open();
-	}
 
 	private boolean _allowBrowseDocuments = true;
 	private boolean _autoCreate = true;

@@ -27,6 +27,7 @@ import java.io.ObjectOutput;
 import java.io.Writer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,6 +38,10 @@ public class JSONArrayImpl implements JSONArray {
 
 	public JSONArrayImpl() {
 		_jsonArray = new org.json.JSONArray();
+	}
+
+	public JSONArrayImpl(Collection<?> collection) {
+		_jsonArray = new org.json.JSONArray(collection);
 	}
 
 	public JSONArrayImpl(org.json.JSONArray jsonArray) {
@@ -58,7 +63,17 @@ public class JSONArrayImpl implements JSONArray {
 
 	@Override
 	public Object get(int index) {
-		return _jsonArray.opt(index);
+		Object value = _jsonArray.opt(index);
+
+		if (value instanceof org.json.JSONArray) {
+			return new JSONArrayImpl((org.json.JSONArray)value);
+		}
+
+		if (value instanceof org.json.JSONObject) {
+			return new JSONObjectImpl((org.json.JSONObject)value);
+		}
+
+		return value;
 	}
 
 	@Override
@@ -173,14 +188,18 @@ public class JSONArrayImpl implements JSONArray {
 
 	@Override
 	public JSONArray put(JSONArray value) {
-		_jsonArray.put(((JSONArrayImpl)value).getJSONArray());
+		JSONArrayImpl jsonArrayImpl = (JSONArrayImpl)value;
+
+		_jsonArray.put(jsonArrayImpl.getJSONArray());
 
 		return this;
 	}
 
 	@Override
 	public JSONArray put(JSONObject value) {
-		_jsonArray.put(((JSONObjectImpl)value).getJSONObject());
+		JSONObjectImpl jsonObjectImpl = (JSONObjectImpl)value;
+
+		_jsonArray.put(jsonObjectImpl.getJSONObject());
 
 		return this;
 	}
@@ -194,7 +213,15 @@ public class JSONArrayImpl implements JSONArray {
 
 	@Override
 	public JSONArray put(Object value) {
-		_jsonArray.put(value);
+		if (value instanceof JSONArray) {
+			put((JSONArray)value);
+		}
+		else if (value instanceof JSONObject) {
+			put((JSONObject)value);
+		}
+		else {
+			_jsonArray.put(value);
+		}
 
 		return this;
 	}

@@ -73,8 +73,8 @@ public class IfClauseWhitespace {
 		}
 
 		while ((testString != null) &&
-			   (StringUtil.count("hello", "world") !=
-				   StringUtil.count("hello", "w"))) {
+			   (StringUtil.count("hello", "world") != StringUtil.count(
+				   "hello", "w"))) {
 
 			testString = testString + "test";
 		}
@@ -97,8 +97,6 @@ public class IfClauseWhitespace {
 		if (testString.contains(
 				"This string is so long that it will not be able to fit on " +
 					"one single line")) {
-
-			return;
 		}
 	}
 

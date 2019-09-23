@@ -21,13 +21,13 @@ import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.test.randomizerbumpers.TikaSafeRandomizerBumper;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -40,8 +40,7 @@ public class DLTestUtil {
 	public static DLFileEntry addDLFileEntry(long dlFolderId) throws Exception {
 		DLFolder dlFolder = DLFolderLocalServiceUtil.fetchDLFolder(dlFolderId);
 
-		byte[] bytes = RandomTestUtil.randomBytes(
-			TikaSafeRandomizerBumper.INSTANCE);
+		byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 		InputStream is = new ByteArrayInputStream(bytes);
 
@@ -58,10 +57,8 @@ public class DLTestUtil {
 	}
 
 	public static DLFolder addDLFolder(long groupId) throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId);
-
-		return addDLFolder(groupId, serviceContext);
+		return addDLFolder(
+			groupId, ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
 	public static DLFolder addDLFolder(

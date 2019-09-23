@@ -46,19 +46,17 @@ public class GoogleDocsIGDisplayContextFactory
 	@Override
 	public IGViewFileVersionDisplayContext getIGViewFileVersionDisplayContext(
 		IGViewFileVersionDisplayContext parentIGViewFileVersionDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileShortcut fileShortcut) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileShortcut fileShortcut) {
 
 		try {
 			long fileEntryId = fileShortcut.getToFileEntryId();
 
 			FileEntry fileEntry = _dlAppService.getFileEntry(fileEntryId);
 
-			FileVersion fileVersion = fileEntry.getFileVersion();
-
 			return getIGViewFileVersionDisplayContext(
-				parentIGViewFileVersionDisplayContext, request, response,
-				fileVersion);
+				parentIGViewFileVersionDisplayContext, httpServletRequest,
+				httpServletResponse, fileEntry.getFileVersion());
 		}
 		catch (PortalException pe) {
 			throw new SystemException(
@@ -71,8 +69,8 @@ public class GoogleDocsIGDisplayContextFactory
 	@Override
 	public IGViewFileVersionDisplayContext getIGViewFileVersionDisplayContext(
 		IGViewFileVersionDisplayContext parentIGViewFileVersionDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileVersion fileVersion) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileVersion fileVersion) {
 
 		GoogleDocsMetadataHelper googleDocsMetadataHelper =
 			new GoogleDocsMetadataHelper(
@@ -83,8 +81,8 @@ public class GoogleDocsIGDisplayContextFactory
 
 		if (googleDocsMetadataHelper.isGoogleDocs()) {
 			return new GoogleDocsIGViewFileVersionDisplayContext(
-				parentIGViewFileVersionDisplayContext, request, response,
-				fileVersion, googleDocsMetadataHelper);
+				parentIGViewFileVersionDisplayContext, httpServletRequest,
+				httpServletResponse, fileVersion, googleDocsMetadataHelper);
 		}
 
 		return parentIGViewFileVersionDisplayContext;

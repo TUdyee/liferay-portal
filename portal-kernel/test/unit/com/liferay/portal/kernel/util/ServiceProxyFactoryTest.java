@@ -16,7 +16,9 @@ package com.liferay.portal.kernel.util;
 
 import com.liferay.petra.memory.FinalizeAction;
 import com.liferay.petra.memory.FinalizeManager;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.test.CaptureHandler;
+import com.liferay.portal.kernel.test.FinalizeManagerUtil;
 import com.liferay.portal.kernel.test.GCUtil;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
@@ -177,8 +179,7 @@ public class ServiceProxyFactoryTest {
 
 		GCUtil.gc(true);
 
-		ReflectionTestUtil.invoke(
-			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
+		FinalizeManagerUtil.drainPendingFinalizeActions();
 
 		Assert.assertTrue(atomicBoolean.get());
 	}
@@ -277,12 +278,12 @@ public class ServiceProxyFactoryTest {
 
 	@Test
 	public void testNonblockingProxy() throws Exception {
-		_testNonBlockingProxy(false);
+		_testNonblockingProxy(false);
 	}
 
 	@Test
 	public void testNonblockingProxyWithFilter() throws Exception {
-		_testNonBlockingProxy(true);
+		_testNonblockingProxy(true);
 	}
 
 	@Test
@@ -293,7 +294,7 @@ public class ServiceProxyFactoryTest {
 			TestService.class, TestServiceUtil.class, testServiceUtil,
 			"nonStaticField", null, false);
 
-		_testNonBlockingProxy(false, testService, testServiceUtil);
+		_testNonblockingProxy(false, testService, testServiceUtil);
 	}
 
 	@Test
@@ -316,6 +317,15 @@ public class ServiceProxyFactoryTest {
 		Assert.assertEquals(
 			_TEST_SERVICE_ID, newTestService.getTestServiceId());
 
+		try {
+			newTestService.throwException();
+
+			Assert.fail();
+		}
+		catch (Exception e) {
+			Assert.assertSame(TestServiceImpl._exception, e);
+		}
+
 		Assert.assertFalse(ProxyUtil.isProxyClass(newTestService.getClass()));
 		Assert.assertSame(TestServiceImpl.class, newTestService.getClass());
 
@@ -334,6 +344,13 @@ public class ServiceProxyFactoryTest {
 			return _TEST_SERVICE_NAME;
 		}
 
+		@Override
+		public void throwException() throws Exception {
+			throw _exception;
+		}
+
+		private static final Exception _exception = new Exception();
+
 	}
 
 	public interface TestService {
@@ -342,12 +359,14 @@ public class ServiceProxyFactoryTest {
 
 		public String getTestServiceName();
 
+		public void throwException() throws Exception;
+
 	}
 
 	private void _testBlockingProxy(boolean proxyService) throws Exception {
 		System.setProperty(
 			ServiceProxyFactory.class.getName() + ".timeout",
-			Long.toString(Long.MAX_VALUE));
+			String.valueOf(Long.MAX_VALUE));
 
 		final TestService testService =
 			ServiceProxyFactory.newServiceTrackedInstance(
@@ -365,6 +384,15 @@ public class ServiceProxyFactoryTest {
 						_TEST_SERVICE_NAME, testService.getTestServiceName());
 					Assert.assertEquals(
 						_TEST_SERVICE_ID, testService.getTestServiceId());
+
+					try {
+						testService.throwException();
+
+						Assert.fail();
+					}
+					catch (Exception e) {
+						Assert.assertSame(TestServiceImpl._exception, e);
+					}
 
 					TestService newTestService = TestServiceUtil.testService;
 
@@ -437,12 +465,18 @@ public class ServiceProxyFactoryTest {
 
 					@Override
 					public boolean add(LogRecord e) {
-						Thread currentThread = Thread.currentThread();
+						if (_logged) {
+							Thread currentThread = Thread.currentThread();
 
-						currentThread.interrupt();
+							currentThread.interrupt();
+						}
+
+						_logged = true;
 
 						return super.add(e);
 					}
+
+					private boolean _logged;
 
 				});
 			List<LogRecord> logRecords = captureHandler.getLogRecords();
@@ -456,7 +490,7 @@ public class ServiceProxyFactoryTest {
 
 			thread.join();
 
-			Assert.assertEquals(logRecords.toString(), 1, logRecords.size());
+			Assert.assertEquals(logRecords.toString(), 2, logRecords.size());
 
 			LogRecord logRecord = logRecords.get(0);
 
@@ -471,9 +505,8 @@ public class ServiceProxyFactoryTest {
 				sb.append("}");
 			}
 
-			sb.append(
-				"\" is unavaiable in 0 milliseconds while setting field \"");
-			sb.append("testService\" for class \"");
+			sb.append("\" is unavailable in 0 milliseconds while setting ");
+			sb.append("field \"testService\" for class \"");
 			sb.append(TestServiceUtil.class.getName());
 			sb.append("\", will retry...");
 
@@ -481,7 +514,7 @@ public class ServiceProxyFactoryTest {
 		}
 	}
 
-	private void _testNonBlockingProxy(boolean filterEnabled) throws Exception {
+	private void _testNonblockingProxy(boolean filterEnabled) throws Exception {
 		TestService testService = null;
 
 		if (filterEnabled) {
@@ -494,10 +527,10 @@ public class ServiceProxyFactoryTest {
 				TestService.class, TestServiceUtil.class, "testService", false);
 		}
 
-		_testNonBlockingProxy(filterEnabled, testService, null);
+		_testNonblockingProxy(filterEnabled, testService, null);
 	}
 
-	private void _testNonBlockingProxy(
+	private void _testNonblockingProxy(
 			boolean filterEnabled, TestService testService,
 			TestServiceUtil testServiceUtil)
 		throws Exception {
@@ -507,6 +540,8 @@ public class ServiceProxyFactoryTest {
 
 		Assert.assertEquals(0, testService.getTestServiceId());
 		Assert.assertEquals(null, testService.getTestServiceName());
+
+		testService.throwException();
 
 		Registry registry = RegistryUtil.getRegistry();
 
@@ -535,6 +570,15 @@ public class ServiceProxyFactoryTest {
 			_TEST_SERVICE_NAME, newTestService.getTestServiceName());
 		Assert.assertEquals(
 			_TEST_SERVICE_ID, newTestService.getTestServiceId());
+
+		try {
+			newTestService.throwException();
+
+			Assert.fail();
+		}
+		catch (Exception e) {
+			Assert.assertSame(TestServiceImpl._exception, e);
+		}
 
 		Assert.assertFalse(ProxyUtil.isProxyClass(newTestService.getClass()));
 		Assert.assertSame(TestServiceImpl.class, newTestService.getClass());

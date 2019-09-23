@@ -14,14 +14,11 @@
 
 package com.liferay.marketplace.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Ryan Park
  */
-@ProviderType
 public class NoSuchModuleException extends NoSuchModelException {
 
 	public NoSuchModuleException() {

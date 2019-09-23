@@ -14,12 +14,12 @@
 
 package com.liferay.taglib.portletext;
 
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIconTracker;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
-import com.liferay.portal.kernel.util.ReflectionUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.PortletConfigurationIconComparator;
 import com.liferay.taglib.servlet.PipingServletResponse;
@@ -39,6 +39,10 @@ import javax.servlet.jsp.PageContext;
  */
 public class IconOptionsTag extends IconTag {
 
+	public String getDirection() {
+		return _direction;
+	}
+
 	public List<PortletConfigurationIcon> getPortletConfigurationIcons() {
 		if (_portletConfigurationIcons != null) {
 			return _portletConfigurationIcons;
@@ -50,6 +54,10 @@ public class IconOptionsTag extends IconTag {
 				PortletConfigurationIconComparator.INSTANCE);
 
 		return _portletConfigurationIcons;
+	}
+
+	public boolean isShowArrow() {
+		return _showArrow;
 	}
 
 	public void setDirection(String direction) {
@@ -120,35 +128,36 @@ public class IconOptionsTag extends IconTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		super.setAttributes(request);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		super.setAttributes(httpServletRequest);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:icon-options:portletConfigurationIcons",
 			getPortletConfigurationIcons());
-		request.setAttribute("liferay-ui:icon:direction", _direction);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:icon:direction", _direction);
+		httpServletRequest.setAttribute(
 			"liferay-ui:icon:showArrow", String.valueOf(_showArrow));
 	}
 
 	private void _processPortletConfigurationIcons(PageContext pageContext) {
 		try {
-			HttpServletRequest request =
+			HttpServletRequest httpServletRequest =
 				(HttpServletRequest)pageContext.getRequest();
 
 			PortletRequest portletRequest =
-				(PortletRequest)request.getAttribute(
+				(PortletRequest)httpServletRequest.getAttribute(
 					JavaConstants.JAVAX_PORTLET_REQUEST);
 
 			PortletResponse portletResponse =
-				(PortletResponse)request.getAttribute(
+				(PortletResponse)httpServletRequest.getAttribute(
 					JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 			for (PortletConfigurationIcon portletConfigurationIcon :
 					_portletConfigurationIcons) {
 
 				boolean include = portletConfigurationIcon.include(
-					request,
+					httpServletRequest,
 					PipingServletResponse.createPipingServletResponse(
 						pageContext));
 

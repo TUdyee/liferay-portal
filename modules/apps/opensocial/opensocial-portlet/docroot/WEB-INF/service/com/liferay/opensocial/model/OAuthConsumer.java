@@ -14,31 +14,31 @@
 
 package com.liferay.opensocial.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the OAuthConsumer service. Represents a row in the &quot;OpenSocial_OAuthConsumer&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see OAuthConsumerModel
- * @see com.liferay.opensocial.model.impl.OAuthConsumerImpl
- * @see com.liferay.opensocial.model.impl.OAuthConsumerModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.opensocial.model.impl.OAuthConsumerImpl")
 @ProviderType
 public interface OAuthConsumer extends OAuthConsumerModel, PersistedModel {
-	/*
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.opensocial.model.impl.OAuthConsumerImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.opensocial.model.impl.OAuthConsumerImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<OAuthConsumer, Long> O_AUTH_CONSUMER_ID_ACCESSOR =
-		new Accessor<OAuthConsumer, Long>() {
+	public static final Accessor<OAuthConsumer, Long>
+		O_AUTH_CONSUMER_ID_ACCESSOR = new Accessor<OAuthConsumer, Long>() {
+
 			@Override
 			public Long get(OAuthConsumer oAuthConsumer) {
 				return oAuthConsumer.getOAuthConsumerId();
@@ -53,9 +53,11 @@ public interface OAuthConsumer extends OAuthConsumerModel, PersistedModel {
 			public Class<OAuthConsumer> getTypeClass() {
 				return OAuthConsumer.class;
 			}
+
 		};
 
-	public java.lang.String getKeyName();
+	public String getKeyName();
 
-	public void setKeyName(java.lang.String keyName);
+	public void setKeyName(String keyName);
+
 }

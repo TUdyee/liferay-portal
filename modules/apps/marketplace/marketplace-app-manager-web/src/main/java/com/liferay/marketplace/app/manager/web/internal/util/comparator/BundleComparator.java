@@ -14,13 +14,14 @@
 
 package com.liferay.marketplace.app.manager.web.internal.util.comparator;
 
-import com.liferay.marketplace.app.manager.web.internal.constants.BundleConstants;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.util.Comparator;
 import java.util.Dictionary;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 
 /**
  * @author Ryan Park
@@ -46,15 +47,15 @@ public class BundleComparator implements Comparator<Bundle> {
 		if (_ascending) {
 			return value;
 		}
-		else {
-			return -value;
-		}
+
+		return -value;
 	}
 
 	protected String getBundleName(Bundle bundle) {
-		Dictionary<String, String> headers = bundle.getHeaders();
+		Dictionary<String, String> headers = bundle.getHeaders(
+			StringPool.BLANK);
 
-		return GetterUtil.getString(headers.get(BundleConstants.BUNDLE_NAME));
+		return GetterUtil.getString(headers.get(Constants.BUNDLE_NAME));
 	}
 
 	private final boolean _ascending;

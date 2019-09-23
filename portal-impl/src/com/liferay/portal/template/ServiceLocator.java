@@ -14,8 +14,6 @@
 
 package com.liferay.portal.template;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.bean.BeanLocatorImpl;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.bean.PortletBeanLocatorUtil;
@@ -29,7 +27,6 @@ import java.util.function.Function;
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class ServiceLocator {
 
 	public static ServiceLocator getInstance() {

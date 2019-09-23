@@ -1,164 +1,124 @@
-<definition>
-	<var name="formName" value="Created Form Name" />
-	<var name="rowIndexNumber" value="1" />
+definition {
 
-	<command name="gotoAddDataProvider">
-		<execute function="Click" locator1="FormsAdmin#DATA_PROVIDER_PLUS_BUTTON" />
-	</command>
+	var formName = "Created Form Name";
+	var rowIndexNumber = "1";
 
-	<command name="gotoAddForm">
-		<execute function="Click" locator1="Button#PLUS" />
-	</command>
+	macro gotoAddDataProvider {
+		LexiconEntry.gotoAdd();
+	}
 
-	<command name="gotoBack">
-		<execute macro="Navigator#gotoBack" />
+	macro gotoAddForm {
+		LexiconEntry.gotoAdd();
+	}
 
-		<if>
-			<condition function="IsElementPresent" locator1="Button#LEAVE" />
-			<then>
-				<execute function="Click" locator1="Button#LEAVE" />
-			</then>
-		</if>
-	</command>
+	macro gotoBack {
+		Navigator.gotoBack();
 
-	<command name="gotoDataProviders">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+		if (IsElementPresent(locator1 = "Button#LEAVE")) {
+			Click(locator1 = "Button#LEAVE");
+		}
+	}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Data Providers">
-			<var name="key_menuItem" value="Data Providers" />
-		</execute>
-	</command>
+	macro gotoDeleteField {
+		FormsAdminNavigator.gotoEditField(fieldName = "${fieldName}");
 
-	<command name="gotoDeleteField">
-		<execute macro="FormsAdminNavigator#gotoEditField">
-			<var name="fieldName" value="${fieldName}" />
-		</execute>
+		var key_fieldName = "${fieldName}";
 
-		<var name="key_fieldName" value="${fieldName}" />
+		while (IsElementNotPresent(locator1 = "Form#SIDEBAR_MENUITEM_REMOVE_FIELD")) {
+			Click(locator1 = "Form#SIDEBAR_ELLIPSIS");
+		}
 
-		<execute function="Click" locator1="Form#SIDEBAR_ELLIPSIS" />
+		Click(locator1 = "Form#SIDEBAR_MENUITEM_REMOVE_FIELD");
 
-		<execute function="Click" locator1="Form#SIDEBAR_MENUITEM_REMOVE_FIELD" />
+	}
 
-		<execute function="AssertElementNotPresent#assertNotVisible" locator1="Form#SIDEBAR_CLOSE" />
-	</command>
+	macro gotoEditField {
+		var key_fieldName = "${fieldName}";
 
-	<command name="gotoEdit">
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Edit" />
-			<var name="rowEntry" value="${formName}" />
-		</execute>
-	</command>
+		Click(locator1 = "Form#FIELD_BODY");
 
-	<command name="gotoEditDuplicateField">
-		<var name="key_fieldName" value="${fieldName}" />
+		AssertElementPresent(locator1 = "Form#SIDEBAR_BASIC_TAB");
+	}
 
-		<execute function="Click" locator1="Form#FIELD_BODY_DUPLICATE" />
+	macro gotoEditFormByName {
+		AssertClick(
+			key_formName = "${formName}",
+			locator1 = "FormsAdmin#FORMS_TABLE_NAME",
+			value1 = "${formName}");
+	}
 
-		<execute function="AssertElementPresent" locator1="Form#SIDEBAR_BASIC_TAB" />
-	</command>
+	macro gotoFormBuilder {
+		var key_assetTitle = "Form";
 
-	<command name="gotoEditField">
-		<var name="key_fieldName" value="${fieldName}" />
+		AssertClick(
+			locator1 = "NavBar#ASSET_TITLE_LINK",
+			value1 = "Form");
+	}
 
-		<execute function="Click" locator1="Form#FIELD_BODY" />
+	macro gotoPermissions {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Permissions",
+			rowEntry = "${formName}");
 
-		<execute function="AssertElementPresent" locator1="Form#SIDEBAR_BASIC_TAB" />
-	</command>
+		SelectFrame(locator1 = "IFrame#DIALOG");
+	}
 
-	<command name="gotoEditFormByName">
-		<execute function="AssertClick" locator1="FormsAdmin#FORMS_TABLE_NAME" value1="${formName}">
-			<var name="key_formName" value="${formName}" />
-		</execute>
-	</command>
+	macro gotoPreviewForm {
+		AssertClick(
+			locator1 = "Button#PREVIEW",
+			value1 = "Preview Form");
+	}
 
-	<command name="gotoFormBuilder">
-		<var name="key_assetTitle" value="Builder" />
+	macro gotoPublishCopyURLLink {
+		Click(locator1 = "Form#PUBLISH_ICON");
+	}
 
-		<execute function="AssertClick" locator1="NavBar#ASSET_TITLE" value1="Builder" />
-	</command>
+	macro gotoPublishedForm {
+		FormsAdminNavigator.gotoPublishCopyURLLink();
 
-	<command name="gotoPermissions">
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Permissions" />
-			<var name="rowEntry" value="${formName}" />
-		</execute>
+		var publishedFormPublicURL = Form.getPublishedFormPublicURL(
+			publishedFormPublicURL = "${publishedFormPublicURL}"
+		);
 
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
+		Navigator.openSpecificURL(url = "${publishedFormPublicURL}");
+	}
 
-	<command name="gotoPreviewForm">
-		<execute function="AssertClick" locator1="Button#PREVIEW" value1="Preview Form" />
-	</command>
+	macro gotoRules {
+		var key_assetTitle = "Rules";
 
-	<command name="gotoPublishCopyURLLink">
-		<var name="key_alertMessage" value="The form was published successfully! Access it with this URL" />
+		AssertClick(
+			locator1 = "NavBar#ASSET_TITLE_LINK",
+			value1 = "Rules");
+	}
 
-		<if>
-			<condition function="IsElementPresent" locator1="Form#PUBLISH_UNPUBLISH_ICON_CLOSE" />
-			<then>
-				<execute function="Click" locator1="Form#PUBLISH_UNPUBLISH_ICON_CLOSE" />
-			</then>
-		</if>
+	macro gotoSettings {
+		AssertElementPresent(locator1 = "Form#NAME_FIELD");
 
-		<execute function="Click" locator1="Form#PUBLISH_ICON" />
-	</command>
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Settings");
+	}
 
-	<command name="gotoRules">
-		<var name="key_assetTitle" value="Rules" />
+	macro gotoView {
+		var key_rowIndexNumber = "${rowIndexNumber}";
 
-		<execute function="AssertClick" locator1="NavBar#ASSET_TITLE" value1="Rules" />
-	</command>
+		AssertElementPresent(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS_N");
 
-	<command name="gotoSettings">
-		<execute function="AssertElementPresent" locator1="Form#NAME_FIELD" />
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "View");
+	}
 
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+	macro gotoViewEntries {
+		AssertElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Settings">
-			<var name="key_menuItem" value="Settings" />
-		</execute>
-	</command>
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "View Entries");
+	}
 
-	<command name="gotoView">
-		<var name="key_rowIndexNumber" value="${rowIndexNumber}" />
+	macro openPublishURL {
+		FormsAdminNavigator.gotoPublishCopyURLLink();
 
-		<execute function="AssertElementPresent" locator1="Icon#ROW_VERTICAL_ELLIPSIS_N" />
+		Pause(locator1 = "2000");
 
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS_N" />
+		var publishFormURL = selenium.getElementValue("Form#PUBLISH_FORM_PUBLIC_URL");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="View">
-			<var name="key_menuItem" value="View" />
-		</execute>
-	</command>
+		Navigator.openSpecificURL(url = "${publishFormURL}");
+	}
 
-	<command name="gotoViewEntries">
-		<execute function="AssertElementPresent" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
-
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
-
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="View Entries">
-			<var name="key_menuItem" value="View Entries" />
-		</execute>
-	</command>
-
-	<command name="gotoViewEntriesViaIcon">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS">
-			<var name="key_rowEntry" value="${formName}" />
-		</execute>
-
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="View Entries">
-			<var name="key_menuItem" value="View Entries" />
-		</execute>
-	</command>
-
-	<command name="openPublishURL">
-		<execute macro="FormsAdminNavigator#gotoPublishCopyURLLink" />
-
-		<var locator="Form#PUBLISH_FORM_PUBLIC_URL" name="publishFormURL" />
-
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="${publishFormURL}" />
-		</execute>
-	</command>
-</definition>
+}

@@ -62,9 +62,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"auth.verifier.SyncAuthVerifier.urls.includes=/api/jsonws/sync.syncdevice/*,/api/jsonws/sync.syncdlobject/*"
-	}
+	property = "auth.verifier.SyncAuthVerifier.urls.includes=/api/jsonws/sync.syncdevice/*,/api/jsonws/sync.syncdlobject/*",
+	service = AuthVerifier.class
 )
 public class SyncAuthVerifier implements AuthVerifier {
 
@@ -115,19 +114,21 @@ public class SyncAuthVerifier implements AuthVerifier {
 
 		AuthVerifierResult authVerifierResult = new AuthVerifierResult();
 
-		HttpServletRequest request = accessControlContext.getRequest();
+		HttpServletRequest httpServletRequest =
+			accessControlContext.getRequest();
 
-		String uri = (String)request.getAttribute(WebKeys.INVOKER_FILTER_URI);
+		String uri = (String)httpServletRequest.getAttribute(
+			WebKeys.INVOKER_FILTER_URI);
 
 		if (uri.startsWith("/download/")) {
-			String contextPath = request.getContextPath();
+			String contextPath = httpServletRequest.getContextPath();
 
 			if (!contextPath.equals("/o/sync")) {
 				return authVerifierResult;
 			}
 		}
 
-		String token = request.getHeader(_TOKEN_HEADER);
+		String token = httpServletRequest.getHeader(_TOKEN_HEADER);
 
 		if (Validator.isNotNull(token)) {
 			String userIdString = getUserId(token);
@@ -141,7 +142,7 @@ public class SyncAuthVerifier implements AuthVerifier {
 		}
 
 		HttpAuthorizationHeader httpAuthorizationHeader =
-			HttpAuthManagerUtil.parse(request);
+			HttpAuthManagerUtil.parse(httpServletRequest);
 
 		if (httpAuthorizationHeader == null) {
 
@@ -154,30 +155,30 @@ public class SyncAuthVerifier implements AuthVerifier {
 			return authVerifierResult;
 		}
 
-		String scheme = httpAuthorizationHeader.getScheme();
-
 		if (!StringUtil.equalsIgnoreCase(
-				scheme, HttpAuthorizationHeader.SCHEME_BASIC)) {
+				httpAuthorizationHeader.getScheme(),
+				HttpAuthorizationHeader.SCHEME_BASIC)) {
 
 			return authVerifierResult;
 		}
 
 		try {
-			long userId = HttpAuthManagerUtil.getBasicUserId(request);
+			long userId = HttpAuthManagerUtil.getBasicUserId(
+				httpServletRequest);
 
 			if (userId > 0) {
 				token = createToken(userId);
 
 				if (token != null) {
-					HttpServletResponse response =
+					HttpServletResponse httpServletResponse =
 						accessControlContext.getResponse();
 
-					response.addHeader(_TOKEN_HEADER, token);
+					httpServletResponse.addHeader(_TOKEN_HEADER, token);
 				}
 			}
 			else {
 				userId = _userLocalService.getDefaultUserId(
-					_portal.getCompanyId(request));
+					_portal.getCompanyId(httpServletRequest));
 			}
 
 			authVerifierResult.setState(AuthVerifierResult.State.SUCCESS);

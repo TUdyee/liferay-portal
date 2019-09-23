@@ -14,6 +14,7 @@
 
 package com.liferay.portal.model.impl;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,11 +28,11 @@ import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.model.cache.CacheField;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalServiceUtil;
 import com.liferay.portal.kernel.service.ThemeLocalServiceUtil;
 import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PrefsPropsUtil;
@@ -176,13 +177,18 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 	}
 
 	@Override
+	public int getPageCount() {
+		return LayoutSetLocalServiceUtil.getPageCount(
+			getGroupId(), getPrivateLayout());
+	}
+
+	@Override
 	public String getSettings() {
 		if (_settingsProperties == null) {
 			return super.getSettings();
 		}
-		else {
-			return _settingsProperties.toString();
-		}
+
+		return _settingsProperties.toString();
 	}
 
 	@Override
@@ -215,9 +221,7 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 
 	@Override
 	public String getThemeSetting(String key, String device) {
-		String settings = super.getSettings();
-
-		if (!Validator.isBlank(settings)) {
+		if (!Validator.isBlank(super.getSettings())) {
 			UnicodeProperties settingsProperties = getSettingsProperties();
 
 			String value = settingsProperties.getProperty(
@@ -334,9 +338,8 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 
 			return ThemeLocalServiceUtil.getTheme(getCompanyId(), themeId);
 		}
-		else {
-			return getTheme();
-		}
+
+		return getTheme();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(LayoutSetImpl.class);

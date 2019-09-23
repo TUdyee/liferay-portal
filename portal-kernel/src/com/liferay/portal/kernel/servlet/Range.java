@@ -14,8 +14,8 @@
 
 package com.liferay.portal.kernel.servlet;
 
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 
 /**
  * @author Juan González
@@ -25,8 +25,9 @@ public class Range {
 	public Range(long start, long end, long total) {
 		_start = start;
 		_end = end;
-		_length = end - start + 1;
 		_total = total;
+
+		_length = end - start + 1;
 	}
 
 	@Override

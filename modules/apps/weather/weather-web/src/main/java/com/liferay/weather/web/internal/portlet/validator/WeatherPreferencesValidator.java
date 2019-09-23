@@ -14,7 +14,7 @@
 
 package com.liferay.weather.web.internal.portlet.validator;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.weather.web.internal.constants.WeatherPortletKeys;
 import com.liferay.weather.web.internal.model.Weather;
@@ -34,7 +34,8 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + WeatherPortletKeys.WEATHER}
+	property = "javax.portlet.name=" + WeatherPortletKeys.WEATHER,
+	service = PreferencesValidator.class
 )
 public class WeatherPreferencesValidator implements PreferencesValidator {
 
@@ -42,13 +43,13 @@ public class WeatherPreferencesValidator implements PreferencesValidator {
 	public void validate(PortletPreferences preferences)
 		throws ValidatorException {
 
-		List<String> badZips = new ArrayList<>();
-
 		String apiKey = preferences.getValue("apiKey", StringPool.BLANK);
 
 		if (Validator.isNull(apiKey)) {
 			return;
 		}
+
+		List<String> badZips = new ArrayList<>();
 
 		String[] zips = preferences.getValues("zips", new String[0]);
 

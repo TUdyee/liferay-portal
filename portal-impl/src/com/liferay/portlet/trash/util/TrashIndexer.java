@@ -19,13 +19,11 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
-import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.trash.TrashHandler;
@@ -43,7 +41,7 @@ import javax.portlet.PortletResponse;
 /**
  * @author     Julio Camarero
  * @author     Zsolt Berentey
- * @deprecated As of 7.0.0, replaced by {@link
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.trash.internal.search.TrashIndexer}
  */
 @Deprecated
@@ -85,9 +83,6 @@ public class TrashIndexer extends BaseIndexer<TrashEntry> {
 					fullQueryBooleanFilter.add(
 						filter, BooleanClauseOccur.MUST_NOT);
 				}
-
-				processTrashHandlerExcludeQuery(
-					searchContext, fullQueryBooleanFilter, trashHandler);
 			}
 
 			long[] groupIds = searchContext.getGroupIds();
@@ -104,10 +99,7 @@ public class TrashIndexer extends BaseIndexer<TrashEntry> {
 			fullQueryBooleanFilter.addRequiredTerm(
 				Field.STATUS, WorkflowConstants.STATUS_IN_TRASH);
 
-			BooleanQuery fullQuery = createFullQuery(
-				fullQueryBooleanFilter, searchContext);
-
-			return fullQuery;
+			return createFullQuery(fullQueryBooleanFilter, searchContext);
 		}
 		catch (SearchException se) {
 			throw se;
@@ -165,9 +157,8 @@ public class TrashIndexer extends BaseIndexer<TrashEntry> {
 		else if (orderByCol.equals("removed-by")) {
 			return Field.REMOVED_BY_USER_NAME;
 		}
-		else {
-			return orderByCol;
-		}
+
+		return orderByCol;
 	}
 
 	@Override
@@ -188,24 +179,6 @@ public class TrashIndexer extends BaseIndexer<TrashEntry> {
 
 	@Override
 	protected void doReindex(TrashEntry trashEntry) {
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, added strictly to support backwards
-	 *             compatibility of {@link
-	 *             TrashHandler#getExcludeQuery(SearchContext)}
-	 */
-	@Deprecated
-	protected void processTrashHandlerExcludeQuery(
-		SearchContext searchContext, BooleanFilter fullQueryBooleanFilter,
-		TrashHandler trashHandler) {
-
-		Query query = trashHandler.getExcludeQuery(searchContext);
-
-		if (query != null) {
-			fullQueryBooleanFilter.add(
-				new QueryFilter(query), BooleanClauseOccur.MUST_NOT);
-		}
 	}
 
 }

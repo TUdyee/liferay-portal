@@ -14,9 +14,9 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringPool;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.springframework.mock.web.MockServletContext;
 
 /**
- * @author Laszlo Csontos
+ * @author László Csontos
  */
 public class ServletContextUtilTest {
 

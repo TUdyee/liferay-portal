@@ -14,8 +14,6 @@
 
 package com.liferay.expando.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,72 +23,84 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see ExpandoColumnService
  * @generated
  */
-@ProviderType
-public class ExpandoColumnServiceWrapper implements ExpandoColumnService,
-	ServiceWrapper<ExpandoColumnService> {
+public class ExpandoColumnServiceWrapper
+	implements ExpandoColumnService, ServiceWrapper<ExpandoColumnService> {
+
 	public ExpandoColumnServiceWrapper(
 		ExpandoColumnService expandoColumnService) {
+
 		_expandoColumnService = expandoColumnService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link ExpandoColumnServiceUtil} to access the expando column remote service. Add custom service methods to <code>com.liferay.portlet.expando.service.impl.ExpandoColumnServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
 	public com.liferay.expando.kernel.model.ExpandoColumn addColumn(
-		long tableId, java.lang.String name, int type)
+			long tableId, String name, int type)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _expandoColumnService.addColumn(tableId, name, type);
 	}
 
 	@Override
 	public com.liferay.expando.kernel.model.ExpandoColumn addColumn(
-		long tableId, java.lang.String name, int type,
-		java.lang.Object defaultData)
+			long tableId, String name, int type, Object defaultData)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _expandoColumnService.addColumn(tableId, name, type, defaultData);
+
+		return _expandoColumnService.addColumn(
+			tableId, name, type, defaultData);
 	}
 
 	@Override
 	public void deleteColumn(long columnId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_expandoColumnService.deleteColumn(columnId);
 	}
 
 	@Override
 	public com.liferay.expando.kernel.model.ExpandoColumn fetchExpandoColumn(
-		long columnId)
+			long columnId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _expandoColumnService.fetchExpandoColumn(columnId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _expandoColumnService.getOSGiServiceIdentifier();
 	}
 
 	@Override
 	public com.liferay.expando.kernel.model.ExpandoColumn updateColumn(
-		long columnId, java.lang.String name, int type)
+			long columnId, String name, int type)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _expandoColumnService.updateColumn(columnId, name, type);
 	}
 
 	@Override
 	public com.liferay.expando.kernel.model.ExpandoColumn updateColumn(
-		long columnId, java.lang.String name, int type,
-		java.lang.Object defaultData)
+			long columnId, String name, int type, Object defaultData)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _expandoColumnService.updateColumn(columnId, name, type,
-			defaultData);
+
+		return _expandoColumnService.updateColumn(
+			columnId, name, type, defaultData);
 	}
 
 	@Override
 	public com.liferay.expando.kernel.model.ExpandoColumn updateTypeSettings(
-		long columnId, java.lang.String typeSettings)
+			long columnId, String typeSettings)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _expandoColumnService.updateTypeSettings(columnId, typeSettings);
 	}
 
@@ -105,4 +115,5 @@ public class ExpandoColumnServiceWrapper implements ExpandoColumnService,
 	}
 
 	private ExpandoColumnService _expandoColumnService;
+
 }

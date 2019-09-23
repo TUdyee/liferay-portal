@@ -14,8 +14,6 @@
 
 package com.liferay.portal.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
@@ -26,10 +24,11 @@ import com.liferay.portal.kernel.util.MethodKey;
 
 /**
  * Provides the HTTP utility for the
- * {@link ThemeServiceUtil} service utility. The
+ * <code>ThemeServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -48,19 +47,19 @@ import com.liferay.portal.kernel.util.MethodKey;
  *
  * @author Brian Wing Shun Chan
  * @see ThemeServiceSoap
- * @see HttpPrincipal
- * @see ThemeServiceUtil
  * @generated
  */
-@ProviderType
 public class ThemeServiceHttp {
-	public static java.util.List<com.liferay.portal.kernel.model.Theme> getThemes(
-		HttpPrincipal httpPrincipal, long companyId) {
-		try {
-			MethodKey methodKey = new MethodKey(ThemeServiceUtil.class,
-					"getThemes", _getThemesParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, companyId);
+	public static java.util.List<com.liferay.portal.kernel.model.Theme>
+		getThemes(HttpPrincipal httpPrincipal, long companyId) {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				ThemeServiceUtil.class, "getThemes", _getThemesParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId);
 
 			Object returnObj = null;
 
@@ -68,10 +67,12 @@ public class ThemeServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (java.util.List<com.liferay.portal.kernel.model.Theme>)returnObj;
+			return (java.util.List<com.liferay.portal.kernel.model.Theme>)
+				returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -82,9 +83,11 @@ public class ThemeServiceHttp {
 
 	public static com.liferay.portal.kernel.json.JSONArray getWARThemes(
 		HttpPrincipal httpPrincipal) {
+
 		try {
-			MethodKey methodKey = new MethodKey(ThemeServiceUtil.class,
-					"getWARThemes", _getWARThemesParameterTypes1);
+			MethodKey methodKey = new MethodKey(
+				ThemeServiceUtil.class, "getWARThemes",
+				_getWARThemesParameterTypes1);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey);
 
@@ -94,7 +97,8 @@ public class ThemeServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.portal.kernel.json.JSONArray)returnObj;
@@ -107,8 +111,12 @@ public class ThemeServiceHttp {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ThemeServiceHttp.class);
+
 	private static final Class<?>[] _getThemesParameterTypes0 = new Class[] {
-			long.class
-		};
-	private static final Class<?>[] _getWARThemesParameterTypes1 = new Class[] {  };
+		long.class
+	};
+	private static final Class<?>[] _getWARThemesParameterTypes1 = new Class[] {
+		
+	};
+
 }

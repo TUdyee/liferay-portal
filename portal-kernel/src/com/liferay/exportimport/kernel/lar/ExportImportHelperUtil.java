@@ -14,8 +14,7 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
@@ -40,7 +39,6 @@ import javax.portlet.PortletRequest;
 /**
  * @author Zsolt Berentey
  */
-@ProviderType
 public class ExportImportHelperUtil {
 
 	public static long[] getAllLayoutIds(long groupId, boolean privateLayout) {
@@ -54,7 +52,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, moved to {@link
+	 * @deprecated As of Wilberforce (7.0.x), moved to {@link
 	 *             ExportImportDateUtil#getCalendar(PortletRequest, String,
 	 *             boolean)}
 	 */
@@ -82,7 +80,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, moved to {@link
+	 * @deprecated As of Wilberforce (7.0.x), moved to {@link
 	 *             ExportImportDateUtil#getDateRange(PortletRequest, long,
 	 *             boolean, long, String, String)}
 	 */
@@ -98,7 +96,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static Layout getExportableLayout(ThemeDisplay themeDisplay)
@@ -116,7 +114,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExportPortletControlsMap(long, String, Map)}
 	 */
 	@Deprecated
@@ -130,7 +128,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExportPortletControlsMap(long, String, Map, String)}
 	 */
 	@Deprecated
@@ -162,7 +160,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getImportPortletControlsMap(long, String, Map, Element,
 	 *             ManifestSummary)}
 	 */
@@ -177,7 +175,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getImportPortletControlsMap(long, String, Map, Element,
 	 *             ManifestSummary)}
 	 */
@@ -241,12 +239,26 @@ public class ExportImportHelperUtil {
 		return _exportImportHelper.getLayoutIds(portletRequest, targetGroupId);
 	}
 
+	public static long getLayoutModelDeletionCount(
+			final PortletDataContext portletDataContext, boolean privateLayout)
+		throws PortalException {
+
+		return _exportImportHelper.getLayoutModelDeletionCount(
+			portletDataContext, privateLayout);
+	}
+
+	public static Layout getLayoutOrCreateDummyRootLayout(long plid)
+		throws PortalException {
+
+		return _exportImportHelper.getLayoutOrCreateDummyRootLayout(plid);
+	}
+
 	public static ZipWriter getLayoutSetZipWriter(long groupId) {
 		return _exportImportHelper.getLayoutSetZipWriter(groupId);
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getManifestSummary(PortletDataContext)}
 	 */
 	@Deprecated
@@ -291,6 +303,10 @@ public class ExportImportHelperUtil {
 			portletDataContext, stagedModelType);
 	}
 
+	public static String getPortletExportFileName(Portlet portlet) {
+		return _exportImportHelper.getPortletExportFileName(portlet);
+	}
+
 	public static ZipWriter getPortletZipWriter(String portletId) {
 		return _exportImportHelper.getPortletZipWriter(portletId);
 	}
@@ -325,6 +341,16 @@ public class ExportImportHelperUtil {
 			portletDataContext, referenceStagedModel);
 	}
 
+	public static boolean isExportPortletData(
+		PortletDataContext portletDataContext) {
+
+		return _exportImportHelper.isExportPortletData(portletDataContext);
+	}
+
+	public static boolean isLayoutRevisionInReview(Layout layout) {
+		return _exportImportHelper.isLayoutRevisionInReview(layout);
+	}
+
 	public static boolean isReferenceWithinExportScope(
 		PortletDataContext portletDataContext, StagedModel stagedModel) {
 
@@ -332,8 +358,17 @@ public class ExportImportHelperUtil {
 			portletDataContext, stagedModel);
 	}
 
+	public static void processBackgroundTaskManifestSummary(
+			long userId, long sourceGroupId, BackgroundTask backgroundTask,
+			File file)
+		throws PortalException {
+
+		_exportImportHelper.processBackgroundTaskManifestSummary(
+			userId, sourceGroupId, backgroundTask, file);
+	}
+
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessorr#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean) in
 	 *             the export-import-api module
@@ -351,7 +386,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean) in
 	 *             the export-import-api module
@@ -369,7 +404,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessorr#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean) in
 	 *             the export-import-api module
@@ -387,7 +422,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceExportDLReferences(
@@ -402,7 +437,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceExportDLReferences(
@@ -417,7 +452,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceExportLayoutReferences(
@@ -429,7 +464,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceExportLayoutReferences(
@@ -442,7 +477,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceExportLinksToLayouts(
@@ -457,7 +492,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceExportLinksToLayouts(
@@ -470,7 +505,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceImportContentReferences(
 	 *             PortletDataContext, StagedModel, String) in the
 	 *             export-import-api module
@@ -487,7 +522,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceImportContentReferences(
 	 *             PortletDataContext, StagedModel, String) in the
 	 *             export-import-api module
@@ -503,7 +538,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceImportDLReferences(
@@ -517,7 +552,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceImportDLReferences(
@@ -530,7 +565,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceImportLayoutReferences(
@@ -542,7 +577,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceImportLayoutReferences(
@@ -555,7 +590,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceImportLinksToLayouts(
@@ -567,7 +602,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String replaceImportLinksToLayouts(
@@ -579,8 +614,14 @@ public class ExportImportHelperUtil {
 			portletDataContext, content, importReferencedContent);
 	}
 
+	public static void setPortletScope(
+		PortletDataContext portletDataContext, Element portletElement) {
+
+		_exportImportHelper.setPortletScope(portletDataContext, portletElement);
+	}
+
 	/**
-	 * @deprecated As of 7.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             DefaultConfigurationPortletDataHandler#updateExportPortletPreferencesClassPKs(
 	 *             PortletDataContext, Portlet, PortletPreferences, String,
 	 *             String)}
@@ -596,7 +637,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #updateExportPortletPreferencesClassPKs(PortletDataContext,
 	 *             Portlet, PortletPreferences, String, String)}
 	 */
@@ -613,7 +654,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             DefaultConfigurationPortletDataHandler#updateImportPortletPreferencesClassPKs(
 	 *             PortletDataContext, PortletPreferences, String, Class, long)}
 	 */
@@ -629,7 +670,7 @@ public class ExportImportHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #validateMissingReferences(PortletDataContext)}
 	 */
 	@Deprecated

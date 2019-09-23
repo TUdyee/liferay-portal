@@ -14,20 +14,24 @@
 
 package com.liferay.portal.test.rule;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
-import com.liferay.portal.kernel.test.rule.BaseTestRule.StatementWrapper;
+import com.liferay.portal.kernel.test.rule.StatementWrapper;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
-import com.liferay.portal.kernel.util.ReflectionUtil;
-import com.liferay.portal.spring.hibernate.PortletTransactionManager;
-import com.liferay.portal.spring.transaction.CurrentPlatformTransactionManagerUtil;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.registry.Registry;
+import com.liferay.registry.RegistryUtil;
+import com.liferay.registry.ServiceReference;
 
 import java.io.Closeable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
@@ -44,14 +48,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-
-import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * @author Shuyang Zhou
@@ -117,7 +113,7 @@ public class TransactionalTestRule implements TestRule {
 
 				@Override
 				public void evaluate() throws Throwable {
-					try (Closeable closeable = _installTransactionManager(
+					try (Closeable closeable = _installTransactionExecutor(
 							_originBundleSymbolicName)) {
 
 						TransactionInvokerUtil.invoke(
@@ -192,7 +188,7 @@ public class TransactionalTestRule implements TestRule {
 				final Object target, final Object... params)
 			throws Throwable {
 
-			try (Closeable closeable = _installTransactionManager(
+			try (Closeable closeable = _installTransactionExecutor(
 					_originBundleSymbolicName)) {
 
 				return TransactionInvokerUtil.invoke(
@@ -231,57 +227,61 @@ public class TransactionalTestRule implements TestRule {
 
 	}
 
-	private static Closeable _installTransactionManager(
+	private static Closeable _installTransactionExecutor(
 			String originBundleSymbolicName)
-		throws InvalidSyntaxException {
+		throws Exception {
 
 		if (originBundleSymbolicName == null) {
 			return () -> {
 			};
 		}
 
-		ThreadLocal<Deque<PlatformTransactionManager>>
-			platformTransactionManagersThreadLocal =
-				ReflectionTestUtil.getFieldValue(
-					CurrentPlatformTransactionManagerUtil.class,
-					"_platformTransactionManagersThreadLocal");
+		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
 
-		Deque<PlatformTransactionManager> platformTransactionManagers =
-			platformTransactionManagersThreadLocal.get();
+		Class<?> clazz = classLoader.loadClass(
+			"com.liferay.portal.spring.transaction." +
+				"TransactionExecutorThreadLocal");
 
-		Bundle bundle = FrameworkUtil.getBundle(TransactionalTestRule.class);
+		Field field = clazz.getDeclaredField("_transactionExecutorThreadLocal");
 
-		BundleContext bundleContext = bundle.getBundleContext();
+		field.setAccessible(true);
+
+		ThreadLocal<Deque<Object>> transactionExecutorsThreadLocal =
+			(ThreadLocal<Deque<Object>>)field.get(null);
+
+		Deque<Object> transactionExecutors =
+			transactionExecutorsThreadLocal.get();
+
+		Registry registry = RegistryUtil.getRegistry();
 
 		ServiceReference<?>[] serviceReferences =
-			bundleContext.getAllServiceReferences(
-				PortletTransactionManager.class.getName(),
+			registry.getAllServiceReferences(
+				"com.liferay.portal.spring.transaction.TransactionExecutor",
 				"(origin.bundle.symbolic.name=" + originBundleSymbolicName +
 					")");
 
 		Assert.assertEquals(
-			"Expected 1 PortletTransactionManager for " +
-				originBundleSymbolicName + ", actually have " +
-					Arrays.toString(serviceReferences),
+			StringBundler.concat(
+				"Expected 1 TransactionExecutor for ", originBundleSymbolicName,
+				", actually have ", Arrays.toString(serviceReferences)),
 			1, serviceReferences.length);
 
 		ServiceReference<?> serviceReference = serviceReferences[0];
 
-		PortletTransactionManager portletTransactionManager =
-			(PortletTransactionManager)bundleContext.getService(
-				serviceReference);
+		Object portletTransactionExecutor = registry.getService(
+			serviceReference);
 
-		if (portletTransactionManager == platformTransactionManagers.peek()) {
+		if (portletTransactionExecutor == transactionExecutors.peek()) {
 			return () -> {
 			};
 		}
 
-		platformTransactionManagers.push(portletTransactionManager);
+		transactionExecutors.push(portletTransactionExecutor);
 
 		return () -> {
-			platformTransactionManagers.pop();
+			transactionExecutors.pop();
 
-			bundleContext.ungetService(serviceReference);
+			registry.ungetService(serviceReference);
 		};
 	}
 

@@ -47,6 +47,13 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testDeserializationSecurity() throws Exception {
+		test(
+			"DeserializationSecurity.testjava",
+			"Use ProtectedObjectInputStream instead of new ObjectInputStream");
+	}
+
+	@Test
 	public void testDiamondOperator() throws Exception {
 		test("DiamondOperator.testjava");
 	}
@@ -65,7 +72,17 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testDuplicateVariables() throws Exception {
-		test("DuplicateVariables.testjava", "Duplicate _s2");
+		test("DuplicateVariables.testjava", "Duplicate _STRING_2");
+	}
+
+	@Test
+	public void testElseStatement() throws Exception {
+		test("ElseStatement1.testjava");
+		test(
+			"ElseStatement2.testjava",
+			"Else statement is not needed because of the 'return' statement " +
+				"on line 26",
+			28);
 	}
 
 	@Test
@@ -79,8 +96,17 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testExceptionVariableNameForExceptionMapper() throws Exception {
+		test(
+			"ExceptionVariableNameForExceptionMapper.testjava",
+			"Rename variable 'exception' to 'noSuchStructureException'",
+			40);
+	}
+
+	@Test
 	public void testFormatAnnotations() throws Exception {
-		test("FormatAnnotations.testjava");
+		test("FormatAnnotations1.testjava");
+		test("FormatAnnotations2.testjava");
 	}
 
 	@Test
@@ -109,23 +135,6 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testIfClauseParentheses() throws Exception {
-		test(
-			"IfClauseParentheses.testjava",
-			new String[] {
-				"Missing parentheses in if-statement",
-				"Missing parentheses in if-statement",
-				"Missing parentheses in if-statement",
-				"Missing parentheses in if-statement",
-				"Missing parentheses in if-statement",
-				"Unnecessary parentheses around expression.",
-				"Redundant parentheses in if-statement",
-				"Unnecessary parentheses around expression."
-			},
-			new Integer[] {25, 29, 33, 39, 43, 43, 47, 51});
-	}
-
-	@Test
 	public void testIfClauseWhitespace() throws Exception {
 		test("IfClauseWhitespace.testjava");
 	}
@@ -142,7 +151,7 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testIncorrectIfStatement() throws Exception {
-		test("IncorrectIfStatement.testjava", "Incorrect if statement", 23);
+		//test("IncorrectIfStatement.testjava", "Incorrect if statement", 23);
 	}
 
 	@Test
@@ -158,48 +167,33 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testIncorrectLineBreaks() throws Exception {
+	public void testIncorrectOperatorOrder() throws Exception {
 		test(
-			"IncorrectLineBreaks1.testjava",
+			"IncorrectOperatorOrder.testjava",
 			new String[] {
-				"'=' should be on the previous line.",
-				"There should be a line break after '||'",
-				"There should be a line break after '\"Hello World\", " +
-					"\"Hello\", \"World\"),'",
-				"Add the string 'Hello World Hello World ' to the previous " +
-					"literal string",
-				"There should be a line break after '\"Hello World Hello " +
-					"World Hello World\",'",
-				"There should be a line break after " +
-					"'anotherStringWithAVeryLongName,'",
-				"There should be a line break after '='",
-				"There should be a line break after '+'",
-				"There should be a line break after '='",
-				"Line should not start with '.'",
-				"There should be a line break before 'throws'",
-				"There should be a line break after '}'",
-				"There should be a line break after '}'",
-				"There should be a line break after '('",
-				"There should be a line break after '('",
-				"'null) {' should be added to previous line",
-				"There should be a line break before 'new " +
-					"Comparator<String>() {'",
-				"There should be a line break after '},'",
-				"Line starts with '2' tabs, but '3' tabs are expected",
-				"Line starts with '2' tabs, but '3' tabs are expected",
-				"There should be a line break before 'throws'",
-				"There should be a line break after " +
-					"'themeDisplay.getCompanyId(),'",
-				"Line starts with '2' tabs, but '3' tabs are expected",
-				"There should be a line break before 'throws'",
-				"There should be a line break after '}'"
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator"
 			},
 			new Integer[] {
-				33, 37, 45, 49, 49, 54, 57, 60, 63, 67, 70, 75, 79, 84, 88, 95,
-				106, 119, 123, 124, 124, 131, 141, 141, 159
-			});
-		test("IncorrectLineBreaks2.testjava");
-	}
+				53, 57, 61, 97, 101, 105, 141, 145, 149, 185, 189, 193, 229,
+				233, 237, 273, 277, 281});
+		}
 
 	@Test
 	public void testIncorrectParameterNames() throws Exception {
@@ -215,33 +209,20 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testIncorrectTabs() throws Exception {
-		test(
-			"IncorrectTabs.testjava",
-			new String[] {
-				"There should be a line break after '('",
-				"There should be a line break after '{'",
-				"Line starts with '3' tabs, but '4' tabs are expected",
-				"Line starts with '2' tabs, but '3' tabs are expected",
-				"Line starts with '3' tabs, but '4' tabs are expected"
-			},
-			new Integer[] {26, 30, 31, 32, 37});
-	}
-
-	@Test
 	public void testIncorrectVariableNames() throws Exception {
 		test(
 			"IncorrectVariableNames1.testjava",
 			new String[] {
-				"Protected or public constant '_TEST_1' must match " +
-					"pattern '^[a-zA-Z0-9][_a-zA-Z0-9]*$'",
+				"public constant '_TEST_1' of type 'int' must match pattern " +
+					"'^[A-Z0-9][_A-Z0-9]*$'",
 				"Protected or public non-static field '_test2' must match " +
 					"pattern '^[a-z0-9][_a-zA-Z0-9]*$'"
 			},
 			new Integer[] {22, 28});
 		test(
 			"IncorrectVariableNames2.testjava",
-			"Private constant 'STRING_1' must match pattern '^_[_a-zA-Z0-9]*$'",
+			"private constant 'STRING_1' of type 'String' must match pattern " +
+				"'^_[A-Z0-9][_A-Z0-9]*$'",
 			26);
 		test(
 			"IncorrectVariableNames3.testjava",
@@ -268,6 +249,11 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 				"Use StringUtil.toUpperCase"
 			},
 			new Integer[] {26, 30, 31});
+	}
+
+	@Test
+	public void testJavaParameterAnnotations() throws Exception {
+		test("JavaParameterAnnotations.testjava");
 	}
 
 	@Test
@@ -299,7 +285,7 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testLPS28266() throws Exception {
-		test("LPS28266.testjava", "Use rs.getInt(1) for count, see LPS-28266");
+		test("LPS28266.testjava", "Use rs.getInt(1) for count");
 	}
 
 	@Test
@@ -310,6 +296,42 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testMissingEmptyLines() throws Exception {
 		test("MissingEmptyLines.testjava");
+	}
+
+	@Test
+	public void testMissingDiamondOperator() throws Exception {
+		test("MissingDiamondOperator.testjava",
+			new String[] {
+				"Missing diamond operator '<>' for type 'ArrayList'",
+				"Missing generic types '<String, String>' for type 'ArrayList'",
+				"Missing diamond operator '<>' for type 'ConcurrentHashMap'",
+				"Missing diamond operator '<>' for type " +
+					"'ConcurrentSkipListMap'",
+				"Missing diamond operator '<>' for type " +
+					"'ConcurrentSkipListSet'",
+				"Missing diamond operator '<>' for type 'CopyOnWriteArraySet'",
+				"Missing generic types '<Position, String>' for type 'EnumMap'",
+				"Missing diamond operator '<>' for type 'HashMap'",
+				"Missing generic types '<String, String>' for type 'HashMap'",
+				"Missing diamond operator '<>' for type 'HashSet'",
+				"Missing diamond operator '<>' for type 'Hashtable'",
+				"Missing diamond operator '<>' for type 'IdentityHashMap'",
+				"Missing diamond operator '<>' for type 'LinkedHashMap'",
+				"Missing diamond operator '<>' for type 'LinkedHashSet'",
+				"Missing diamond operator '<>' for type 'LinkedList'",
+				"Missing diamond operator '<>' for type 'Stack'",
+				"Missing diamond operator '<>' for type 'TreeMap'",
+				"Missing diamond operator '<>' for type 'TreeSet'",
+				"Missing diamond operator '<>' for type 'Vector'",
+				"Missing generic types '<Map<String, String>>' for type " +
+					"'ArrayList'",
+				"Missing generic types '<String, String>' for type 'HashMap'",
+				"Missing generic types '<String, String>' for type 'HashMap'"
+			},
+			new Integer[] {
+				45, 47, 53, 55, 57, 59, 61, 68, 70, 76, 78, 80, 83, 85, 87, 89,
+				91, 93, 95, 97, 99, 110
+			});
 	}
 
 	@Test
@@ -355,14 +377,7 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testSortAnnotationParameters() throws Exception {
-		test(
-			"SortAnnotationParameters.testjava",
-			new String[] {
-				"Annotation parameter 'immediate' is not sorted alphabetically",
-				"Annotation parameter 'propagation' is not sorted " +
-					"alphabetically"
-			},
-			new Integer[] {24, 27});
+		test("SortAnnotationParameters.testjava");
 	}
 
 	@Test
@@ -406,6 +421,16 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUnusedParameter() throws Exception {
 		test("UnusedParameter.testjava", "Parameter 'color' is unused", 26);
+	}
+
+	@Test
+	public void testUnusedVariable() throws Exception {
+		test(
+			"UnusedVariable.testjava",
+			new String[] {
+				"Variable 'matcher' is unused", "Variable '_s' is unused"
+			},
+			new Integer[] {26, 31});
 	}
 
 }

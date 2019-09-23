@@ -1,256 +1,186 @@
-<definition component-name="portal-user-management-and-portal-configuration">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Users and Organizations" />
+@component-name = "portal-user-management-and-portal-configuration"
+definition {
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Users and Organizations";
 
-		<execute macro="User#firstLoginPG" />
-	</set-up>
+	setUp {
+		TestCase.setUpPortalInstance();
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		User.firstLoginPG();
+	}
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="User#tearDownCP" />
-			</else>
-		</if>
-	</tear-down>
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-	<command name="AddOrganizationMember" priority="5">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			User.tearDownCP();
+		}
+	}
 
-		<execute macro="User#addCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+	@priority = "5"
+	test AddOrganizationMember {
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
 
-		<execute macro="MyAccount#addOrganization">
-			<var name="organizationName" value="Organization Name" />
-		</execute>
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		MyAccount.addOrganization(organizationName = "Organization Name");
 
-		<execute macro="Organization#addMemberCP">
-			<var name="orgName" value="Organization Name" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userName" value="userfn userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		Organization.addMemberCP(
+			orgName = "Organization Name",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userName = "userfn userln",
+			userScreenName = "usersn");
 
-		<execute macro="Organization#gotoCP">
-			<var name="orgName" value="Organization Name" />
-			<var name="searchToken" value="Organization" />
-		</execute>
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="Organization#viewAssignMemberCP">
-			<var name="userName" value="userfn userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
-	</command>
+		Organization.gotoCP(
+			orgName = "Organization Name",
+			searchToken = "Organization");
 
-	<command name="AddOrganizations" priority="4">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		Organization.viewAssignMemberCP(
+			userName = "userfn userln",
+			userScreenName = "usersn");
+	}
 
-		<for list="1,2,3" param="i">
-			<execute macro="MyAccount#addOrganization">
-				<var name="organizationName" value="Organization Name ${i}" />
-			</execute>
+	@priority = "4"
+	test AddOrganizations {
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="My Account" />
-				<var name="panel" value="User" />
-				<var name="portlet" value="My Organizations" />
-			</execute>
+		for (var i : list "1,2,3") {
+			MyAccount.addOrganization(organizationName = "Organization Name ${i}");
 
-			<execute macro="Organization#searchCP">
-				<var name="orgName" value="Organization Name ${i}" />
-				<var name="searchTerm" value="Organization Name ${i}" />
-			</execute>
-		</for>
-	</command>
+			UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-	<command name="DeleteOrganization" priority="5">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+			Search.searchPG(
+				portletName = "My Organizations",
+				searchTerm = "Organization Name ${i}");
+		}
+	}
 
-		<execute macro="MyAccount#addOrganization">
-			<var name="organizationName" value="Organization Name" />
-		</execute>
+	@priority = "5"
+	test DeleteOrganization {
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		MyAccount.addOrganization(organizationName = "Organization Name");
 
-		<execute macro="Organization#deleteCP">
-			<var name="orgName" value="Organization Name" />
-		</execute>
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		Organization.deletePG(orgName = "Organization Name");
 
-		<execute macro="Organization#viewNoOrganizationsFoundCP" />
-	</command>
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-	<command name="EditOrganizationSite" priority="5">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		Organization.viewNoOrganizationsFoundCP();
+	}
 
-		<execute macro="MyAccount#addOrganization">
-			<var name="organizationName" value="Organization Name" />
-		</execute>
+	@priority = "5"
+	test EditOrganizationSite {
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		MyAccount.addOrganization(organizationName = "Organization Name");
 
-		<execute macro="Organization#addSiteCP">
-			<var name="orgName" value="Organization Name" />
-		</execute>
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Sites" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Sites" />
-		</execute>
+		Organization.addSitePG(orgName = "Organization Name");
 
-		<execute macro="Site#viewCP">
-			<var name="siteMember" value="Organization" />
-			<var name="siteName" value="Organization Name" />
-			<var name="siteType" value="Private" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		Site.viewCP(
+			siteMember = "Organization",
+			siteName = "Organization Name",
+			siteType = "Private");
 
-		<execute macro="Organization#editSiteCP">
-			<var name="orgName" value="Organization Name" />
-			<var name="orgNameEdit" value="Organization Name Edit" />
-		</execute>
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="My Organizations" />
-		</execute>
+		Organization.editSiteCP(
+			orgName = "Organization Name",
+			orgNameEdit = "Organization Name Edit");
 
-		<execute macro="Organization#searchCP">
-			<var name="orgName" value="Organization Name Edit" />
-			<var name="searchTerm" value="Organization Name Edit" />
-		</execute>
+		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
-		<execute macro="Organization#viewCP">
-			<var name="orgName" value="Organization Name Edit" />
-			<var name="orgType" value="Organization" />
-		</execute>
-	</command>
+		Organization.searchCP(
+			orgName = "Organization Name Edit",
+			searchTerm = "Organization Name Edit");
 
-	<command name="ViewMyAccount" priority="4">
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="Account Settings" />
-		</execute>
+		Organization.viewCP(
+			orgName = "Organization Name Edit",
+			orgType = "Organization");
+	}
 
-		<execute macro="MyAccount#view" />
-	</command>
+	@priority = "4"
+	test ViewMyAccount {
+		Navigator.openURL();
 
-	<command name="ViewMyAccountUser" priority="4">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+		Navigator.gotoAccountSettings();
 
-		<execute macro="User#addCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		MyAccount.view();
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+	@priority = "4"
+	test ViewMyAccountUser {
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute macro="User#editPasswordCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
 
-		<execute macro="User#logoutAndLoginPG">
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="Account Settings" />
-		</execute>
+		User.editPasswordCP(
+			userEmailAddress = "userea@liferay.com",
+			userScreenName = "usersn");
 
-		<execute macro="MyAccount#view" />
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
 
-		<execute macro="User#logoutAndLoginPG">
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
-	</command>
+		Navigator.openURL();
 
-	<command name="ViewMyAccountViaSignInPortlet" priority="4">
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Sign In" />
-		</execute>
+		Navigator.gotoAccountSettings();
 
-		<execute function="AssertClick" locator1="SignIn#PORTLET_CONTENT_USER_NAME" value1="Test Test" />
+		MyAccount.view();
 
-		<execute macro="MyAccount#view" />
-	</command>
-</definition>
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+	}
+
+	@priority = "4"
+	test ViewMyAccountViaSignInPortlet {
+		Portlet.addPG(portletName = "Sign In");
+
+		AssertClick(
+			locator1 = "SignIn#PORTLET_CONTENT_USER_NAME",
+			value1 = "Test Test");
+
+		MyAccount.view();
+	}
+
+}

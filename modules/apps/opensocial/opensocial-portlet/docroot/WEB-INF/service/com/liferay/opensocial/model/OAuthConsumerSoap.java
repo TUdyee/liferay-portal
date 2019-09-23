@@ -14,8 +14,6 @@
 
 package com.liferay.opensocial.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,8 +26,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class OAuthConsumerSoap implements Serializable {
+
 	public static OAuthConsumerSoap toSoapModel(OAuthConsumer model) {
 		OAuthConsumerSoap soapModel = new OAuthConsumerSoap();
 
@@ -74,7 +72,8 @@ public class OAuthConsumerSoap implements Serializable {
 	}
 
 	public static OAuthConsumerSoap[] toSoapModels(List<OAuthConsumer> models) {
-		List<OAuthConsumerSoap> soapModels = new ArrayList<OAuthConsumerSoap>(models.size());
+		List<OAuthConsumerSoap> soapModels = new ArrayList<OAuthConsumerSoap>(
+			models.size());
 
 		for (OAuthConsumer model : models) {
 			soapModels.add(toSoapModel(model));
@@ -175,4 +174,5 @@ public class OAuthConsumerSoap implements Serializable {
 	private String _consumerKey;
 	private String _consumerSecret;
 	private String _keyType;
+
 }

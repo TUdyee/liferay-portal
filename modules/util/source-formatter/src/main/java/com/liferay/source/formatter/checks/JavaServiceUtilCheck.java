@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public class JavaServiceUtilCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -36,8 +36,7 @@ public class JavaServiceUtilCheck extends BaseFileCheck {
 
 		String className = JavaSourceUtil.getClassName(fileName);
 
-		if (absolutePath.contains("/wsrp/internal/bind/") ||
-			className.equals("BaseServiceImpl") ||
+		if (className.equals("BaseServiceImpl") ||
 			!className.endsWith("ServiceImpl")) {
 
 			return content;
@@ -49,13 +48,14 @@ public class JavaServiceUtilCheck extends BaseFileCheck {
 			addMessage(
 				fileName,
 				"Do not use a portal-kernel *ServiceUtil in a *ServiceImpl " +
-					"class, create a reference via service.xml instead");
+					"class, create a reference via service.xml instead",
+				"service_util.markdown");
 		}
 
 		return content;
 	}
 
-	private final Pattern _serviceUtilPattern = Pattern.compile(
+	private static final Pattern _serviceUtilPattern = Pattern.compile(
 		"import com\\.liferay\\.[a-z]+\\.kernel\\..*ServiceUtil;");
 
 }

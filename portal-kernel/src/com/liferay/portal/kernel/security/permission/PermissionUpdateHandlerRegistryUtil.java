@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.security.permission;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -35,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author Gergely Mathe
  */
-@ProviderType
 public class PermissionUpdateHandlerRegistryUtil {
 
 	public static PermissionUpdateHandler getPermissionUpdateHandler(
@@ -74,8 +71,8 @@ public class PermissionUpdateHandlerRegistryUtil {
 		Registry registry = RegistryUtil.getRegistry();
 
 		_serviceTracker = registry.trackServices(
-			(Class<PermissionUpdateHandler>)(Class<?>)
-				PermissionUpdateHandler.class,
+			(Class<PermissionUpdateHandler>)
+				(Class<?>)PermissionUpdateHandler.class,
 			new PermissionUpdateHandlerServiceTrackerCustomizer());
 
 		_serviceTracker.open();
@@ -99,8 +96,8 @@ public class PermissionUpdateHandlerRegistryUtil {
 
 		ServiceRegistration<PermissionUpdateHandler> serviceRegistration =
 			registry.registerService(
-				(Class<PermissionUpdateHandler>)(Class<?>)
-					PermissionUpdateHandler.class,
+				(Class<PermissionUpdateHandler>)
+					(Class<?>)PermissionUpdateHandler.class,
 				permissionUpdateHandler);
 
 		_serviceRegistrations.put(permissionUpdateHandler, serviceRegistration);

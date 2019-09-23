@@ -38,10 +38,16 @@ public class PortletKeys {
 	public static final String BLOGS_AGGREGATOR =
 		"com_liferay_blogs_web_portlet_BlogsAgreggatorPortlet";
 
+	public static final String BOOKMARKS =
+		"com_liferay_bookmarks_web_portlet_BookmarksPortlet";
+
+	public static final String BOOKMARKS_ADMIN =
+		"com_liferay_bookmarks_web_portlet_BookmarksAdminPortlet";
+
 	public static final String CALENDAR = "8";
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             com.liferay.chat.constants.ChatPortletKeys#CHAT}
 	 */
 	@Deprecated
@@ -190,6 +196,15 @@ public class PortletKeys {
 
 	public static final String USERS_ADMIN =
 		"com_liferay_users_admin_web_portlet_UsersAdminPortlet";
+
+	public static final String WIKI =
+		"com_liferay_wiki_web_portlet_WikiPortlet";
+
+	public static final String WIKI_ADMIN =
+		"com_liferay_wiki_web_portlet_WikiAdminPortlet";
+
+	public static final String WIKI_DISPLAY =
+		"com_liferay_wiki_web_portlet_WikiDisplayPortlet";
 
 	public static final String WORKFLOW_DEFINITION =
 		"com_liferay_portal_workflow_definition_web_portlet_" +

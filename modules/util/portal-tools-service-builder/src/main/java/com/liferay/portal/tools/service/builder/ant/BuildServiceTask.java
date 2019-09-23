@@ -18,8 +18,6 @@ import com.liferay.portal.tools.service.builder.ServiceBuilder;
 import com.liferay.portal.tools.service.builder.ServiceBuilderArgs;
 import com.liferay.portal.tools.service.builder.ServiceBuilderInvoker;
 
-import java.util.Set;
-
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
@@ -37,12 +35,9 @@ public class BuildServiceTask extends Task {
 			ServiceBuilder serviceBuilder = ServiceBuilderInvoker.invoke(
 				project.getBaseDir(), _serviceBuilderArgs);
 
-			Set<String> modifiedFileNames =
-				serviceBuilder.getModifiedFileNames();
-
 			project.addIdReference(
 				ServiceBuilderArgs.OUTPUT_KEY_MODIFIED_FILES,
-				modifiedFileNames);
+				serviceBuilder.getModifiedFileNames());
 		}
 		catch (Exception e) {
 			throw new BuildException(e);
@@ -74,6 +69,10 @@ public class BuildServiceTask extends Task {
 
 	public void setBuildNumberIncrement(boolean buildNumberIncrement) {
 		_serviceBuilderArgs.setBuildNumberIncrement(buildNumberIncrement);
+	}
+
+	public void setDatabaseNameMaxLength(int databaseNameMaxLength) {
+		_serviceBuilderArgs.setDatabaseNameMaxLength(databaseNameMaxLength);
 	}
 
 	public void setHbmFileName(String hbmFileName) {

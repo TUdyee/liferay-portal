@@ -14,19 +14,14 @@
 
 package com.liferay.powwow.model;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <p>
@@ -37,21 +32,12 @@ import java.util.Objects;
  * @see PowwowMeeting
  * @generated
  */
-@ProviderType
-public class PowwowMeetingWrapper implements PowwowMeeting,
-	ModelWrapper<PowwowMeeting> {
+public class PowwowMeetingWrapper
+	extends BaseModelWrapper<PowwowMeeting>
+	implements PowwowMeeting, ModelWrapper<PowwowMeeting> {
+
 	public PowwowMeetingWrapper(PowwowMeeting powwowMeeting) {
-		_powwowMeeting = powwowMeeting;
-	}
-
-	@Override
-	public Class<?> getModelClass() {
-		return PowwowMeeting.class;
-	}
-
-	@Override
-	public String getModelClassName() {
-		return PowwowMeeting.class.getName();
+		super(powwowMeeting);
 	}
 
 	@Override
@@ -146,7 +132,7 @@ public class PowwowMeetingWrapper implements PowwowMeeting,
 		}
 
 		String providerTypeMetadata = (String)attributes.get(
-				"providerTypeMetadata");
+			"providerTypeMetadata");
 
 		if (providerTypeMetadata != null) {
 			setProviderTypeMetadata(providerTypeMetadata);
@@ -171,490 +157,364 @@ public class PowwowMeetingWrapper implements PowwowMeeting,
 		}
 	}
 
-	@Override
-	public java.lang.Object clone() {
-		return new PowwowMeetingWrapper((PowwowMeeting)_powwowMeeting.clone());
-	}
-
-	@Override
-	public int compareTo(PowwowMeeting powwowMeeting) {
-		return _powwowMeeting.compareTo(powwowMeeting);
-	}
-
 	/**
-	* Returns the calendar booking ID of this powwow meeting.
-	*
-	* @return the calendar booking ID of this powwow meeting
-	*/
+	 * Returns the calendar booking ID of this powwow meeting.
+	 *
+	 * @return the calendar booking ID of this powwow meeting
+	 */
 	@Override
 	public long getCalendarBookingId() {
-		return _powwowMeeting.getCalendarBookingId();
+		return model.getCalendarBookingId();
 	}
 
 	/**
-	* Returns the company ID of this powwow meeting.
-	*
-	* @return the company ID of this powwow meeting
-	*/
+	 * Returns the company ID of this powwow meeting.
+	 *
+	 * @return the company ID of this powwow meeting
+	 */
 	@Override
 	public long getCompanyId() {
-		return _powwowMeeting.getCompanyId();
+		return model.getCompanyId();
 	}
 
 	/**
-	* Returns the create date of this powwow meeting.
-	*
-	* @return the create date of this powwow meeting
-	*/
+	 * Returns the create date of this powwow meeting.
+	 *
+	 * @return the create date of this powwow meeting
+	 */
 	@Override
 	public Date getCreateDate() {
-		return _powwowMeeting.getCreateDate();
+		return model.getCreateDate();
 	}
 
 	/**
-	* Returns the description of this powwow meeting.
-	*
-	* @return the description of this powwow meeting
-	*/
+	 * Returns the description of this powwow meeting.
+	 *
+	 * @return the description of this powwow meeting
+	 */
 	@Override
-	public java.lang.String getDescription() {
-		return _powwowMeeting.getDescription();
-	}
-
-	@Override
-	public ExpandoBridge getExpandoBridge() {
-		return _powwowMeeting.getExpandoBridge();
+	public String getDescription() {
+		return model.getDescription();
 	}
 
 	/**
-	* Returns the group ID of this powwow meeting.
-	*
-	* @return the group ID of this powwow meeting
-	*/
+	 * Returns the group ID of this powwow meeting.
+	 *
+	 * @return the group ID of this powwow meeting
+	 */
 	@Override
 	public long getGroupId() {
-		return _powwowMeeting.getGroupId();
+		return model.getGroupId();
 	}
 
 	/**
-	* Returns the language ID of this powwow meeting.
-	*
-	* @return the language ID of this powwow meeting
-	*/
+	 * Returns the language ID of this powwow meeting.
+	 *
+	 * @return the language ID of this powwow meeting
+	 */
 	@Override
-	public java.lang.String getLanguageId() {
-		return _powwowMeeting.getLanguageId();
+	public String getLanguageId() {
+		return model.getLanguageId();
 	}
 
 	/**
-	* Returns the modified date of this powwow meeting.
-	*
-	* @return the modified date of this powwow meeting
-	*/
+	 * Returns the modified date of this powwow meeting.
+	 *
+	 * @return the modified date of this powwow meeting
+	 */
 	@Override
 	public Date getModifiedDate() {
-		return _powwowMeeting.getModifiedDate();
+		return model.getModifiedDate();
 	}
 
 	/**
-	* Returns the name of this powwow meeting.
-	*
-	* @return the name of this powwow meeting
-	*/
+	 * Returns the name of this powwow meeting.
+	 *
+	 * @return the name of this powwow meeting
+	 */
 	@Override
-	public java.lang.String getName() {
-		return _powwowMeeting.getName();
+	public String getName() {
+		return model.getName();
 	}
 
 	/**
-	* Returns the powwow meeting ID of this powwow meeting.
-	*
-	* @return the powwow meeting ID of this powwow meeting
-	*/
+	 * Returns the powwow meeting ID of this powwow meeting.
+	 *
+	 * @return the powwow meeting ID of this powwow meeting
+	 */
 	@Override
 	public long getPowwowMeetingId() {
-		return _powwowMeeting.getPowwowMeetingId();
+		return model.getPowwowMeetingId();
 	}
 
 	/**
-	* Returns the powwow server ID of this powwow meeting.
-	*
-	* @return the powwow server ID of this powwow meeting
-	*/
+	 * Returns the powwow server ID of this powwow meeting.
+	 *
+	 * @return the powwow server ID of this powwow meeting
+	 */
 	@Override
 	public long getPowwowServerId() {
-		return _powwowMeeting.getPowwowServerId();
+		return model.getPowwowServerId();
 	}
 
 	/**
-	* Returns the primary key of this powwow meeting.
-	*
-	* @return the primary key of this powwow meeting
-	*/
+	 * Returns the primary key of this powwow meeting.
+	 *
+	 * @return the primary key of this powwow meeting
+	 */
 	@Override
 	public long getPrimaryKey() {
-		return _powwowMeeting.getPrimaryKey();
-	}
-
-	@Override
-	public Serializable getPrimaryKeyObj() {
-		return _powwowMeeting.getPrimaryKeyObj();
+		return model.getPrimaryKey();
 	}
 
 	/**
-	* Returns the provider type of this powwow meeting.
-	*
-	* @return the provider type of this powwow meeting
-	*/
+	 * Returns the provider type of this powwow meeting.
+	 *
+	 * @return the provider type of this powwow meeting
+	 */
 	@Override
-	public java.lang.String getProviderType() {
-		return _powwowMeeting.getProviderType();
+	public String getProviderType() {
+		return model.getProviderType();
 	}
 
 	/**
-	* Returns the provider type metadata of this powwow meeting.
-	*
-	* @return the provider type metadata of this powwow meeting
-	*/
+	 * Returns the provider type metadata of this powwow meeting.
+	 *
+	 * @return the provider type metadata of this powwow meeting
+	 */
 	@Override
-	public java.lang.String getProviderTypeMetadata() {
-		return _powwowMeeting.getProviderTypeMetadata();
+	public String getProviderTypeMetadata() {
+		return model.getProviderTypeMetadata();
 	}
 
 	@Override
-	public Map<java.lang.String, Serializable> getProviderTypeMetadataMap() {
-		return _powwowMeeting.getProviderTypeMetadataMap();
+	public Map<String, Serializable> getProviderTypeMetadataMap() {
+		return model.getProviderTypeMetadataMap();
 	}
 
 	/**
-	* Returns the status of this powwow meeting.
-	*
-	* @return the status of this powwow meeting
-	*/
+	 * Returns the status of this powwow meeting.
+	 *
+	 * @return the status of this powwow meeting
+	 */
 	@Override
 	public int getStatus() {
-		return _powwowMeeting.getStatus();
+		return model.getStatus();
 	}
 
 	/**
-	* Returns the user ID of this powwow meeting.
-	*
-	* @return the user ID of this powwow meeting
-	*/
+	 * Returns the user ID of this powwow meeting.
+	 *
+	 * @return the user ID of this powwow meeting
+	 */
 	@Override
 	public long getUserId() {
-		return _powwowMeeting.getUserId();
+		return model.getUserId();
 	}
 
 	/**
-	* Returns the user name of this powwow meeting.
-	*
-	* @return the user name of this powwow meeting
-	*/
+	 * Returns the user name of this powwow meeting.
+	 *
+	 * @return the user name of this powwow meeting
+	 */
 	@Override
-	public java.lang.String getUserName() {
-		return _powwowMeeting.getUserName();
+	public String getUserName() {
+		return model.getUserName();
 	}
 
 	/**
-	* Returns the user uuid of this powwow meeting.
-	*
-	* @return the user uuid of this powwow meeting
-	*/
+	 * Returns the user uuid of this powwow meeting.
+	 *
+	 * @return the user uuid of this powwow meeting
+	 */
 	@Override
-	public java.lang.String getUserUuid() {
-		return _powwowMeeting.getUserUuid();
+	public String getUserUuid() {
+		return model.getUserUuid();
 	}
 
-	@Override
-	public int hashCode() {
-		return _powwowMeeting.hashCode();
-	}
-
-	@Override
-	public boolean isCachedModel() {
-		return _powwowMeeting.isCachedModel();
-	}
-
-	@Override
-	public boolean isEscapedModel() {
-		return _powwowMeeting.isEscapedModel();
-	}
-
-	@Override
-	public boolean isNew() {
-		return _powwowMeeting.isNew();
-	}
-
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this class directly. All methods that expect a powwow meeting model instance should use the <code>PowwowMeeting</code> interface instead.
+	 */
 	@Override
 	public void persist() {
-		_powwowMeeting.persist();
-	}
-
-	@Override
-	public void setCachedModel(boolean cachedModel) {
-		_powwowMeeting.setCachedModel(cachedModel);
+		model.persist();
 	}
 
 	/**
-	* Sets the calendar booking ID of this powwow meeting.
-	*
-	* @param calendarBookingId the calendar booking ID of this powwow meeting
-	*/
+	 * Sets the calendar booking ID of this powwow meeting.
+	 *
+	 * @param calendarBookingId the calendar booking ID of this powwow meeting
+	 */
 	@Override
 	public void setCalendarBookingId(long calendarBookingId) {
-		_powwowMeeting.setCalendarBookingId(calendarBookingId);
+		model.setCalendarBookingId(calendarBookingId);
 	}
 
 	/**
-	* Sets the company ID of this powwow meeting.
-	*
-	* @param companyId the company ID of this powwow meeting
-	*/
+	 * Sets the company ID of this powwow meeting.
+	 *
+	 * @param companyId the company ID of this powwow meeting
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
-		_powwowMeeting.setCompanyId(companyId);
+		model.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the create date of this powwow meeting.
-	*
-	* @param createDate the create date of this powwow meeting
-	*/
+	 * Sets the create date of this powwow meeting.
+	 *
+	 * @param createDate the create date of this powwow meeting
+	 */
 	@Override
 	public void setCreateDate(Date createDate) {
-		_powwowMeeting.setCreateDate(createDate);
+		model.setCreateDate(createDate);
 	}
 
 	/**
-	* Sets the description of this powwow meeting.
-	*
-	* @param description the description of this powwow meeting
-	*/
+	 * Sets the description of this powwow meeting.
+	 *
+	 * @param description the description of this powwow meeting
+	 */
 	@Override
-	public void setDescription(java.lang.String description) {
-		_powwowMeeting.setDescription(description);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(
-		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
-		_powwowMeeting.setExpandoBridgeAttributes(baseModel);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ExpandoBridge expandoBridge) {
-		_powwowMeeting.setExpandoBridgeAttributes(expandoBridge);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ServiceContext serviceContext) {
-		_powwowMeeting.setExpandoBridgeAttributes(serviceContext);
+	public void setDescription(String description) {
+		model.setDescription(description);
 	}
 
 	/**
-	* Sets the group ID of this powwow meeting.
-	*
-	* @param groupId the group ID of this powwow meeting
-	*/
+	 * Sets the group ID of this powwow meeting.
+	 *
+	 * @param groupId the group ID of this powwow meeting
+	 */
 	@Override
 	public void setGroupId(long groupId) {
-		_powwowMeeting.setGroupId(groupId);
+		model.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the language ID of this powwow meeting.
-	*
-	* @param languageId the language ID of this powwow meeting
-	*/
+	 * Sets the language ID of this powwow meeting.
+	 *
+	 * @param languageId the language ID of this powwow meeting
+	 */
 	@Override
-	public void setLanguageId(java.lang.String languageId) {
-		_powwowMeeting.setLanguageId(languageId);
+	public void setLanguageId(String languageId) {
+		model.setLanguageId(languageId);
 	}
 
 	/**
-	* Sets the modified date of this powwow meeting.
-	*
-	* @param modifiedDate the modified date of this powwow meeting
-	*/
+	 * Sets the modified date of this powwow meeting.
+	 *
+	 * @param modifiedDate the modified date of this powwow meeting
+	 */
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
-		_powwowMeeting.setModifiedDate(modifiedDate);
+		model.setModifiedDate(modifiedDate);
 	}
 
 	/**
-	* Sets the name of this powwow meeting.
-	*
-	* @param name the name of this powwow meeting
-	*/
+	 * Sets the name of this powwow meeting.
+	 *
+	 * @param name the name of this powwow meeting
+	 */
 	@Override
-	public void setName(java.lang.String name) {
-		_powwowMeeting.setName(name);
-	}
-
-	@Override
-	public void setNew(boolean n) {
-		_powwowMeeting.setNew(n);
+	public void setName(String name) {
+		model.setName(name);
 	}
 
 	/**
-	* Sets the powwow meeting ID of this powwow meeting.
-	*
-	* @param powwowMeetingId the powwow meeting ID of this powwow meeting
-	*/
+	 * Sets the powwow meeting ID of this powwow meeting.
+	 *
+	 * @param powwowMeetingId the powwow meeting ID of this powwow meeting
+	 */
 	@Override
 	public void setPowwowMeetingId(long powwowMeetingId) {
-		_powwowMeeting.setPowwowMeetingId(powwowMeetingId);
+		model.setPowwowMeetingId(powwowMeetingId);
 	}
 
 	/**
-	* Sets the powwow server ID of this powwow meeting.
-	*
-	* @param powwowServerId the powwow server ID of this powwow meeting
-	*/
+	 * Sets the powwow server ID of this powwow meeting.
+	 *
+	 * @param powwowServerId the powwow server ID of this powwow meeting
+	 */
 	@Override
 	public void setPowwowServerId(long powwowServerId) {
-		_powwowMeeting.setPowwowServerId(powwowServerId);
+		model.setPowwowServerId(powwowServerId);
 	}
 
 	/**
-	* Sets the primary key of this powwow meeting.
-	*
-	* @param primaryKey the primary key of this powwow meeting
-	*/
+	 * Sets the primary key of this powwow meeting.
+	 *
+	 * @param primaryKey the primary key of this powwow meeting
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
-		_powwowMeeting.setPrimaryKey(primaryKey);
-	}
-
-	@Override
-	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
-		_powwowMeeting.setPrimaryKeyObj(primaryKeyObj);
+		model.setPrimaryKey(primaryKey);
 	}
 
 	/**
-	* Sets the provider type of this powwow meeting.
-	*
-	* @param providerType the provider type of this powwow meeting
-	*/
+	 * Sets the provider type of this powwow meeting.
+	 *
+	 * @param providerType the provider type of this powwow meeting
+	 */
 	@Override
-	public void setProviderType(java.lang.String providerType) {
-		_powwowMeeting.setProviderType(providerType);
+	public void setProviderType(String providerType) {
+		model.setProviderType(providerType);
 	}
 
 	/**
-	* Sets the provider type metadata of this powwow meeting.
-	*
-	* @param providerTypeMetadata the provider type metadata of this powwow meeting
-	*/
+	 * Sets the provider type metadata of this powwow meeting.
+	 *
+	 * @param providerTypeMetadata the provider type metadata of this powwow meeting
+	 */
 	@Override
-	public void setProviderTypeMetadata(java.lang.String providerTypeMetadata) {
-		_powwowMeeting.setProviderTypeMetadata(providerTypeMetadata);
+	public void setProviderTypeMetadata(String providerTypeMetadata) {
+		model.setProviderTypeMetadata(providerTypeMetadata);
 	}
 
 	/**
-	* Sets the status of this powwow meeting.
-	*
-	* @param status the status of this powwow meeting
-	*/
+	 * Sets the status of this powwow meeting.
+	 *
+	 * @param status the status of this powwow meeting
+	 */
 	@Override
 	public void setStatus(int status) {
-		_powwowMeeting.setStatus(status);
+		model.setStatus(status);
 	}
 
 	/**
-	* Sets the user ID of this powwow meeting.
-	*
-	* @param userId the user ID of this powwow meeting
-	*/
+	 * Sets the user ID of this powwow meeting.
+	 *
+	 * @param userId the user ID of this powwow meeting
+	 */
 	@Override
 	public void setUserId(long userId) {
-		_powwowMeeting.setUserId(userId);
+		model.setUserId(userId);
 	}
 
 	/**
-	* Sets the user name of this powwow meeting.
-	*
-	* @param userName the user name of this powwow meeting
-	*/
+	 * Sets the user name of this powwow meeting.
+	 *
+	 * @param userName the user name of this powwow meeting
+	 */
 	@Override
-	public void setUserName(java.lang.String userName) {
-		_powwowMeeting.setUserName(userName);
+	public void setUserName(String userName) {
+		model.setUserName(userName);
 	}
 
 	/**
-	* Sets the user uuid of this powwow meeting.
-	*
-	* @param userUuid the user uuid of this powwow meeting
-	*/
+	 * Sets the user uuid of this powwow meeting.
+	 *
+	 * @param userUuid the user uuid of this powwow meeting
+	 */
 	@Override
-	public void setUserUuid(java.lang.String userUuid) {
-		_powwowMeeting.setUserUuid(userUuid);
+	public void setUserUuid(String userUuid) {
+		model.setUserUuid(userUuid);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.CacheModel<PowwowMeeting> toCacheModel() {
-		return _powwowMeeting.toCacheModel();
+	protected PowwowMeetingWrapper wrap(PowwowMeeting powwowMeeting) {
+		return new PowwowMeetingWrapper(powwowMeeting);
 	}
 
-	@Override
-	public PowwowMeeting toEscapedModel() {
-		return new PowwowMeetingWrapper(_powwowMeeting.toEscapedModel());
-	}
-
-	@Override
-	public java.lang.String toString() {
-		return _powwowMeeting.toString();
-	}
-
-	@Override
-	public PowwowMeeting toUnescapedModel() {
-		return new PowwowMeetingWrapper(_powwowMeeting.toUnescapedModel());
-	}
-
-	@Override
-	public java.lang.String toXmlString() {
-		return _powwowMeeting.toXmlString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-
-		if (!(obj instanceof PowwowMeetingWrapper)) {
-			return false;
-		}
-
-		PowwowMeetingWrapper powwowMeetingWrapper = (PowwowMeetingWrapper)obj;
-
-		if (Objects.equals(_powwowMeeting, powwowMeetingWrapper._powwowMeeting)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
-	public PowwowMeeting getWrappedModel() {
-		return _powwowMeeting;
-	}
-
-	@Override
-	public boolean isEntityCacheEnabled() {
-		return _powwowMeeting.isEntityCacheEnabled();
-	}
-
-	@Override
-	public boolean isFinderCacheEnabled() {
-		return _powwowMeeting.isFinderCacheEnabled();
-	}
-
-	@Override
-	public void resetOriginalValues() {
-		_powwowMeeting.resetOriginalValues();
-	}
-
-	private final PowwowMeeting _powwowMeeting;
 }

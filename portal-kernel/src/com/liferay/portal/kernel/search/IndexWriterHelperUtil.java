@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
@@ -28,7 +26,6 @@ import java.util.Map;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class IndexWriterHelperUtil {
 
 	public static void addDocument(
@@ -170,7 +167,7 @@ public class IndexWriterHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.portal.search.index.IndexStatusManager#
 	 *             isIndexReadOnly}
 	 */
@@ -186,7 +183,7 @@ public class IndexWriterHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             com.liferay.portal.search.index.IndexStatusManager#
 	 *             isIndexReadOnly(String)}
 	 */
@@ -232,7 +229,7 @@ public class IndexWriterHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.portal.search.index.IndexStatusManager#
 	 *             setIndexReadOnly(boolean)}
 	 */
@@ -242,7 +239,7 @@ public class IndexWriterHelperUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             com.liferay.portal.search.index.IndexStatusManager#
 	 *             setIndexReadOnly(String, boolean)}
 	 */

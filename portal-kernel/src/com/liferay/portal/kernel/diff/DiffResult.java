@@ -14,8 +14,8 @@
 
 package com.liferay.portal.kernel.diff;
 
-import com.liferay.portal.kernel.util.HashUtil;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,8 +63,10 @@ public class DiffResult {
 
 		DiffResult diffResult = (DiffResult)obj;
 
+		List<String> changedLines = diffResult.getChangedLines();
+
 		if ((diffResult.getLineNumber() == _lineNumber) &&
-			diffResult.getChangedLines().equals(_changedLines)) {
+			changedLines.equals(_changedLines)) {
 
 			return true;
 		}

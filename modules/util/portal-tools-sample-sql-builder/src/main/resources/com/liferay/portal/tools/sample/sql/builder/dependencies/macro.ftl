@@ -12,7 +12,9 @@
 		<#local assetCategoryIds = dataFactory.getAssetCategoryIds(assetEntryModel)>
 
 		<#list assetCategoryIds as assetCategoryId>
-			insert into AssetEntries_AssetCategories values (${assetEntryModel.companyId}, ${assetCategoryId}, ${assetEntryModel.entryId});
+			<#local assetEntryAssetCategoryRelId = dataFactory.getCounterNext()>
+
+			insert into AssetEntryAssetCategoryRel values (${assetEntryAssetCategoryRelId}, ${assetEntryModel.entryId}, ${assetCategoryId}, 0);
 		</#list>
 
 		<#local assetTagIds = dataFactory.getAssetTagIds(assetEntryModel)>
@@ -117,11 +119,10 @@
 
 <#macro insertGroup
 	_groupModel
-	_publicPageCount
 >
 	${dataFactory.toInsertSQL(_groupModel)}
 
-	<#local layoutSetModels = dataFactory.newLayoutSetModels(_groupModel.groupId, _publicPageCount)>
+	<#local layoutSetModels = dataFactory.newLayoutSetModels(_groupModel.groupId)>
 
 	<#list layoutSetModels as layoutSetModel>
 		${dataFactory.toInsertSQL(layoutSetModel)}

@@ -1,305 +1,266 @@
-<definition component-name="portal-web-forms-and-data-lists">
-	<property name="custom.properties" value="minifier.enabled=false" />
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Forms" />
+@component-name = "portal-web-forms-and-data-lists"
+definition {
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	property custom.properties = "minifier.enabled=true";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Forms";
 
-		<execute macro="User#firstLoginPG" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<var method="TestPropsUtil#get('portal.url')" name="portalURL" />
+		User.firstLoginPG();
 
-		<execute macro="Navigator#openURL" />
+		var portalURL = PropsUtil.get("portal.url");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Forms" />
-		</execute>
+		Navigator.openURL();
 
-		<execute macro="FormsAdminNavigator#gotoAddForm" />
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			panel = "Site Administration",
+			portlet = "Forms");
 
-		<execute macro="Form#editName" />
+		FormsAdminNavigator.gotoAddForm();
 
-		<execute macro="Form#editPageTitle">
-			<var name="formPageName" value="Page 1" />
-		</execute>
+		Form.editName();
 
-		<execute macro="Form#gotoAddField">
-			<var name="fieldType" value="Single Selection" />
-		</execute>
+		Form.editPageTitle(formPageName = "Page 1");
 
-		<execute macro="Form#editFieldLabel">
-			<var name="fieldValue" value="Choose Your Destiny" />
-		</execute>
+		Form.gotoAddField(fieldType = "Single Selection");
 
-		<execute macro="FormFields#editOptionsRow">
-			<var name="optionName" value="Destiny1" />
-			<var name="optionValue" value="Destiny 1" />
-		</execute>
+		Form.editFieldLabelMetal(fieldValue = "Choose Your Destiny");
 
-		<execute macro="FormFields#editOptionsRow">
-			<var name="optionName" value="Destiny2" />
-			<var name="optionValue" value="Destiny 2" />
-			<var name="rowNumber" value="2" />
-		</execute>
+		FormFields.editOptionsRow(
+			optionName = "Destiny1",
+			optionValue = "Destiny 1");
 
-		<execute macro="FormFields#editOptionsRow">
-			<var name="optionName" value="Destiny3" />
-			<var name="optionValue" value="Destiny 3" />
-			<var name="rowNumber" value="3" />
-		</execute>
+		FormFields.editOptionsRow(
+			optionName = "Destiny2",
+			optionValue = "Destiny 2",
+			rowNumber = "2");
 
-		<execute macro="Form#closeSidebar" />
+		FormFields.editOptionsRow(
+			optionName = "Destiny3",
+			optionValue = "Destiny 3",
+			rowNumber = "3");
 
-		<for list="1,2,3" param="option">
-			<execute macro="Form#addPage" />
+		Form.closeSidebar();
 
-			<var method="MathUtil#sum('${option}','1')" name="pageNumber" />
+		for (var option : list "1,2,3") {
+			Form.addPage();
 
-			<execute macro="Form#editPageTitle">
-				<var name="formPageName" value="Page ${pageNumber}" />
-			</execute>
-
-			<execute macro="Form#gotoAddField">
-				<var name="fieldType" value="Text Field" />
-			</execute>
-
-			<execute macro="Form#editFieldLabel">
-				<var name="fieldValue" value="Destiny ${option}" />
-			</execute>
-
-			<execute macro="Form#closeSidebar" />
-		</for>
-
-		<execute macro="FormsAdminNavigator#gotoRules" />
-
-		<execute macro="FormRules#addRule" />
-
-		<execute macro="FormRules#configureConditionOptions">
-			<var name="conditionField" value="Choose Your Destiny" />=
-			<var name="conditionOperator" value="Is equal to" />
-			<var name="conditionRowNumber" value="1" />
-			<var name="conditionValueField" value="Destiny 2" />
-			<var name="conditionValueType" value="Value" />
-		</execute>
-
-		<execute macro="FormRules#configureActionOptions">
-			<var name="action" value="Jump to Page" />
-			<var name="actionRowNumber" value="1" />
-			<var name="actionTarget" value="3 Page 3" />
-		</execute>
-
-		<execute macro="FormRules#save" />
-
-		<execute macro="FormRules#addRule" />
-
-		<execute macro="FormRules#configureConditionOptions">
-			<var name="conditionField" value="Choose Your Destiny" />=
-			<var name="conditionOperator" value="Is equal to" />
-			<var name="conditionRowNumber" value="1" />
-			<var name="conditionValueField" value="Destiny 3" />
-			<var name="conditionValueType" value="Value" />
-		</execute>
-
-		<execute macro="FormRules#configureActionOptions">
-			<var name="action" value="Jump to Page" />
-			<var name="actionRowNumber" value="1" />
-			<var name="actionTarget" value="4 Page 4" />
-		</execute>
-
-		<execute macro="FormRules#save" />
-
-		<execute macro="FormsAdminNavigator#gotoFormBuilder" />
-
-		<execute macro="Form#save" />
-	</set-up>
-
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
-
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="Navigator#openURL" />
-
-				<execute macro="ProductMenu#gotoPortlet">
-					<var name="category" value="Content" />
-					<var name="panel" value="Site Administration" />
-					<var name="portlet" value="Forms" />
-				</execute>
-
-				<execute macro="FormsAdmin#teardownForms" />
-
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
-
-	<command name="ViewFormRulesSummary" priority="4">
-		<description message="This is a use case for LPS-68227." />
-
-		<execute macro="FormsAdminNavigator#gotoRules" />
-
-		<execute macro="FormRules#viewSummary">
-			<var name="action" value="Jump to Page" />
-			<var name="actionTarget" value="3 Page 3" />
-			<var name="conditionField" value="Choose Your Destiny" />
-			<var name="conditionFieldConstant" value="Destiny 2" />
-			<var name="conditionOperator" value="equal to" />
-			<var name="ruleNumber" value="1" />
-		</execute>
-
-		<execute macro="FormRules#viewSummary">
-			<var name="action" value="Jump to Page" />
-			<var name="actionTarget" value="4 Page 4" />
-			<var name="conditionField" value="Choose Your Destiny" />
-			<var name="conditionFieldConstant" value="Destiny 3" />
-			<var name="conditionOperator" value="equal to" />
-			<var name="ruleNumber" value="2" />
-		</execute>
-	</command>
-
-	<command name="ViewPagesAfterJump" priority="5">
-		<description message="This is a use case for LPS-69372." />
-		<property name="portal.acceptance" value="pending" />
-
-		<execute macro="Form#publishForm" />
+			var pageNumber = MathUtil.sum("${option}", "1");
 
-		<execute macro="FormsAdminNavigator#openPublishURL">
-			<var name="publishFormURL" value="${publishedFormPublicURL}" />
-		</execute>
+			Form.editPageTitle(formPageName = "Page ${pageNumber}");
 
-		<for list="1,2,3" param="option">
-			<execute macro="FormFields#selectRadioOption">
-				<var name="fieldName" value="ChooseYourDestiny" />
-				<var name="radioOption" value="Destiny ${option}" />
-			</execute>
+			Form.gotoAddField(fieldType = "Text Field");
 
-			<var method="MathUtil#sum('${option}','1')" name="pageNumber" />
+			Form.editFieldLabelMetal(fieldValue = "Destiny ${option}");
 
-			<execute macro="FormPortlet#nextPage">
-				<var name="formPageCurrent" value="Page 1" />
-				<var name="formPageNext" value="Page ${pageNumber}" />
-			</execute>
+			Form.closeSidebar();
+		}
 
-			<execute macro="FormFields#viewTextField">
-				<var name="fieldLabel" value="Destiny ${option}" />
-				<var name="fieldName" value="Destiny${option}" />
-			</execute>
+		FormsAdminNavigator.gotoRules();
 
-			<execute macro="FormPortlet#previousPage" />
-		</for>
+		FormRules.addRule();
 
-		<execute macro="FormFields#selectRadioOption">
-			<var name="fieldName" value="ChooseYourDestiny" />
-			<var name="radioOption" value="Destiny 2" />
-		</execute>
+		FormRules.configureConditionOptions(
+			conditionField = "Choose Your Destiny",
+			conditionOperator = "Is equal to",
+			conditionRowNumber = "1",
+			conditionValueField = "Destiny 2",
+			conditionValueType = "Value");
 
-		<execute macro="FormPortlet#nextPage">
-			<var name="formPageCurrent" value="Page 1" />
-			<var name="formPageNext" value="Page 3" />
-		</execute>
+		FormRules.configureActionOptions(
+			action = "Jump to Page",
+			actionRowNumber = "1",
+			actionTarget = "3 Page 3");
 
-		<execute macro="FormFields#editText">
-			<var name="fieldName" value="Destiny2" />
-			<var name="fieldValue" value="After skipping to page 3" />
-		</execute>
+		FormRules.save();
 
-		<execute macro="FormPortlet#nextPage">
-			<var name="formPageCurrent" value="Page 3" />
-			<var name="formPageNext" value="Page 4" />
-		</execute>
+		FormRules.addRule();
 
-		<execute macro="FormFields#editText">
-			<var name="fieldName" value="Destiny3" />
-			<var name="fieldValue" value="Also fill out page 4" />
-		</execute>
+		FormRules.configureConditionOptions(
+			conditionField = "Choose Your Destiny",
+			conditionOperator = "Is equal to",
+			conditionRowNumber = "1",
+			conditionValueField = "Destiny 3",
+			conditionValueType = "Value");
 
-		<execute macro="FormPortlet#submitSuccessfully" />
-	</command>
+		FormRules.configureActionOptions(
+			action = "Jump to Page",
+			actionRowNumber = "1",
+			actionTarget = "4 Page 4");
 
-	<command name="ViewRuleAfterLabelEdit" priority="4">
-		<description message="This is a use case for LPS-68227." />
+		FormRules.save();
 
-		<execute macro="FormsAdminNavigator#gotoEditField">
-			<var name="fieldName" value="ChooseYourDestiny" />
-		</execute>
+		FormsAdminNavigator.gotoFormBuilder();
 
-		<execute macro="Form#editFieldLabel">
-			<var name="fieldName" value="ChooseYourDestiny" />
-			<var name="fieldValue" value="Edit Label" />
-		</execute>
+		Form.save();
+	}
 
-		<execute macro="Form#closeSidebar" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			Navigator.openURL();
+
+			ProductMenu.gotoPortlet(
+				category = "Content &amp; Data",
+				panel = "Site Administration",
+				portlet = "Forms");
 
-		<execute macro="Form#save" />
+			FormsAdmin.teardownForms();
 
-		<execute macro="FormsAdminNavigator#gotoRules" />
+			Page.tearDownCP();
+		}
+	}
 
-		<execute macro="FormRules#gotoEdit">
-			<var name="ruleNumber" value="1" />
-		</execute>
+	@description = "This is a use case for LPS-68227."
+	@priority = "4"
+	test ViewFormRulesSummary {
+		property test.name.skip.portal.instance = "FormsJumpToPage#ViewFormRulesSummary";
+		FormsAdminNavigator.gotoRules();
+
+		FormRules.viewSummary(
+			action = "Jump to Page",
+			actionTarget = "3 Page 3",
+			conditionField = "Choose Your Destiny",
+			conditionFieldConstant = "Destiny 2",
+			conditionOperator = "equal to",
+			ruleNumber = "1");
 
-		<var name="key_conditionRowNumber" value="1" />
+		FormRules.viewSummary(
+			action = "Jump to Page",
+			actionTarget = "4 Page 4",
+			conditionField = "Choose Your Destiny",
+			conditionFieldConstant = "Destiny 3",
+			conditionOperator = "equal to",
+			ruleNumber = "2");
+	}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="FormRules#RULE_BUILDER_CONDITION_FIELD" value1="Edit Label" />
-	</command>
+	@description = "This is a use case for LPS-69372."
+	@priority = "5"
+	test ViewPagesAfterJump {
+		property test.name.skip.portal.instance = "FormsJumpToPage#ViewPagesAfterJump";
+		Form.publishForm();
 
-	<command name="ViewRuleAfterOptionValueEdit" priority="3">
-		<description message="This is a use case for LPS-68227." />
+		FormsAdminNavigator.openPublishURL(publishFormURL = "${publishedFormPublicURL}");
 
-		<execute macro="FormsAdminNavigator#gotoEditField">
-			<var name="fieldName" value="ChooseYourDestiny" />
-		</execute>
+		for (var option : list "1,2,3") {
+			FormFields.selectRadioOption(
+				fieldName = "ChooseYourDestiny",
+				radioOption = "Destiny ${option}");
 
-		<execute macro="FormFields#editOptionsRow">
-			<var name="optionName" value="Destiny2" />
-			<var name="optionValue" value="Edited Destiny" />
-			<var name="rowNumber" value="2" />
-		</execute>
+			var pageNumber = MathUtil.sum("${option}", "1");
 
-		<execute macro="Form#closeSidebar" />
+			FormPortlet.nextPage(
+				formPageCurrent = "Page 1",
+				formPageNext = "Page ${pageNumber}");
 
-		<execute macro="Form#save" />
+			FormFields.viewTextField(
+				fieldLabel = "Destiny ${option}",
+				fieldName = "Destiny${option}");
 
-		<execute macro="FormsAdminNavigator#gotoRules" />
+			FormPortlet.previousPage();
+		}
 
-		<execute macro="FormRules#gotoEdit">
-			<var name="ruleNumber" value="1" />
-		</execute>
+		FormFields.selectRadioOption(
+			fieldName = "ChooseYourDestiny",
+			radioOption = "Destiny 2");
 
-		<var name="key_conditionRowNumber" value="1" />
+		FormPortlet.nextPage(
+			formPageCurrent = "Page 1",
+			formPageNext = "Page 3");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="FormRules#RULE_BUILDER_CONDITION_VALUE_FIELD" value1="Edited Destiny" />
-	</command>
+		FormFields.editText(
+			fieldName = "Destiny2",
+			fieldValue = "After skipping to page 3");
 
-	<command name="ViewRuleAfterPageNameChange" priority="4">
-		<description message="This is a use case for LPS-68227." />
+		FormPortlet.nextPage(
+			formPageCurrent = "Page 3",
+			formPageNext = "Page 4");
 
-		<execute macro="Form#gotoFormPage">
-			<var name="formPageName" value="Page 3" />
-		</execute>
+		FormFields.editText(
+			fieldName = "Destiny3",
+			fieldValue = "Also fill out page 4");
 
-		<execute macro="Form#editPageTitle">
-			<var name="formPageName" value="Renamed Page" />
-		</execute>
+		FormPortlet.submitSuccessfully();
+	}
 
-		<execute macro="Form#save" />
+	@description = "This is a use case for LPS-68227."
+	@priority = "4"
+	test ViewRuleAfterLabelEdit {
+		property test.name.skip.portal.instance = "FormsJumpToPage#ViewRuleAfterLabelEdit";
+		FormsAdminNavigator.gotoEditField(fieldName = "ChooseYourDestiny");
 
-		<execute macro="FormsAdminNavigator#gotoRules" />
+		Form.editFieldLabelMetal(
+			fieldName = "ChooseYourDestiny",
+			fieldValue = "Edit Label");
 
-		<execute macro="FormRules#gotoEdit">
-			<var name="ruleNumber" value="1" />
-		</execute>
+		Form.closeSidebar();
 
-		<var name="key_actionRowNumber" value="1" />
+		Form.save();
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="FormRules#RULE_BUILDER_JUMP_TO_PAGE_ACTION_TARGET" value1="3 Renamed Page" />
-	</command>
-</definition>
+		FormsAdminNavigator.gotoRules();
+
+		FormRules.gotoEdit(ruleNumber = "1");
+
+		var key_conditionRowNumber = "1";
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD",
+			value1 = "Edit Label");
+	}
+
+	@description = "This is a use case for LPS-68227."
+	@priority = "3"
+	test ViewRuleAfterOptionValueEdit {
+		property test.name.skip.portal.instance = "FormsJumpToPage#ViewRuleAfterOptionValueEdit";
+		FormsAdminNavigator.gotoEditField(fieldName = "ChooseYourDestiny");
+
+		FormFields.editOptionsRow(
+			optionName = "Destiny2",
+			optionValue = "Edited Destiny",
+			rowNumber = "2");
+
+		Form.closeSidebar();
+
+		Form.save();
+
+		FormsAdminNavigator.gotoRules();
+
+		FormRules.gotoEdit(ruleNumber = "1");
+
+		var key_conditionRowNumber = "1";
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "FormRules#RULE_BUILDER_CONDITION_VALUE_FIELD",
+			value1 = "Edited Destiny");
+	}
+
+	@description = "This is a use case for LPS-68227."
+	@priority = "4"
+	test ViewRuleAfterPageNameChange {
+		property test.name.skip.portal.instance = "FormsJumpToPage#ViewRuleAfterPageNameChange";
+		Form.gotoFormPage(formPageName = "Page 3");
+
+		Form.editPageTitle(formPageName = "Renamed Page");
+
+		Form.save();
+
+		FormsAdminNavigator.gotoRules();
+
+		FormRules.gotoEdit(ruleNumber = "1");
+
+		var key_actionRowNumber = "1";
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "FormRules#RULE_BUILDER_JUMP_TO_PAGE_ACTION_TARGET",
+			value1 = "3 Renamed Page");
+	}
+
+}

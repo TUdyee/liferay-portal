@@ -35,14 +35,11 @@ public class BooleanClauseOccurImpl implements BooleanClauseOccur {
 
 		BooleanClauseOccur booleanClauseOccur = (BooleanClauseOccur)obj;
 
-		String name = booleanClauseOccur.getName();
-
-		if (_name.equals(name)) {
+		if (_name.equals(booleanClauseOccur.getName())) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override

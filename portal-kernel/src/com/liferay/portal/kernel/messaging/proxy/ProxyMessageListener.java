@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.messaging.proxy;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.Message;
@@ -42,8 +43,9 @@ public class ProxyMessageListener implements MessageListener {
 			}
 			else if (!(payload instanceof ProxyRequest)) {
 				throw new Exception(
-					"Payload " + payload.getClass() + " is not of type " +
-						ProxyRequest.class.getName());
+					StringBundler.concat(
+						"Payload ", payload.getClass(), " is not of type ",
+						ProxyRequest.class.getName()));
 			}
 			else {
 				ProxyRequest proxyRequest = (ProxyRequest)payload;

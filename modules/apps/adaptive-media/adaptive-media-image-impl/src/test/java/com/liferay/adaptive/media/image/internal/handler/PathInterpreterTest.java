@@ -23,7 +23,8 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 
 import java.util.Map;
 import java.util.Optional;
@@ -41,9 +42,11 @@ public class PathInterpreterTest {
 
 	@Before
 	public void setUp() {
-		_pathInterpreter.setDLAppService(_dlAppService);
-		_pathInterpreter.setAMImageConfigurationHelper(
+		ReflectionTestUtil.setFieldValue(
+			_pathInterpreter, "_amImageConfigurationHelper",
 			_amImageConfigurationHelper);
+		ReflectionTestUtil.setFieldValue(
+			_pathInterpreter, "_dlAppService", _dlAppService);
 	}
 
 	@Test
@@ -117,6 +120,48 @@ public class PathInterpreterTest {
 	}
 
 	@Test
+	public void testFileEntryPathWithTimestamp() throws Exception {
+		Mockito.when(
+			_dlAppService.getFileEntry(Mockito.anyLong())
+		).thenReturn(
+			_fileEntry
+		);
+
+		Mockito.when(
+			_fileEntry.getFileVersion()
+		).thenReturn(
+			_fileVersion
+		);
+
+		Mockito.when(
+			_amImageConfigurationHelper.getAMImageConfigurationEntry(
+				Mockito.anyLong(), Mockito.eq("x"))
+		).thenReturn(
+			Optional.of(_amImageConfigurationEntry)
+		);
+
+		_pathInterpreter.interpretPath("/image/0/x/foo.jpg?t=12345");
+
+		Mockito.verify(
+			_dlAppService
+		).getFileEntry(
+			0
+		);
+
+		Mockito.verify(
+			_fileVersion
+		).getCompanyId();
+
+		Mockito.verify(
+			_amImageConfigurationEntry
+		).getProperties();
+
+		Mockito.verify(
+			_amImageConfigurationEntry
+		).getUUID();
+	}
+
+	@Test
 	public void testFileVersionPath() throws Exception {
 		Mockito.when(
 			_dlAppService.getFileVersion(1)
@@ -170,9 +215,9 @@ public class PathInterpreterTest {
 	}
 
 	@Test
-	public void testNonMatchingPathInfo() {
+	public void testNonmatchingPathInfo() {
 		Optional<Tuple<FileVersion, Map<String, String>>> resultOptional =
-			_pathInterpreter.interpretPath("/" + StringUtil.randomString());
+			_pathInterpreter.interpretPath("/" + RandomTestUtil.randomString());
 
 		Assert.assertFalse(resultOptional.isPresent());
 	}

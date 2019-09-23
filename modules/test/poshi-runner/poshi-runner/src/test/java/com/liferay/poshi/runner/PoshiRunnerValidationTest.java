@@ -14,6 +14,7 @@
 
 package com.liferay.poshi.runner;
 
+import com.liferay.poshi.runner.util.FileUtil;
 import com.liferay.poshi.runner.util.OSDetector;
 import com.liferay.poshi.runner.util.PropsValues;
 
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 
 import junit.framework.TestCase;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -46,7 +49,19 @@ public class PoshiRunnerValidationTest extends TestCase {
 	@Before
 	@Override
 	public void setUp() throws Exception {
-		PoshiRunnerContext.readFiles();
+		String[] poshiFileNames = ArrayUtils.addAll(
+			PoshiRunnerContext.POSHI_SUPPORT_FILE_INCLUDES,
+			PoshiRunnerContext.POSHI_TEST_FILE_INCLUDES);
+
+		String poshiTestDirName =
+			"src/test/resources/com/liferay/poshi/runner/dependencies/test";
+
+		String poshiValidationDirName =
+			"src/test/resources/com/liferay/poshi/runner/dependencies" +
+				"/validation";
+
+		PoshiRunnerContext.readFiles(
+			poshiFileNames, poshiTestDirName, poshiValidationDirName);
 	}
 
 	@After
@@ -82,21 +97,24 @@ public class PoshiRunnerValidationTest extends TestCase {
 		String classCommandName = "ValidateClassCommandName#classCommandName";
 
 		Element element = PoshiRunnerContext.getTestCaseCommandElement(
-			classCommandName);
+			classCommandName,
+			PoshiRunnerGetterUtil.getNamespaceFromNamespacedClassCommandName(
+				classCommandName));
 
 		String filePath = getFilePath("ValidateClassCommandName.testcase");
 
-		PoshiRunnerValidation.validateClassCommandName(
+		PoshiRunnerValidation.validateNamespacedClassCommandName(
 			element, classCommandName, "test-case", filePath);
 
 		Assert.assertEquals(
-			"validateClassCommandName is failing", "", getExceptionMessage());
+			"validateNamespaceClassCommandName is failing", "",
+			getExceptionMessage());
 
-		PoshiRunnerValidation.validateClassCommandName(
+		PoshiRunnerValidation.validateNamespacedClassCommandName(
 			element, "ValidateClassCommandName#fail", "test-case", filePath);
 
 		Assert.assertEquals(
-			"validateClassCommandName is failing",
+			"validateNamespaceClassCommandName is failing",
 			"Invalid test-case command ValidateClassCommandName#fail",
 			getExceptionMessage());
 	}
@@ -907,27 +925,35 @@ public class PoshiRunnerValidationTest extends TestCase {
 		String filePath = "validateMethodExecuteElement.macro";
 		String invalidClassName = "com.liferay.poshi.runner.util.FakeUtil";
 		String invalidMethodName = "FakeMethod";
+		String invalidUtilityClassName =
+			"com.liferay.poshi.runner.PoshiRunnerGetterUtil";
+		String invalidUtilityClassMethodName = "getCurrentNamespace";
 		String validClassName = "com.liferay.poshi.runner.util.StringUtil";
 		String validMethodName = "add";
 
 		List<String> testClassNames = new ArrayList<>();
 
 		testClassNames.add(invalidClassName);
+		testClassNames.add(invalidUtilityClassName);
 		testClassNames.add(validClassName);
 
 		List<String> testMethodNames = new ArrayList<>();
 
 		testMethodNames.add(validMethodName);
+		testMethodNames.add(invalidUtilityClassMethodName);
 		testMethodNames.add(invalidMethodName);
 
 		List<List<String>> testArguments = new ArrayList<>();
 
 		testArguments.add(new ArrayList<String>());
 		testArguments.add(new ArrayList<String>());
+		testArguments.add(new ArrayList<String>());
 
 		List<String> expectedMessages = new ArrayList<>();
 
 		expectedMessages.add("Unable to find class " + invalidClassName);
+		expectedMessages.add(
+			invalidUtilityClassName + " is an invalid utility class");
 		expectedMessages.add(
 			"Unable to find method " + validClassName + "#" +
 				invalidMethodName);
@@ -953,47 +979,6 @@ public class PoshiRunnerValidationTest extends TestCase {
 				"validateMethodExecuteElement is failing",
 				expectedMessages.get(i), getExceptionMessage());
 		}
-	}
-
-	@Test
-	public void testValidateNumberOfAttributes() {
-		Document document = DocumentHelper.createDocument();
-
-		Element element = document.addElement("execute");
-
-		element.addAttribute("function", "Open");
-		element.addAttribute("locator1", "http://www.liferay.com");
-
-		PoshiRunnerValidation.validateNumberOfAttributes(
-			element, 2, "ValidateNumberOfAttributes.macro");
-
-		Assert.assertEquals(
-			"validateNumberOfAttributes is failing", "", getExceptionMessage());
-
-		PoshiRunnerValidation.validateNumberOfAttributes(
-			element, 1, "ValidateNumberOfAttributes.macro");
-
-		Assert.assertEquals(
-			"validateNumberOfAttributes is failing", "Too many attributes",
-			getExceptionMessage());
-
-		PoshiRunnerValidation.validateNumberOfAttributes(
-			element, 3, "ValidateNumberOfAttributes.macro");
-
-		Assert.assertEquals(
-			"validateNumberOfAttributes is failing", "Too few attributes",
-			getExceptionMessage());
-
-		document = DocumentHelper.createDocument();
-
-		element = document.addElement("execute");
-
-		PoshiRunnerValidation.validateNumberOfAttributes(
-			element, 2, "ValidateNumberOfAttributes.macro");
-
-		Assert.assertEquals(
-			"validateNumberOfAttributes is failing", "Missing attributes",
-			getExceptionMessage());
 	}
 
 	@Test
@@ -1175,21 +1160,6 @@ public class PoshiRunnerValidationTest extends TestCase {
 
 		Assert.assertEquals(
 			"validatePropertyElement is failing", "", getExceptionMessage());
-
-		document = DocumentHelper.createDocument();
-
-		element = document.addElement("property");
-
-		element.addAttribute("line-number", "1");
-		element.addAttribute("name", "property.name");
-		element.addAttribute("value", "Tools");
-
-		PoshiRunnerValidation.validatePropertyElement(
-			element, "ValidatePossibleAttributeNames.macro");
-
-		Assert.assertEquals(
-			"validatePropertyElement is failing",
-			"Invalid property name property.name", getExceptionMessage());
 	}
 
 	@Test
@@ -1392,126 +1362,6 @@ public class PoshiRunnerValidationTest extends TestCase {
 	}
 
 	@Test
-	public void testValidateToggleElement() {
-		Document document = DocumentHelper.createDocument();
-
-		Element toggleElement = document.addElement("toggle");
-
-		toggleElement.addAttribute("name", "LRQA-TOGGLE");
-		toggleElement.addAttribute("line-number", "1");
-
-		Element onElement = toggleElement.addElement("on");
-
-		onElement.addAttribute("line-number", "2");
-
-		Element onChildElement = onElement.addElement("execute");
-
-		onChildElement.addAttribute("function", "Click");
-		onChildElement.addAttribute("locator1", "//here");
-		onChildElement.addAttribute("line-number", "3");
-
-		PoshiRunnerValidation.validateToggleElement(
-			toggleElement, "ValidateToggleElement.macro");
-
-		Assert.assertEquals(
-			"ValidateToggleElement is failing", "", getExceptionMessage());
-
-		Element onElement2 = toggleElement.addElement("on");
-
-		onElement2.addAttribute("line-number", "5");
-
-		Element onChildElement2 = onElement2.addElement("execute");
-
-		onChildElement2.addAttribute("function", "Click");
-		onChildElement2.addAttribute("locator1", "//here");
-		onChildElement2.addAttribute("line-number", "6");
-
-		PoshiRunnerValidation.validateToggleElement(
-			toggleElement, "ValidateToggleElement.macro");
-
-		Assert.assertEquals(
-			"ValidateToggleElement is failing", "Too many on elements",
-			getExceptionMessage());
-
-		document = DocumentHelper.createDocument();
-
-		toggleElement = document.addElement("toggle");
-
-		toggleElement.addAttribute("name", "LRQA-TOGGLE");
-		toggleElement.addAttribute("line-number", "1");
-
-		Element offElement = toggleElement.addElement("off");
-
-		offElement.addAttribute("line-number", "2");
-
-		Element offChildElement = offElement.addElement("execute");
-
-		offChildElement.addAttribute("function", "Click");
-		offChildElement.addAttribute("locator1", "//here");
-		offChildElement.addAttribute("line-number", "3");
-
-		PoshiRunnerValidation.validateToggleElement(
-			toggleElement, "ValidateToggleElement.macro");
-
-		Assert.assertEquals(
-			"ValidateToggleElement is failing", "", getExceptionMessage());
-
-		Element offElement2 = toggleElement.addElement("off");
-
-		offElement2.addAttribute("line-number", "5");
-
-		Element offChildElement2 = offElement2.addElement("execute");
-
-		offChildElement2.addAttribute("function", "Click");
-		offChildElement2.addAttribute("locator1", "//here");
-		offChildElement2.addAttribute("line-number", "6");
-
-		PoshiRunnerValidation.validateToggleElement(
-			toggleElement, "ValidateToggleElement.macro");
-
-		Assert.assertEquals(
-			"ValidateToggleElement is failing", "Too many off elements",
-			getExceptionMessage());
-
-		document = DocumentHelper.createDocument();
-
-		toggleElement = document.addElement("toggle");
-
-		toggleElement.addAttribute("name", "LRQA-TOGGLE");
-		toggleElement.addAttribute("line-number", "1");
-
-		PoshiRunnerValidation.validateToggleElement(
-			toggleElement, "ValidateToggleElement.macro");
-
-		Assert.assertEquals(
-			"ValidateToggleElement is failing", "Missing child elements",
-			getExceptionMessage());
-
-		document = DocumentHelper.createDocument();
-
-		toggleElement = document.addElement("toggle");
-
-		toggleElement.addAttribute("line-number", "1");
-
-		onElement = toggleElement.addElement("on");
-
-		onElement.addAttribute("line-number", "2");
-
-		onChildElement = onElement.addElement("execute");
-
-		onChildElement.addAttribute("function", "Click");
-		onChildElement.addAttribute("locator1", "//here");
-		onChildElement.addAttribute("line-number", "3");
-
-		PoshiRunnerValidation.validateToggleElement(
-			toggleElement, "ValidateToggleElement.macro");
-
-		Assert.assertEquals(
-			"ValidateToggleElement is failing", "Missing name attribute",
-			getExceptionMessage());
-	}
-
-	@Test
 	public void testValidateVarElement() {
 		Document document = DocumentHelper.createDocument();
 
@@ -1553,6 +1403,22 @@ public class PoshiRunnerValidationTest extends TestCase {
 
 		Assert.assertEquals(
 			"validateVarElement is failing", "Missing value attribute",
+			getExceptionMessage());
+
+		document = DocumentHelper.createDocument();
+
+		element = document.addElement("var");
+
+		element.addAttribute("line-number", "1");
+		element.addAttribute("method", "TestPropsUtil#get('test.name')");
+		element.addAttribute("name", "name");
+
+		PoshiRunnerValidation.validateVarElement(
+			element, "ValidateVarElement.macro");
+
+		Assert.assertEquals(
+			"validateVarElement is failing",
+			"TestPropsUtil is not a valid simple class name",
 			getExceptionMessage());
 	}
 
@@ -1621,7 +1487,7 @@ public class PoshiRunnerValidationTest extends TestCase {
 	}
 
 	protected String getFilePath(String fileName) {
-		String filePath = PoshiRunnerGetterUtil.getCanonicalPath(
+		String filePath = FileUtil.getCanonicalPath(
 			PropsValues.TEST_BASE_DIR_NAME +
 				"resources/com/liferay/poshi/runner/dependencies/validation/" +
 					fileName);

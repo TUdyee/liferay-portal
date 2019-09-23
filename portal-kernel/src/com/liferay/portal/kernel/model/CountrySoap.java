@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -25,11 +23,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.service.http.CountryServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portal.service.http.CountryServiceSoap
  * @generated
  */
-@ProviderType
 public class CountrySoap implements Serializable {
+
 	public static CountrySoap toSoapModel(Country model) {
 		CountrySoap soapModel = new CountrySoap();
 
@@ -40,8 +37,8 @@ public class CountrySoap implements Serializable {
 		soapModel.setA3(model.getA3());
 		soapModel.setNumber(model.getNumber());
 		soapModel.setIdd(model.getIdd());
-		soapModel.setZipRequired(model.getZipRequired());
-		soapModel.setActive(model.getActive());
+		soapModel.setZipRequired(model.isZipRequired());
+		soapModel.setActive(model.isActive());
 
 		return soapModel;
 	}
@@ -74,7 +71,8 @@ public class CountrySoap implements Serializable {
 	}
 
 	public static CountrySoap[] toSoapModels(List<Country> models) {
-		List<CountrySoap> soapModels = new ArrayList<CountrySoap>(models.size());
+		List<CountrySoap> soapModels = new ArrayList<CountrySoap>(
+			models.size());
 
 		for (Country model : models) {
 			soapModels.add(toSoapModel(model));
@@ -183,4 +181,5 @@ public class CountrySoap implements Serializable {
 	private String _idd;
 	private boolean _zipRequired;
 	private boolean _active;
+
 }

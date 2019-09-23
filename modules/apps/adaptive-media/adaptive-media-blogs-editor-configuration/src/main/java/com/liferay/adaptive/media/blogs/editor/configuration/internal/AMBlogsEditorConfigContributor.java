@@ -14,24 +14,24 @@
 
 package com.liferay.adaptive.media.blogs.editor.configuration.internal;
 
+import com.liferay.adaptive.media.image.html.constants.AMImageHTMLConstants;
 import com.liferay.adaptive.media.image.item.selector.AMImageFileEntryItemSelectorReturnType;
+import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.item.selector.criterion.BlogsItemSelectorCriterion;
-import com.liferay.blogs.web.constants.BlogsPortletKeys;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -103,6 +103,10 @@ public class AMBlogsEditorConfigContributor
 			return;
 		}
 
+		jsonObject.put(
+			"adaptiveMediaFileEntryAttributeName",
+			AMImageHTMLConstants.ATTRIBUTE_NAME_FILE_ENTRY_ID);
+
 		String extraPlugins = jsonObject.getString("extraPlugins");
 
 		if (Validator.isNotNull(extraPlugins)) {
@@ -114,42 +118,31 @@ public class AMBlogsEditorConfigContributor
 
 		jsonObject.put("extraPlugins", extraPlugins);
 
-		String itemSelectedEventName = _itemSelector.getItemSelectedEventName(
-			itemSelectorURL);
-
 		PortletURL itemSelectorPortletURL = _itemSelector.getItemSelectorURL(
-			requestBackedPortletURLFactory, itemSelectedEventName,
-			itemSelectorCriteria.toArray(
-				new ItemSelectorCriterion[itemSelectorCriteria.size()]));
+			requestBackedPortletURLFactory,
+			_itemSelector.getItemSelectedEventName(itemSelectorURL),
+			itemSelectorCriteria.toArray(new ItemSelectorCriterion[0]));
 
 		jsonObject.put(
-			"filebrowserImageBrowseLinkUrl", itemSelectorPortletURL.toString());
-		jsonObject.put(
-			"filebrowserImageBrowseUrl", itemSelectorPortletURL.toString());
-	}
-
-	@Reference(unbind = "-")
-	public void setItemSelector(ItemSelector itemSelector) {
-		_itemSelector = itemSelector;
+			"filebrowserImageBrowseLinkUrl", itemSelectorPortletURL.toString()
+		).put(
+			"filebrowserImageBrowseUrl", itemSelectorPortletURL.toString()
+		);
 	}
 
 	protected void addAMImageFileEntryItemSelectorReturnType(
 		ItemSelectorCriterion itemSelectorCriterion) {
 
 		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
+			itemSelectorCriterion.getDesiredItemSelectorReturnTypes();
 
 		desiredItemSelectorReturnTypes.add(
-			new AMImageFileEntryItemSelectorReturnType());
-		desiredItemSelectorReturnTypes.addAll(
-			itemSelectorCriterion.getDesiredItemSelectorReturnTypes());
-
-		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
+			0, new AMImageFileEntryItemSelectorReturnType());
 	}
 
 	private static final String _IMG_TAG_RULE = "img[*](*){*};";
 
+	@Reference
 	private ItemSelector _itemSelector;
 
 }

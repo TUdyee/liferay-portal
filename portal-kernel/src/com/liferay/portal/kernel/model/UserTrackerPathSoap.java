@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,8 +26,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class UserTrackerPathSoap implements Serializable {
+
 	public static UserTrackerPathSoap toSoapModel(UserTrackerPath model) {
 		UserTrackerPathSoap soapModel = new UserTrackerPathSoap();
 
@@ -44,7 +42,8 @@ public class UserTrackerPathSoap implements Serializable {
 	}
 
 	public static UserTrackerPathSoap[] toSoapModels(UserTrackerPath[] models) {
-		UserTrackerPathSoap[] soapModels = new UserTrackerPathSoap[models.length];
+		UserTrackerPathSoap[] soapModels =
+			new UserTrackerPathSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -55,10 +54,12 @@ public class UserTrackerPathSoap implements Serializable {
 
 	public static UserTrackerPathSoap[][] toSoapModels(
 		UserTrackerPath[][] models) {
+
 		UserTrackerPathSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new UserTrackerPathSoap[models.length][models[0].length];
+			soapModels =
+				new UserTrackerPathSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new UserTrackerPathSoap[0][0];
@@ -73,7 +74,9 @@ public class UserTrackerPathSoap implements Serializable {
 
 	public static UserTrackerPathSoap[] toSoapModels(
 		List<UserTrackerPath> models) {
-		List<UserTrackerPathSoap> soapModels = new ArrayList<UserTrackerPathSoap>(models.size());
+
+		List<UserTrackerPathSoap> soapModels =
+			new ArrayList<UserTrackerPathSoap>(models.size());
 
 		for (UserTrackerPath model : models) {
 			soapModels.add(toSoapModel(model));
@@ -147,4 +150,5 @@ public class UserTrackerPathSoap implements Serializable {
 	private long _userTrackerId;
 	private String _path;
 	private Date _pathDate;
+
 }

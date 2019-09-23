@@ -14,14 +14,11 @@
 
 package com.liferay.push.notifications.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Bruno Farache
  */
-@ProviderType
 public class NoSuchDeviceException extends NoSuchModelException {
 
 	public NoSuchDeviceException() {

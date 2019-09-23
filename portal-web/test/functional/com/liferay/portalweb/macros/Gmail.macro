@@ -1,254 +1,218 @@
-<definition>
-	<command name="deleteSpecificMail">
-		<for list="${gmailMessageTitleList}" param="gmailMessageTitle">
-			<var name="key_gmailMessageTitle" value="${gmailMessageTitle}" />
+definition {
 
-			<if>
-				<condition function="IsElementPresent" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_SPECIFIC_MESSAGE_TITLE_CHECKBOX" />
-				<then>
-					<execute function="Check" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_SPECIFIC_MESSAGE_TITLE_CHECKBOX" />
+	macro deleteSpecificMail {
+		for (var gmailMessageTitle : list "${gmailMessageTitleList}") {
+			var key_gmailMessageTitle = "${gmailMessageTitle}";
 
-					<execute function="Click" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_DELETE_BUTTON" />
+			if (IsElementPresent(locator1 = "Gmail#GMAIL_HTML_MODE_MAIL_TABLE_SPECIFIC_MESSAGE_TITLE_CHECKBOX")) {
+				Check(locator1 = "Gmail#GMAIL_HTML_MODE_MAIL_TABLE_SPECIFIC_MESSAGE_TITLE_CHECKBOX");
 
-					<execute function="Pause" locator1="3000" />
-				</then>
-			</if>
-		</for>
-	</command>
+				Click(locator1 = "Gmail#GMAIL_HTML_MODE_MAIL_TABLE_DELETE_BUTTON");
 
-	<command name="gotoHtmlMode">
-		<execute function="Open" locator1="https://mail.google.com/mail/?ui=html&amp;zy=h" />
+				Pause(locator1 = "3000");
+			}
+		}
+	}
 
-		<if>
-			<condition function="IsElementPresent" locator1="Gmail#GMAIL_HTML_MODE_CONFIRMATION" />
-			<then>
-				<execute function="Click" locator1="Gmail#GMAIL_HTML_MODE_CONFIRMATION" />
-			</then>
-		</if>
+	macro gotoHtmlMode {
+		Navigator.openSpecificURL(url = "https://mail.google.com/mail/?ui=html&amp;zy=h");
 
-		<execute function="Pause" locator1="5000" />
-	</command>
+		if (IsElementPresent(locator1 = "Gmail#GMAIL_HTML_MODE_CONFIRMATION")) {
+			Click(locator1 = "Gmail#GMAIL_HTML_MODE_CONFIRMATION");
+		}
 
-	<command name="gotoMail">
-		<var name="key_gmailAssetType" value="${gmailAssetType}" />
+		Pause(locator1 = "5000");
+	}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_USER_NAME" value1="${emailFromUserName}" />
+	macro gotoMail {
+		var key_gmailAssetType = "${gmailAssetType}";
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_MESSAGE_TITLE" value1="${gmailMessageTitle}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MAIL_TABLE_USER_NAME",
+			value1 = "${emailFromUserName}");
 
-		<execute function="Pause" locator1="3000" />
-	</command>
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MAIL_TABLE_MESSAGE_TITLE",
+			value1 = "${gmailMessageTitle}");
 
-	<command name="login">
-		<execute function="Open" locator1="http://www.gmail.com" />
+		Pause(locator1 = "3000");
+	}
 
-		<execute function="Pause" locator1="5000" />
+	macro login {
+		Navigator.openSpecificURL(url = "http://www.gmail.com");
 
-		<var name="key_userEmailAddress" value="${userEmailAddress}" />
+		Pause(locator1 = "5000");
 
-		<if>
-			<and>
-				<condition function="IsElementNotPresent" locator1="Gmail#GMAIL_NORMAL_MODE_USER_SCREENNAME" />
-				<condition function="IsElementNotPresent" locator1="Gmail#GMAIL_HTML_MODE_USER_SCREENNAME" />
-			</and>
-			<then>
-				<if>
-					<condition function="IsElementPresent" locator1="Gmail#LOGIN_EMAIL_FIELD" />
-					<then>
-						<execute function="Type" locator1="Gmail#LOGIN_EMAIL_FIELD" value1="${userEmailAddress}" />
+		var key_userEmailAddress = "${userEmailAddress}";
 
-						<execute function="Click" locator1="Gmail#LOGIN_NEXT_BUTTON" />
-					</then>
-				</if>
+		if ((IsElementNotPresent(locator1 = "Gmail#GMAIL_NORMAL_MODE_USER_SCREENNAME")) && (IsElementNotPresent(locator1 = "Gmail#GMAIL_HTML_MODE_USER_SCREENNAME"))) {
+			if (IsElementPresent(locator1 = "Gmail#LOGIN_EMAIL_FIELD")) {
+				Type(
+					locator1 = "Gmail#LOGIN_EMAIL_FIELD",
+					value1 = "${userEmailAddress}");
 
-				<execute function="Type" locator1="Gmail#LOGIN_PASSWORD_FIELD" value1="${userPassword}" />
+				Click(locator1 = "Gmail#LOGIN_NEXT_BUTTON");
+			}
 
-				<if>
-					<condition function="IsElementPresent" locator1="Gmail#LOGIN_SIGN_IN_BUTTON" />
-					<then>
-						<execute function="Check" locator1="Gmail#LOGIN_STAY_SIGNED_IN_CHECKBOX" />
+			Type(
+				locator1 = "Gmail#LOGIN_PASSWORD_FIELD",
+				value1 = "${userPassword}");
 
-						<execute function="Click" locator1="Gmail#LOGIN_SIGN_IN_BUTTON" />
-					</then>
-					<else>
-						<execute function="Click" locator1="Gmail#LOGIN_NEXT_BUTTON" />
-					</else>
-				</if>
+			if (IsElementPresent(locator1 = "Gmail#LOGIN_SIGN_IN_BUTTON")) {
+				Check(locator1 = "Gmail#LOGIN_STAY_SIGNED_IN_CHECKBOX");
 
-				<if>
-					<condition function="IsElementPresent" locator1="Gmail#MAIL_NAVIGATION" />
-					<then>
-						<execute function="Click" locator1="Gmail#MAIL_NAVIGATION" />
-					</then>
-				</if>
+				Click(locator1 = "Gmail#LOGIN_SIGN_IN_BUTTON");
+			}
+			else {
+				Click(locator1 = "Gmail#LOGIN_NEXT_BUTTON");
+			}
 
-				<execute function="Pause" locator1="5000" />
-			</then>
-			<elseif>
-				<condition function="IsElementPresent" locator1="Gmail#GMAIL_HTML_MODE_USER_SCREENNAME" />
-				<then>
-					<execute function="AssertElementPresent" locator1="Gmail#GMAIL_HTML_MODE_USER_SCREENNAME" />
-				</then>
-			</elseif>
-			<else>
-				<execute function="AssertElementPresent" locator1="Gmail#GMAIL_NORMAL_MODE_USER_SCREENNAME" />
-			</else>
-		</if>
-	</command>
+			if (IsElementPresent(locator1 = "Gmail#MAIL_NAVIGATION")) {
+				Click(locator1 = "Gmail#MAIL_NAVIGATION");
+			}
 
-	<command name="logoutAndLogin">
-		<execute function="Open" locator1="http://www.gmail.com" />
+			Pause(locator1 = "5000");
+		}
+		else if (IsElementPresent(locator1 = "Gmail#GMAIL_HTML_MODE_USER_SCREENNAME")) {
+			AssertElementPresent(locator1 = "Gmail#GMAIL_HTML_MODE_USER_SCREENNAME");
+		}
+		else {
+			AssertElementPresent(locator1 = "Gmail#GMAIL_NORMAL_MODE_USER_SCREENNAME");
+		}
+	}
 
-		<execute function="Pause" locator1="3000" />
+	macro logoutAndLogin {
+		Navigator.openSpecificURL(url = "http://www.gmail.com");
 
-		<execute macro="Gmail#gotoHtmlMode" />
+		Pause(locator1 = "3000");
 
-		<execute function="Click" locator1="Gmail#GMAIL_HTML_MODE_SIGN_OUT" />
+		Gmail.gotoHtmlMode();
 
-		<if>
-			<condition function="IsElementPresent" locator1="Gmail#SIGN_IN_WITH_DIFFERENT_ACCOUNT" />
-			<then>
-				<execute function="Click" locator1="Gmail#SIGN_IN_WITH_DIFFERENT_ACCOUNT" />
+		Click(locator1 = "Gmail#GMAIL_HTML_MODE_SIGN_OUT");
 
-				<execute function="Click" locator1="Gmail#ADD_ACCOUNT_BUTTON"  />
-			</then>
-			<elseif>
-				<condition function="IsElementPresent" locator1="Gmail#ADD_ACCOUNT_BUTTON" />
-				<then>
-					<execute function="Click" locator1="Gmail#ADD_ACCOUNT_BUTTON" />
-				</then>
-			</elseif>
-		</if>
+		if (IsElementPresent(locator1 = "Gmail#SIGN_IN_WITH_DIFFERENT_ACCOUNT")) {
+			Click(locator1 = "Gmail#SIGN_IN_WITH_DIFFERENT_ACCOUNT");
 
-		<execute function="Type" locator1="Gmail#LOGIN_EMAIL_FIELD" value1="${userEmailAddress}" />
+			Click(locator1 = "Gmail#USE_ANOTHER_ACCOUNT");
+		}
+		else if (IsElementPresent(locator1 = "Gmail#USE_ANOTHER_ACCOUNT")) {
+			Click(locator1 = "Gmail#USE_ANOTHER_ACCOUNT");
+		}
 
-		<execute function="Click" locator1="Gmail#LOGIN_NEXT_BUTTON" />
+		Type(
+			locator1 = "Gmail#LOGIN_EMAIL_FIELD",
+			value1 = "${userEmailAddress}");
 
-		<execute function="Type" locator1="Gmail#LOGIN_PASSWORD_FIELD" value1="${userPassword}" />
+		Click(locator1 = "Gmail#LOGIN_NEXT_BUTTON");
 
-		<if>
-			<condition function="IsElementPresent" locator1="Gmail#LOGIN_SIGN_IN_BUTTON" />
-			<then>
-				<execute function="Check" locator1="Gmail#LOGIN_STAY_SIGNED_IN_CHECKBOX" />
+		Type(
+			locator1 = "Gmail#LOGIN_PASSWORD_FIELD",
+			value1 = "${userPassword}");
 
-				<execute function="Click" locator1="Gmail#LOGIN_SIGN_IN_BUTTON" />
-			</then>
-			<else>
-				<execute function="Click" locator1="Gmail#LOGIN_NEXT_BUTTON" />
-			</else>
-		</if>
+		if (IsElementPresent(locator1 = "Gmail#LOGIN_SIGN_IN_BUTTON")) {
+			Check(locator1 = "Gmail#LOGIN_STAY_SIGNED_IN_CHECKBOX");
 
-		<if>
-			<condition function="IsElementPresent" locator1="Gmail#MAIL_NAVIGATION" />
-			<then>
-				<execute function="Click" locator1="Gmail#MAIL_NAVIGATION" />
-			</then>
-		</if>
+			Click(locator1 = "Gmail#LOGIN_SIGN_IN_BUTTON");
+		}
+		else {
+			Click(locator1 = "Gmail#LOGIN_NEXT_BUTTON");
+		}
 
-		<execute function="Pause" locator1="5000" />
-	</command>
+		if (IsElementPresent(locator1 = "Gmail#MAIL_NAVIGATION")) {
+			Click(locator1 = "Gmail#MAIL_NAVIGATION");
+		}
 
-	<command name="openMessageContinueReadingButton">
-		<var method="StringUtil#replace('${pageName}', ' ', '-')" name="pageNameURL" />
-		<var method="StringUtil#lowerCase('/${pageNameURL}')" name="pageNameURL" />
+		Pause(locator1 = "5000");
+	}
 
-		<execute function="AssertClick" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_CONTINUE_READING_BUTTON" value1="CONTINUE READING" />
+	macro openMessageContinueReadingButton {
+		var pageNameURL = StringUtil.replace("${pageName}", " ", "-");
+		var pageNameURL = StringUtil.lowerCase("/${pageNameURL}");
 
-		<if>
-			<isset var="contentTitle" />
-			<then>
-				<execute function="SelectWindow" locator1="title=- ${contentTitle} - ${siteName}" />
-			</then>
-			<else>
-				<execute function="SelectWindow" locator1="title=${pageName} - ${siteName}" />
-			</else>
-		</if>
-	</command>
+		AssertClick(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_CONTINUE_READING_BUTTON",
+			value1 = "CONTINUE READING");
 
-	<command name="openMessageLink">
-		<var name="key_gmailAssetType" value="${gmailAssetType}" />
+		if (isSet(contentTitle)) {
+			SelectWindow(locator1 = "title=- ${contentTitle} - ${siteName}");
+		}
+		else {
+			SelectWindow(locator1 = "title=${pageName} - ${siteName}");
+		}
+	}
 
-		<var method="StringUtil#replace('${pageName}', ' ', '-')" name="pageNameURL" />
-		<var method="StringUtil#lowerCase('/${pageNameURL}')" name="pageNameURL" />
+	macro openMessageLink {
+		var key_gmailAssetType = "${gmailAssetType}";
+		var pageNameURL = StringUtil.replace("${pageName}", " ", "-");
+		var pageNameURL = StringUtil.lowerCase("/${pageNameURL}");
+		var key_pageNameURL = "${pageNameURL}";
 
-		<var name="key_pageNameURL" value="${pageNameURL}" />
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_LINK",
+			value1 = "${pageNameURL}");
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_LINK" value1="${pageNameURL}" />
+		if (isSet(contentTitle)) {
+			SelectWindow(locator1 = "title=${contentTitle} - ${pageName} - ${siteName}");
+		}
+		else if ("${pageName}" == "update_password") {
+			var pageName = "New Password";
 
-		<if>
-			<isset var="contentTitle" />
-			<then>
-				<execute function="SelectWindow" locator1="title=${contentTitle} - ${pageName} - ${siteName}" />
-			</then>
-			<else>
-				<execute function="SelectWindow" locator1="title=${pageName} - ${siteName}" />
-			</else>
-		</if>
-	</command>
+			SelectWindow(locator1 = "title=${pageName} - ${siteName}");
+		}
+		else {
+			SelectWindow(locator1 = "title=${pageName} - ${siteName}");
+		}
+	}
 
-	<command name="replyMail">
-		<execute function="Type" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_QUICK_REPLY_FIELD" value1="${gmailReplyMessage}" />
+	macro replyMail {
+		Type(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_QUICK_REPLY_FIELD",
+			value1 = "${gmailReplyMessage}");
 
-		<execute function="AssertClick" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_QUICK_REPLY_SEND_BUTTON" value1="Send" />
+		AssertClick(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_QUICK_REPLY_SEND_BUTTON",
+			value1 = "Send");
 
-		<execute function="AssertTextEquals" locator1="Gmail#SUCCESS_MESSAGE" value1="Your message has been sent." />
-	</command>
+		AssertTextEquals(
+			locator1 = "Gmail#SUCCESS_MESSAGE",
+			value1 = "Your message has been sent.");
+	}
 
-	<command name="tearDown">
-		<execute macro="Gmail#login">
-			<var name="userEmailAddress" value="${userEmailAddress}" />
-			<var name="userPassword" value="${userPassword}" />
-		</execute>
+	macro viewMail {
+		Gmail.gotoMail(
+			emailFromUserName = "${emailFromUserName}",
+			gmailAssetType = "${gmailAssetType}",
+			gmailMessageTitle = "${gmailMessageTitle}");
 
-		<execute macro="Gmail#gotoHtmlMode" />
+		var key_gmailAssetType = "${gmailAssetType}";
 
-		<while>
-			<condition function="IsElementPresent" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_GENERIC" />
-			<then>
-				<execute function="Check" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_GENERIC" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_TITLE",
+			value1 = "${gmailMessageTitle}");
 
-				<execute function="Click" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_DELETE_BUTTON" />
+		if (IsElementPresent(locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_SHOW_QUOTED_TEXT_LINK")) {
+			Click(locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_SHOW_QUOTED_TEXT_LINK");
+		}
 
-				<execute function="Pause" locator1="3000" />
-			</then>
-		</while>
-	</command>
+		AssertTextEquals.assertPartialText(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_GREETING",
+			value1 = "${gmailMessageBody}");
 
-	<command name="viewMail">
-		<execute macro="Gmail#gotoMail">
-			<var name="emailFromUserName" value="${emailFromUserName}" />
-			<var name="gmailAssetType" value="${gmailAssetType}" />
-			<var name="gmailMessageTitle" value="${gmailMessageTitle}" />
-		</execute>
+		AssertTextEquals.assertPartialText(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_BODY",
+			value1 = "${gmailMessageBody}");
 
-		<var name="key_gmailAssetType" value="${gmailAssetType}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_CLOSING",
+			value1 = "${gmailMessageBody}");
 
-		<execute function="AssertTextEquals" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_TITLE" value1="${gmailMessageTitle}" />
+		if (isSet(gmailMessageAttachment)) {
+			var key_gmailMessageAttachment = "${gmailMessageAttachment}";
 
-		<if>
-			<condition function="IsElementPresent" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_SHOW_QUOTED_TEXT_LINK" />
-			<then>
-				<execute function="Click" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_SHOW_QUOTED_TEXT_LINK" />
-			</then>
-		</if>
+			AssertTextEquals(
+				locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_ATTACHMENT",
+				value1 = "${gmailMessageAttachment}");
+		}
+	}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_GREETING" value1="${gmailMessageBody}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_BODY" value1="${gmailMessageBody}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_CLOSING" value1="${gmailMessageBody}" />
-
-		<if>
-			<isset var="gmailMessageAttachment" />
-			<then>
-				<var name="key_gmailMessageAttachment" value="${gmailMessageAttachment}" />
-
-				<execute function="AssertTextEquals" locator1="Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_ATTACHMENT" value1="${gmailMessageAttachment}" />
-			</then>
-		</if>
-	</command>
-
-	<command name="viewMailNotPresent">
-		<var name="key_gmailAssetType" value="${gmailAssetType}" />
-
-		<execute function="AssertElementNotPresent" locator1="Gmail#GMAIL_HTML_MODE_MAIL_TABLE_MESSAGE_TITLE" />
-	</command>
-</definition>
+}

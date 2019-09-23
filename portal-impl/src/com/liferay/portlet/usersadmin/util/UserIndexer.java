@@ -14,7 +14,6 @@
 
 package com.liferay.portlet.usersadmin.util;
 
-import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.NoSuchContactException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -59,7 +58,7 @@ import javax.portlet.PortletResponse;
  * @author     Raymond Augé
  * @author     Zsigmond Rab
  * @author     Hugo Huijser
- * @deprecated As of 7.0.0, replaced by {@link
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.users.admin.internal.search.UserIndexer}
  */
 @Deprecated
@@ -107,7 +106,6 @@ public class UserIndexer extends BaseIndexer<User> {
 		}
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			String key = entry.getKey();
 			Object value = entry.getValue();
 
 			if (value == null) {
@@ -125,7 +123,7 @@ public class UserIndexer extends BaseIndexer<User> {
 			}
 
 			addContextQueryParams(
-				contextBooleanFilter, searchContext, key, value);
+				contextBooleanFilter, searchContext, entry.getKey(), value);
 		}
 	}
 
@@ -303,9 +301,8 @@ public class UserIndexer extends BaseIndexer<User> {
 		else if (orderByCol.equals("screen-name")) {
 			return "screenName";
 		}
-		else {
-			return orderByCol;
-		}
+
+		return orderByCol;
 	}
 
 	@Override
@@ -348,10 +345,8 @@ public class UserIndexer extends BaseIndexer<User> {
 			return;
 		}
 
-		Document document = getDocument(user);
-
 		IndexWriterHelperUtil.updateDocument(
-			getSearchEngineId(), user.getCompanyId(), document,
+			getSearchEngineId(), user.getCompanyId(), getDocument(user),
 			isCommitImmediately());
 
 		Indexer<Contact> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
@@ -395,27 +390,19 @@ public class UserIndexer extends BaseIndexer<User> {
 
 		indexableActionableDynamicQuery.setCompanyId(companyId);
 		indexableActionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<User>() {
-
-				@Override
-				public void performAction(User user) {
-					if (!user.isDefaultUser()) {
-						try {
-							Document document = getDocument(user);
-
-							indexableActionableDynamicQuery.addDocuments(
-								document);
-						}
-						catch (PortalException pe) {
-							if (_log.isWarnEnabled()) {
-								_log.warn(
-									"Unable to index user " + user.getUserId(),
-									pe);
-							}
+			(User user) -> {
+				if (!user.isDefaultUser()) {
+					try {
+						indexableActionableDynamicQuery.addDocuments(
+							getDocument(user));
+					}
+					catch (PortalException pe) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(
+								"Unable to index user " + user.getUserId(), pe);
 						}
 					}
 				}
-
 			});
 		indexableActionableDynamicQuery.setSearchEngineId(getSearchEngineId());
 

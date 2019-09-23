@@ -15,8 +15,10 @@
 package com.liferay.gradle.plugins.defaults;
 
 import com.liferay.gradle.plugins.LiferayPlugin;
+import com.liferay.gradle.plugins.defaults.internal.JavaDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LicenseReportDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayBaseDefaultsPlugin;
+import com.liferay.gradle.plugins.defaults.internal.LiferayCIPatcherPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayCIPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayRelengPlugin;
 import com.liferay.gradle.plugins.defaults.internal.MavenDefaultsPlugin;
@@ -39,14 +41,19 @@ public class LiferayDefaultsPlugin extends LiferayPlugin {
 			LicenseReportDefaultsPlugin.INSTANCE.apply(project);
 		}
 
-		if (_isRunningInCIEnvironment()) {
-			LiferayCIPlugin.INSTANCE.apply(project);
-		}
-
+		JavaDefaultsPlugin.INSTANCE.apply(project);
 		LiferayBaseDefaultsPlugin.INSTANCE.apply(project);
 		LiferayRelengPlugin.INSTANCE.apply(project);
 		MavenDefaultsPlugin.INSTANCE.apply(project);
 		NodeDefaultsPlugin.INSTANCE.apply(project);
+
+		if (_isRunningInCIEnvironment()) {
+			LiferayCIPlugin.INSTANCE.apply(project);
+		}
+
+		if (_isRunningInCIPatcherEnvironment()) {
+			LiferayCIPatcherPlugin.INSTANCE.apply(project);
+		}
 	}
 
 	@Override
@@ -66,6 +73,16 @@ public class LiferayDefaultsPlugin extends LiferayPlugin {
 
 	private boolean _isRunningInCIEnvironment() {
 		if (Validator.isNotNull(System.getenv("JENKINS_HOME"))) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isRunningInCIPatcherEnvironment() {
+		if (Validator.isNotNull(
+				System.getenv("FIX_PACKS_RELEASE_ENVIRONMENT"))) {
+
 			return true;
 		}
 

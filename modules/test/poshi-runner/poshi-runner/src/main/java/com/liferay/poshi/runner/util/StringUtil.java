@@ -15,8 +15,11 @@
 package com.liferay.poshi.runner.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -73,6 +76,20 @@ public class StringUtil {
 		return s;
 	}
 
+	public static String combine(String... strings) {
+		if ((strings == null) || (strings.length == 0)) {
+			return "";
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		for (String string : strings) {
+			sb.append(string);
+		}
+
+		return sb.toString();
+	}
+
 	public static boolean contains(String s, String text) {
 		return contains(s, text, StringPool.COMMA);
 	}
@@ -86,7 +103,11 @@ public class StringUtil {
 			s = s.concat(delimiter);
 		}
 
-		String dtd = delimiter.concat(text).concat(delimiter);
+		String dtd = delimiter.concat(
+			text
+		).concat(
+			delimiter
+		);
 
 		int pos = s.indexOf(dtd);
 
@@ -104,6 +125,10 @@ public class StringUtil {
 	}
 
 	public static int count(String s, String text) {
+		return count(s, text, s.length());
+	}
+
+	public static int count(String s, String text, int index) {
 		if ((s == null) || (s.length() == 0) || (text == null) ||
 			(text.length() == 0)) {
 
@@ -114,13 +139,33 @@ public class StringUtil {
 
 		int pos = s.indexOf(text);
 
-		while (pos != -1) {
+		while ((pos != -1) && (pos < index)) {
 			pos = s.indexOf(text, pos + text.length());
 
 			count++;
 		}
 
 		return count;
+	}
+
+	public static int countStartingNewLines(String s) {
+		String[] snippets = s.split("\n\\h*", -1);
+
+		if (snippets.length == 1) {
+			return 0;
+		}
+
+		for (int i = 0; i < snippets.length; i++) {
+			String snippet = snippets[i];
+
+			if (snippet.isEmpty()) {
+				continue;
+			}
+
+			return i;
+		}
+
+		return snippets.length - 1;
 	}
 
 	public static boolean endsWith(String s, String end) {
@@ -137,9 +182,8 @@ public class StringUtil {
 		if (equalsIgnoreCase(temp, end)) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	public static boolean equalsIgnoreCase(String s1, String s2) {
@@ -233,9 +277,8 @@ public class StringUtil {
 		if (index < 0) {
 			return null;
 		}
-		else {
-			return s.substring(0, index);
-		}
+
+		return s.substring(0, index);
 	}
 
 	public static String extractLast(String s, String delimiter) {
@@ -248,9 +291,8 @@ public class StringUtil {
 		if (index < 0) {
 			return null;
 		}
-		else {
-			return s.substring(index + delimiter.length());
-		}
+
+		return s.substring(index + delimiter.length());
 	}
 
 	public static String extractLeadingDigits(String s) {
@@ -330,6 +372,24 @@ public class StringUtil {
 		return true;
 	}
 
+	public static String join(String[] array, String delimiter) {
+		StringBuilder sb = new StringBuilder();
+
+		boolean start = true;
+
+		for (String string : array) {
+			if (!start) {
+				sb.append(delimiter);
+			}
+
+			sb.append(string);
+
+			start = false;
+		}
+
+		return sb.toString();
+	}
+
 	public static int length(String s) {
 		return s.length();
 	}
@@ -403,7 +463,7 @@ public class StringUtil {
 			}
 
 			String substring = s.substring(
-				(int)delimiterIndexes.get(i), (int)delimiterIndexes.get(i + 1));
+				delimiterIndexes.get(i), delimiterIndexes.get(i + 1));
 
 			substrings.add(substring);
 		}
@@ -416,11 +476,15 @@ public class StringUtil {
 			return null;
 		}
 
-		return quote.concat(s).concat(quote);
+		return quote.concat(
+			s
+		).concat(
+			quote
+		);
 	}
 
 	public static String randomString(String length) {
-		int lengthInt = Integer.parseInt(length);
+		int lengthInt = GetterUtil.getInteger(length);
 
 		StringBuilder sb = new StringBuilder();
 
@@ -433,6 +497,18 @@ public class StringUtil {
 		}
 
 		return sb.substring(0, lengthInt);
+	}
+
+	public static String regexReplaceAll(
+		String s, String regex, String replacement) {
+
+		return s.replaceAll(regex, replacement);
+	}
+
+	public static String regexReplaceFirst(
+		String s, String regex, String replacement) {
+
+		return s.replaceFirst(regex, replacement);
 	}
 
 	public static String removeSpaces(String s) {
@@ -497,12 +573,16 @@ public class StringUtil {
 		int y = s.indexOf(oldSub, fromIndex);
 
 		if (y >= 0) {
-			return s.substring(0, y).concat(newSub).concat(
-				s.substring(y + oldSub.length()));
+			return s.substring(
+				0, y
+			).concat(
+				newSub
+			).concat(
+				s.substring(y + oldSub.length())
+			);
 		}
-		else {
-			return s;
-		}
+
+		return s;
 	}
 
 	public static String replaceFirst(
@@ -551,6 +631,51 @@ public class StringUtil {
 		return s.split(delimiter);
 	}
 
+	public static List<String> split(String s, String[] delimiters) {
+		Set<Integer> splitIndexSet = new HashSet<>();
+
+		splitIndexSet.add(0);
+		splitIndexSet.add(s.length());
+
+		List<String> delimiterList = Arrays.asList(
+			_removeDuplicates(delimiters));
+
+		for (String delimiter : delimiterList) {
+			int index = s.indexOf(delimiter);
+
+			while (index >= 0) {
+				splitIndexSet.add(index);
+
+				index = s.indexOf(delimiter, index + 1);
+			}
+		}
+
+		Integer[] splitIndexArray = splitIndexSet.toArray(new Integer[0]);
+
+		Arrays.sort(splitIndexArray);
+
+		List<String> substrings = new ArrayList<>();
+
+		for (int i = 0; i < splitIndexArray.length; i++) {
+			if ((i + 1) == splitIndexArray.length) {
+				continue;
+			}
+
+			String substring = s.substring(
+				splitIndexArray[i], splitIndexArray[i + 1]);
+
+			substring = substring.trim();
+
+			if (delimiterList.contains(substring)) {
+				continue;
+			}
+
+			substrings.add(substring);
+		}
+
+		return substrings;
+	}
+
 	public static boolean startsWith(String s, String start) {
 		if ((s == null) || (start == null)) {
 			return false;
@@ -565,9 +690,8 @@ public class StringUtil {
 		if (equalsIgnoreCase(temp, start)) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	public static String stripBetween(String s, String begin, String end) {
@@ -591,11 +715,10 @@ public class StringUtil {
 
 				break;
 			}
-			else {
-				sb.append(s.substring(pos, x));
 
-				pos = y + end.length();
-			}
+			sb.append(s.substring(pos, x));
+
+			pos = y + end.length();
 		}
 
 		return sb.toString();
@@ -765,6 +888,20 @@ public class StringUtil {
 
 	public static String valueOf(Object obj) {
 		return String.valueOf(obj);
+	}
+
+	private static String[] _removeDuplicates(String[] stringArray) {
+		List<String> stringList = new ArrayList<>();
+
+		for (String string : stringArray) {
+			if (stringList.contains(string)) {
+				continue;
+			}
+
+			stringList.add(string);
+		}
+
+		return stringList.toArray(new String[0]);
 	}
 
 }

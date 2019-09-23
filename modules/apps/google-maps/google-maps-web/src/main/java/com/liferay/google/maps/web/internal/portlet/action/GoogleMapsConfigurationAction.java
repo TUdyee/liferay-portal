@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + GoogleMapsPortletKeys.GOOGLE_MAPS},
+	property = "javax.portlet.name=" + GoogleMapsPortletKeys.GOOGLE_MAPS,
 	service = ConfigurationAction.class
 )
 public class GoogleMapsConfigurationAction extends DefaultConfigurationAction {
@@ -55,8 +55,7 @@ public class GoogleMapsConfigurationAction extends DefaultConfigurationAction {
 			PortletSession.APPLICATION_SCOPE);
 
 		portletSession.removeAttribute(
-			_portal.getPortletNamespace(portletResource) +
-				"directionsAddress",
+			_portal.getPortletNamespace(portletResource) + "directionsAddress",
 			PortletSession.APPLICATION_SCOPE);
 
 		super.processAction(portletConfig, actionRequest, actionResponse);

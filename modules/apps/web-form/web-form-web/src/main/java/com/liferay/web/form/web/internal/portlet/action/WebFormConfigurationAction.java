@@ -16,6 +16,7 @@ package com.liferay.web.form.web.internal.portlet.action;
 
 import com.liferay.expando.kernel.exception.ColumnNameException;
 import com.liferay.expando.kernel.exception.DuplicateColumnNameException;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.web.form.web.internal.constants.WebFormPortletKeys;
@@ -54,21 +54,20 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + WebFormPortletKeys.WEB_FORM},
+	property = "javax.portlet.name=" + WebFormPortletKeys.WEB_FORM,
 	service = ConfigurationAction.class
 )
 public class WebFormConfigurationAction extends DefaultConfigurationAction {
 
 	@Override
-	public String getJspPath(HttpServletRequest request) {
-		String cmd = ParamUtil.getString(request, Constants.CMD);
+	public String getJspPath(HttpServletRequest httpServletRequest) {
+		String cmd = ParamUtil.getString(httpServletRequest, Constants.CMD);
 
 		if (cmd.equals(Constants.ADD)) {
 			return "/edit_field.jsp";
 		}
-		else {
-			return "/configuration.jsp";
-		}
+
+		return "/configuration.jsp";
 	}
 
 	@Override
@@ -90,9 +89,6 @@ public class WebFormConfigurationAction extends DefaultConfigurationAction {
 		boolean updateFields = ParamUtil.getBoolean(
 			actionRequest, "updateFields");
 
-		String portletResource = ParamUtil.getString(
-			actionRequest, "portletResource");
-
 		PortletPreferences preferences = actionRequest.getPreferences();
 
 		LocalizationUtil.setLocalizedPreferencesValues(
@@ -113,6 +109,9 @@ public class WebFormConfigurationAction extends DefaultConfigurationAction {
 
 		if (updateFields) {
 			int i = 1;
+
+			String portletResource = ParamUtil.getString(
+				actionRequest, "portletResource");
 
 			String databaseTableName = WebFormUtil.getNewDatabaseTableName(
 				portletResource);
@@ -141,6 +140,7 @@ public class WebFormConfigurationAction extends DefaultConfigurationAction {
 				Map<Locale, String> fieldParagraphMap =
 					LocalizationUtil.getLocalizationMap(
 						actionRequest, "fieldParagraph" + formFieldsIndex);
+
 				String fieldValidationScript = ParamUtil.getString(
 					actionRequest, "fieldValidationScript" + formFieldsIndex);
 				String fieldValidationErrorMessage = ParamUtil.getString(
@@ -294,8 +294,9 @@ public class WebFormConfigurationAction extends DefaultConfigurationAction {
 				LocalizationUtil.getLocalizationMap(
 					actionRequest, "fieldLabel" + formFieldsIndex);
 
-			for (Locale locale : fieldLabelMap.keySet()) {
-				String fieldLabelValue = fieldLabelMap.get(locale);
+			for (Map.Entry<Locale, String> entry : fieldLabelMap.entrySet()) {
+				String fieldLabelValue = entry.getValue();
+				Locale locale = entry.getKey();
 
 				if (locale.equals(defaultLocale) &&
 					Validator.isNull(fieldLabelValue)) {
@@ -363,14 +364,14 @@ public class WebFormConfigurationAction extends DefaultConfigurationAction {
 				continue;
 			}
 
-			for (Locale locale : fieldLabelMap.keySet()) {
-				String fieldLabelValue = fieldLabelMap.get(locale);
+			for (Map.Entry<Locale, String> entry : fieldLabelMap.entrySet()) {
+				String fieldLabelValue = entry.getValue();
 
 				if (Validator.isNull(fieldLabelValue)) {
 					continue;
 				}
 
-				String languageId = LocaleUtil.toLanguageId(locale);
+				String languageId = LocaleUtil.toLanguageId(entry.getKey());
 
 				if (!localizedUniqueFieldNames.add(
 						languageId + "_" + fieldLabelValue)) {

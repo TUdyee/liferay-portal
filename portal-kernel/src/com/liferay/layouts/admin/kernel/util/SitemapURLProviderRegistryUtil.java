@@ -14,8 +14,6 @@
 
 package com.liferay.layouts.admin.kernel.util;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -32,9 +30,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
+ * @deprecated As of Mueller (7.2.x), replaced by {@link com.liferay.layout.admin.kernel.util.SitemapURLProviderRegistryUtil}
  */
-@ProviderType
+@Deprecated
 public class SitemapURLProviderRegistryUtil {
 
 	public static SitemapURLProvider getSitemapURLProvider(String className) {
@@ -105,8 +104,8 @@ public class SitemapURLProviderRegistryUtil {
 
 	private final ServiceRegistrationMap<SitemapURLProvider>
 		_serviceRegistrations = new ServiceRegistrationMapImpl<>();
-	private final
-		ServiceTracker<SitemapURLProvider, SitemapURLProvider> _serviceTracker;
+	private final ServiceTracker<SitemapURLProvider, SitemapURLProvider>
+		_serviceTracker;
 	private final Map<String, SitemapURLProvider> _sitemapURLProviders =
 		new ConcurrentHashMap<>();
 

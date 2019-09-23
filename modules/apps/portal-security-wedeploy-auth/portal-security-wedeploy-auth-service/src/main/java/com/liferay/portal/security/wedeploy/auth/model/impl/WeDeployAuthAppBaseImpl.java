@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.wedeploy.auth.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp;
 import com.liferay.portal.security.wedeploy.auth.service.WeDeployAuthAppLocalServiceUtil;
 
@@ -31,13 +29,13 @@ import com.liferay.portal.security.wedeploy.auth.service.WeDeployAuthAppLocalSer
  * @see WeDeployAuthApp
  * @generated
  */
-@ProviderType
-public abstract class WeDeployAuthAppBaseImpl extends WeDeployAuthAppModelImpl
-	implements WeDeployAuthApp {
-	/*
+public abstract class WeDeployAuthAppBaseImpl
+	extends WeDeployAuthAppModelImpl implements WeDeployAuthApp {
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a we deploy auth app model instance should use the {@link WeDeployAuthApp} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a we deploy auth app model instance should use the <code>WeDeployAuthApp</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +46,5 @@ public abstract class WeDeployAuthAppBaseImpl extends WeDeployAuthAppModelImpl
 			WeDeployAuthAppLocalServiceUtil.updateWeDeployAuthApp(this);
 		}
 	}
+
 }

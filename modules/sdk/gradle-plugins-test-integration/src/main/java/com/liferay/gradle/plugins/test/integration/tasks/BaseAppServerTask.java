@@ -24,7 +24,9 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.gradle.api.DefaultTask;
@@ -39,6 +41,18 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
  * @author Andrea Di Giorgi
  */
 public abstract class BaseAppServerTask extends DefaultTask {
+
+	public BaseAppServerTask environment(Map<String, String> environment) {
+		_environment.putAll(environment);
+
+		return this;
+	}
+
+	public BaseAppServerTask environment(String key, String value) {
+		_environment.put(key, value);
+
+		return this;
+	}
 
 	public void executableArgs(Iterable<?> executableArgs) {
 		GUtil.addToCollection(_executableArgs, executableArgs);
@@ -69,6 +83,11 @@ public abstract class BaseAppServerTask extends DefaultTask {
 	}
 
 	@Input
+	public Map<String, String> getEnvironment() {
+		return _environment;
+	}
+
+	@Input
 	public String getExecutable() {
 		return GradleUtil.toString(_executable);
 	}
@@ -87,6 +106,11 @@ public abstract class BaseAppServerTask extends DefaultTask {
 	}
 
 	@Input
+	public String getHostName() {
+		return GradleUtil.toString(_hostName);
+	}
+
+	@Input
 	public int getPortNumber() {
 		return GradleUtil.toInteger(_portNumber);
 	}
@@ -94,7 +118,7 @@ public abstract class BaseAppServerTask extends DefaultTask {
 	public boolean isReachable() {
 		try {
 			URL url = new URL(
-				"http", "localhost", getPortNumber(), getCheckPath());
+				"http", getHostName(), getPortNumber(), getCheckPath());
 
 			HttpURLConnection httpURLConnection =
 				(HttpURLConnection)url.openConnection();
@@ -129,6 +153,12 @@ public abstract class BaseAppServerTask extends DefaultTask {
 		_checkTimeout = checkTimeout;
 	}
 
+	public void setEnvironment(Map<String, String> environment) {
+		_environment.clear();
+
+		environment(environment);
+	}
+
 	public void setExecutable(Object executable) {
 		_executable = executable;
 	}
@@ -141,6 +171,10 @@ public abstract class BaseAppServerTask extends DefaultTask {
 
 	public void setExecutableArgs(Object... executableArgs) {
 		setExecutableArgs(Arrays.asList(executableArgs));
+	}
+
+	public void setHostName(Object hostName) {
+		_hostName = hostName;
 	}
 
 	public void setPortNumber(Object portNumber) {
@@ -159,6 +193,8 @@ public abstract class BaseAppServerTask extends DefaultTask {
 		ProcessExecutor processExecutor = new ProcessExecutor(commands);
 
 		processExecutor.directory(getBinDir());
+
+		processExecutor.environment(getEnvironment());
 
 		Slf4jStream slf4jStream = Slf4jStream.ofCaller();
 
@@ -188,9 +224,11 @@ public abstract class BaseAppServerTask extends DefaultTask {
 	private Object _binDir;
 	private long _checkInterval = 500;
 	private Object _checkPath;
-	private long _checkTimeout = 5 * 60 * 1000;
+	private long _checkTimeout = 10 * 60 * 1000;
+	private final Map<String, String> _environment = new LinkedHashMap<>();
 	private Object _executable;
 	private final List<Object> _executableArgs = new ArrayList<>();
+	private Object _hostName = "localhost";
 	private Object _portNumber;
 
 }

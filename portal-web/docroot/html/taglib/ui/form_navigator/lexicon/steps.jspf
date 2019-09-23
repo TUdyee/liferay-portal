@@ -18,7 +18,9 @@
 	<aui:input name="modifiedSections" type="hidden" />
 
 	<div class="form-steps" id="<portlet:namespace />tabs">
-		<liferay-util:buffer var="formNavigatorBottom">
+		<liferay-util:buffer
+			var="formNavigatorBottom"
+		>
 			<c:if test="<%= showButtons %>">
 				<aui:button-row>
 					<aui:button primary="<%= true %>" type="submit" />
@@ -30,7 +32,9 @@
 			<%= Validator.isNotNull(htmlBottom) ? htmlBottom : StringPool.BLANK %>
 		</liferay-util:buffer>
 
-		<liferay-util:buffer var="formSectionsBuffer">
+		<liferay-util:buffer
+			var="formSectionsBuffer"
+		>
 			<div class="form-navigator-content">
 
 				<%
@@ -104,6 +108,7 @@
 					boolean isFoundActiveStep = false;
 
 					for (int j = 0; j < sectionKeys.length; j++) {
+						String sectionIcon = "live";
 						String sectionKey = sectionKeys[j];
 						String sectionLabel = sectionLabels[j];
 
@@ -126,10 +131,12 @@
 						if (curSection.equals(sectionKey) || curSection.equals(sectionId)) {
 							cssClass += " active";
 							isFoundActiveStep = true;
+							sectionIcon = "circle";
 						}
 
 						if (!isFoundActiveStep) {
 							cssClass += " complete";
+							sectionIcon = "check";
 						}
 
 						if (ArrayUtil.contains(modifiedSections, sectionId)) {
@@ -140,7 +147,11 @@
 						<li class="<%= cssClass %>" data-sectionId="<%= sectionId %>" id="<%= sectionId %>Tab">
 							<div class="progress-bar-title"><%= sectionLabel %></div>
 
-							<div class="divider"></div>
+							<div class="divider">
+								<svg aria-hidden="true" class="lexicon-icon lexicon-icon-<%= sectionIcon %>">
+									<use xlink:href="<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg#<%= sectionIcon %>"></use>
+								</svg>
+							</div>
 
 							<div class="progress-bar-step"><liferay-ui:message key="<%= String.valueOf(step) %>" /></div>
 						</li>
@@ -278,9 +289,13 @@
 
 					if (tabview.indexOf(item) < tabIndex) {
 						node.addClass('complete');
+						node.one('.divider').setHTML(Liferay.Util.getLexiconIconTpl('check'));
+					}
+					else if (tabview.indexOf(item) === tabIndex) {
+						node.one('.divider').setHTML(Liferay.Util.getLexiconIconTpl('circle'));
 					}
 					else {
-						node.removeClass('complete');
+						node.one('.divider').setHTML(Liferay.Util.getLexiconIconTpl('live'));
 					}
 				}
 			);

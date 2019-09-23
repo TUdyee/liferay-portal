@@ -50,13 +50,13 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.maven.Conf2ScopeMappingContainer;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Input;
@@ -129,7 +129,6 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 		_configurationScopeMappings.put(configurationName, scope);
 	}
 
-	@SuppressWarnings("unchecked")
 	public BuildPluginDescriptorTask forcedExclusions(
 		Iterable<String> forcedExclusions) {
 
@@ -214,6 +213,10 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 		return GradleUtil.toFile(getProject(), _sourceDir);
 	}
 
+	public boolean isMavenDebug() {
+		return _mavenDebug;
+	}
+
 	@Input
 	public boolean isUseSetterComments() {
 		return _useSetterComments;
@@ -249,6 +252,10 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 
 	public void setGoalPrefix(Object goalPrefix) {
 		_goalPrefix = goalPrefix;
+	}
+
+	public void setMavenDebug(boolean mavenDebug) {
+		_mavenDebug = mavenDebug;
 	}
 
 	public void setMavenEmbedderClasspath(
@@ -317,6 +324,8 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 			return;
 		}
 
+		Logger logger = getLogger();
+
 		Set<String> forcedExclusions = getForcedExclusions();
 
 		ResolvedConfiguration resolvedConfiguration =
@@ -329,11 +338,6 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 
 			final String dependencyGroup = dependency.getGroup();
 			final String dependencyName = dependency.getName();
-
-			XMLUtil.appendElement(
-				document, dependencyElement, "groupId", dependencyGroup);
-			XMLUtil.appendElement(
-				document, dependencyElement, "artifactId", dependencyName);
 
 			String dependencyVersion = dependency.getVersion();
 
@@ -362,11 +366,17 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 
 				dependencyVersion = resolvedDependency.getModuleVersion();
 			}
-			else if (_logger.isWarnEnabled()) {
-				_logger.warn(
-					"Unable to find resolved module version for " + dependency);
+			else if (logger.isWarnEnabled()) {
+				logger.warn(
+					"Unable to find resolved module version for {}",
+					dependency);
 			}
 
+			XMLUtil.appendElement(
+				document, dependencyElement, "groupId", dependencyGroup);
+			XMLUtil.appendElement(
+				document, dependencyElement, "artifactId",
+				_getDependencyName(dependency));
 			XMLUtil.appendElement(
 				document, dependencyElement, "version", dependencyVersion);
 
@@ -433,6 +443,15 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 				public void execute(JavaExecSpec javaExecSpec) {
 					javaExecSpec.args("--batch-mode", "--errors");
 
+					Logger logger = getLogger();
+
+					if (logger.isInfoEnabled()) {
+						javaExecSpec.args("--debug");
+					}
+					else if (logger.isQuietEnabled()) {
+						javaExecSpec.args("--quiet");
+					}
+
 					javaExecSpec.args("--file");
 					javaExecSpec.args(project.relativePath(pomFile));
 
@@ -449,6 +468,7 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 					javaExecSpec.args("plugin:descriptor");
 
 					javaExecSpec.setClasspath(getMavenEmbedderClasspath());
+					javaExecSpec.setDebug(isMavenDebug());
 					javaExecSpec.setMain(getMavenEmbedderMainClassName());
 
 					javaExecSpec.systemProperty(
@@ -459,6 +479,7 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 			});
 
 		File dir = new File(getClassesDir(), "META-INF/maven");
+
 		File outputDir = getOutputDir();
 
 		project.delete(outputDir);
@@ -590,6 +611,28 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 		return code.substring(start, end + 2);
 	}
 
+	private String _getDependencyName(Dependency dependency) {
+		Logger logger = getLogger();
+
+		if (dependency instanceof ProjectDependency) {
+			ProjectDependency projectDependency = (ProjectDependency)dependency;
+
+			Project dependencyProject =
+				projectDependency.getDependencyProject();
+
+			try {
+				return GradleUtil.getArchivesBaseName(dependencyProject);
+			}
+			catch (IllegalStateException ise) {
+				if (logger.isWarnEnabled()) {
+					logger.warn("Unable to find name for " + dependency, ise);
+				}
+			}
+		}
+
+		return dependency.getName();
+	}
+
 	private String _getTypeName(Type type) {
 		String name = type.getFullyQualifiedName();
 
@@ -629,9 +672,7 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 			sb.append('\n');
 			sb.append("private ");
 
-			Type type = beanProperty.getType();
-
-			sb.append(_getTypeName(type));
+			sb.append(_getTypeName(beanProperty.getType()));
 
 			sb.append(' ');
 			sb.append(beanProperty.getName());
@@ -702,8 +743,10 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 		int pos = content.lastIndexOf("</dependencies>");
 
 		if (pos == -1) {
-			if (_logger.isWarnEnabled()) {
-				_logger.warn("Unable to readd forced exclusions");
+			Logger logger = getLogger();
+
+			if (logger.isWarnEnabled()) {
+				logger.warn("Unable to readd forced exclusions");
 			}
 
 			return;
@@ -746,18 +789,16 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 		Files.write(path, content.getBytes(StandardCharsets.UTF_8));
 	}
 
-	private static final Logger _logger = Logging.getLogger(
-		BuildPluginDescriptorTask.class);
-
 	private Object _classesDir;
 	private final Map<String, String> _configurationScopeMappings =
 		new HashMap<>();
 	private final Set<String> _forcedExclusions = new HashSet<>();
 	private Object _goalPrefix;
+	private boolean _mavenDebug;
 	private FileCollection _mavenEmbedderClasspath;
 	private Object _mavenEmbedderMainClassName =
 		"org.apache.maven.cli.MavenCli";
-	private Object _mavenPluginPluginVersion = "3.4";
+	private Object _mavenPluginPluginVersion = "3.5.2";
 	private Object _mavenSettingsFile;
 	private Object _outputDir;
 	private Object _pomArtifactId;

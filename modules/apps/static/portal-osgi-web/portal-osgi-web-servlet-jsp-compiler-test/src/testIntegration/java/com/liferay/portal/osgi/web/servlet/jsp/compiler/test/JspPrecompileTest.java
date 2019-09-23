@@ -15,6 +15,10 @@
 package com.liferay.portal.osgi.web.servlet.jsp.compiler.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
@@ -28,18 +32,14 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.osgi.web.servlet.jsp.compiler.test.servlet.PrecompileTestServlet;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portal.util.test.LayoutTestUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -172,20 +172,20 @@ public class JspPrecompileTest {
 
 			ClassWriter classWriter = new ClassWriter(classReader, 0);
 
-			ClassVisitor classVisitor =
-				new ClassVisitor(Opcodes.ASM5, classWriter) {
+			ClassVisitor classVisitor = new ClassVisitor(
+				Opcodes.ASM5, classWriter) {
 
-					@Override
-					public void visit(
-						int version, int access, String name, String signature,
-						String superName, String[] interfaces) {
+				@Override
+				public void visit(
+					int version, int access, String name, String signature,
+					String superName, String[] interfaces) {
 
-						super.visit(
-							version, access, className, signature, superName,
-							interfaces);
-					}
+					super.visit(
+						version, access, className, signature, superName,
+						interfaces);
+				}
 
-				};
+			};
 
 			classReader.accept(classVisitor, 0);
 
@@ -390,8 +390,10 @@ public class JspPrecompileTest {
 			String content = StringUtil.read(inputStream);
 
 			Assert.assertTrue(
-				"Content {" + content + "} does not contain expected message " +
-					"{" + expectedMessage + "}",
+				StringBundler.concat(
+					"Content {", content,
+					"} does not contain expected message {", expectedMessage,
+					"}"),
 				content.contains(expectedMessage));
 		}
 	}

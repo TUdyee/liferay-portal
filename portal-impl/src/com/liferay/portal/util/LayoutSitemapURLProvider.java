@@ -14,6 +14,7 @@
 
 package com.liferay.portal.util;
 
+import com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layouts.admin.kernel.util.SitemapURLProvider;
 import com.liferay.layouts.admin.kernel.util.SitemapUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -21,6 +22,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutServiceUtil;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -33,8 +35,10 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
+ * @deprecated As of Mueller (7.2.x), replaced by {@link com.liferay.layout.internal.util.LayoutSitemapURLProvider}
  */
+@Deprecated
 @OSGiBeanProperties
 public class LayoutSitemapURLProvider implements SitemapURLProvider {
 
@@ -50,7 +54,7 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 		throws PortalException {
 
 		Layout layout = LayoutLocalServiceUtil.getLayoutByUuidAndGroupId(
-			layoutUuid, layoutSet.getGroupId(), layoutSet.getPrivateLayout());
+			layoutUuid, layoutSet.getGroupId(), layoutSet.isPrivateLayout());
 
 		visitLayout(element, layout, themeDisplay);
 	}
@@ -76,8 +80,8 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 				continue;
 			}
 
-			List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
-				layoutSet.getGroupId(), layoutSet.getPrivateLayout(),
+			List<Layout> layouts = LayoutServiceUtil.getLayouts(
+				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
 				entry.getKey());
 
 			for (Layout layout : layouts) {
@@ -94,7 +98,9 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 			layout.getTypeSettingsProperties();
 
 		if (!GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty("sitemap-include"), true)) {
+				typeSettingsProperties.getProperty(
+					LayoutTypePortletConstants.SITEMAP_INCLUDE),
+				true)) {
 
 			return;
 		}

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.Country;
 
 /**
@@ -30,12 +28,13 @@ import com.liferay.portal.kernel.model.Country;
  * @see Country
  * @generated
  */
-@ProviderType
-public abstract class CountryBaseImpl extends CountryModelImpl
-	implements Country {
-	/*
+public abstract class CountryBaseImpl
+	extends CountryModelImpl implements Country {
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a country model instance should use the {@link Country} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a country model instance should use the <code>Country</code> interface instead.
 	 */
+
 }

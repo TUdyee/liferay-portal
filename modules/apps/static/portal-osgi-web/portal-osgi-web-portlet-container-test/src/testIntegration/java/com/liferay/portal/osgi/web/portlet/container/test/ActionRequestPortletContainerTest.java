@@ -15,7 +15,9 @@
 package com.liferay.portal.osgi.web.portlet.container.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
+import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.auth.AuthToken;
 import com.liferay.portal.kernel.security.auth.AuthTokenWhitelist;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -23,14 +25,12 @@ import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.osgi.web.portlet.container.test.util.PortletContainerTestUtil;
 import com.liferay.portal.security.auth.AuthTokenWhitelistImpl;
 import com.liferay.portal.security.auth.SessionAuthToken;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.PortletContainerTestUtil;
-import com.liferay.portal.util.test.PortletContainerTestUtil.Response;
-import com.liferay.portlet.PortletURLImpl;
 import com.liferay.portlet.SecurityPortletContainerWrapper;
 
 import java.io.IOException;
@@ -87,12 +87,12 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
-		Response response = PortletContainerTestUtil.request(
-			portletURL.toString());
+		PortletContainerTestUtil.Response response =
+			PortletContainerTestUtil.request(portletURL.toString());
 
 		Assert.assertEquals(200, response.getCode());
 
@@ -116,12 +116,12 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
-		Response response = PortletContainerTestUtil.request(
-			portletURL.toString());
+		PortletContainerTestUtil.Response response =
+			PortletContainerTestUtil.request(portletURL.toString());
 
 		Assert.assertEquals(200, response.getCode());
 
@@ -143,12 +143,12 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
-		Response response = PortletContainerTestUtil.request(
-			portletURL.toString());
+		PortletContainerTestUtil.Response response =
+			PortletContainerTestUtil.request(portletURL.toString());
 
 		Assert.assertEquals(200, response.getCode());
 
@@ -168,12 +168,12 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
-		Response response = PortletContainerTestUtil.request(
-			portletURL.toString());
+		PortletContainerTestUtil.Response response =
+			PortletContainerTestUtil.request(portletURL.toString());
 
 		Assert.assertEquals(200, response.getCode());
 
@@ -189,7 +189,7 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
@@ -200,7 +200,8 @@ public class ActionRequestPortletContainerTest
 					SecurityPortletContainerWrapper.class.getName(),
 					Level.WARN)) {
 
-			Response response = PortletContainerTestUtil.request(url);
+			PortletContainerTestUtil.Response response =
+				PortletContainerTestUtil.request(url);
 
 			List<LoggingEvent> loggingEvents =
 				captureAppender.getLoggingEvents();
@@ -211,12 +212,15 @@ public class ActionRequestPortletContainerTest
 			LoggingEvent loggingEvent = loggingEvents.get(0);
 
 			Assert.assertEquals(
-				"User 0 is not allowed to access URL " +
-					url.substring(0, url.indexOf('?')) + " and portlet " +
-						TEST_PORTLET_ID,
+				StringBundler.concat(
+					"User 0 is not allowed to access URL ",
+					url.substring(0, url.indexOf('?')), " and portlet ",
+					TEST_PORTLET_ID, ": User 0 did not provide a valid CSRF ",
+					"token for ",
+					"com.liferay.portlet.SecurityPortletContainerWrapper"),
 				loggingEvent.getMessage());
 
-			Assert.assertEquals(200, response.getCode());
+			Assert.assertEquals(403, response.getCode());
 			Assert.assertFalse(testPortlet.isCalledAction());
 		}
 	}
@@ -232,14 +236,15 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		Response response = PortletContainerTestUtil.getPortalAuthentication(
-			httpServletRequest, layout, TEST_PORTLET_ID);
+		PortletContainerTestUtil.Response response =
+			PortletContainerTestUtil.getPortalAuthentication(
+				httpServletRequest, layout, TEST_PORTLET_ID);
 
 		testPortlet.reset();
 
 		// Make an action request using the portal authentication token
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
@@ -273,14 +278,14 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
 		portletURL.setParameter("p_auth_secret", _SHARED_SECRET);
 
-		Response response = PortletContainerTestUtil.request(
-			portletURL.toString());
+		PortletContainerTestUtil.Response response =
+			PortletContainerTestUtil.request(portletURL.toString());
 
 		Assert.assertEquals(200, response.getCode());
 
@@ -299,14 +304,14 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
 		portletURL.setParameter("struts_action", "/test/portlet/1");
 
-		Response response = PortletContainerTestUtil.request(
-			portletURL.toString());
+		PortletContainerTestUtil.Response response =
+			PortletContainerTestUtil.request(portletURL.toString());
 
 		Assert.assertEquals(200, response.getCode());
 
@@ -324,14 +329,15 @@ public class ActionRequestPortletContainerTest
 		HttpServletRequest httpServletRequest =
 			PortletContainerTestUtil.getHttpServletRequest(group, layout);
 
-		Response response = PortletContainerTestUtil.getPortalAuthentication(
-			httpServletRequest, layout, TEST_PORTLET_ID);
+		PortletContainerTestUtil.Response response =
+			PortletContainerTestUtil.getPortalAuthentication(
+				httpServletRequest, layout, TEST_PORTLET_ID);
 
 		testPortlet.reset();
 
 		// Make an action request using the portal authentication token
 
-		PortletURL portletURL = new PortletURLImpl(
+		PortletURL portletURL = PortletURLFactoryUtil.create(
 			httpServletRequest, TEST_PORTLET_ID, layout.getPlid(),
 			PortletRequest.ACTION_PHASE);
 
@@ -383,11 +389,13 @@ public class ActionRequestPortletContainerTest
 
 		@Override
 		public void addCSRFToken(
-			HttpServletRequest request, LiferayPortletURL liferayPortletURL) {
+			HttpServletRequest httpServletRequest,
+			LiferayPortletURL liferayPortletURL) {
 		}
 
 		@Override
-		public void checkCSRFToken(HttpServletRequest request, String origin) {
+		public void checkCSRFToken(
+			HttpServletRequest httpServletRequest, String origin) {
 		}
 
 	}

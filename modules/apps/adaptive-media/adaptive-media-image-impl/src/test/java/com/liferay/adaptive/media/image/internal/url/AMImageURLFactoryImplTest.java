@@ -18,9 +18,11 @@ import com.liferay.adaptive.media.AMURIResolver;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.internal.configuration.AMImageConfigurationEntryImpl;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 
 import java.net.URI;
 
+import java.util.Date;
 import java.util.HashMap;
 
 import org.junit.Assert;
@@ -47,15 +49,21 @@ public class AMImageURLFactoryImplTest {
 		);
 
 		Mockito.when(
+			_fileVersion.getFileName()
+		).thenReturn(
+			"fileName"
+		);
+
+		Mockito.when(
 			_fileVersion.getFileVersionId()
 		).thenReturn(
 			2L
 		);
 
 		Mockito.when(
-			_fileVersion.getFileName()
+			_fileVersion.getModifiedDate()
 		).thenReturn(
-			"fileName"
+			_modifiedDate
 		);
 
 		Mockito.when(
@@ -64,7 +72,8 @@ public class AMImageURLFactoryImplTest {
 			invocation -> URI.create("prefix/" + invocation.getArguments()[0])
 		);
 
-		_amImageURLFactory.setAMURIResolver(_amURIResolver);
+		ReflectionTestUtil.setFieldValue(
+			_amImageURLFactory, "_amURIResolver", _amURIResolver);
 	}
 
 	@Test
@@ -72,7 +81,9 @@ public class AMImageURLFactoryImplTest {
 		URI uri = _amImageURLFactory.createFileEntryURL(
 			_fileVersion, _amImageConfigurationEntry);
 
-		Assert.assertEquals("prefix/image/1/theUuid/fileName", uri.toString());
+		Assert.assertEquals(
+			"prefix/image/1/theUuid/fileName?t=" + _modifiedDate.getTime(),
+			uri.toString());
 	}
 
 	@Test
@@ -96,5 +107,7 @@ public class AMImageURLFactoryImplTest {
 
 	@Mock
 	private FileVersion _fileVersion;
+
+	private final Date _modifiedDate = new Date();
 
 }

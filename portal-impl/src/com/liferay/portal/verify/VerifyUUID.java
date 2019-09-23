@@ -14,11 +14,13 @@
 
 package com.liferay.portal.verify;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
+import com.liferay.portal.kernel.dao.db.DB;
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.kernel.verify.model.VerifiableUUIDModel;
 
@@ -53,9 +55,7 @@ public class VerifyUUID extends VerifyProcess {
 		Collection<VerifiableUUIDModel> verifiableUUIDModels =
 			verifiableUUIDModelsMap.values();
 
-		doVerify(
-			verifiableUUIDModels.toArray(
-				new VerifiableUUIDModel[verifiableUUIDModels.size()]));
+		doVerify(verifiableUUIDModels.toArray(new VerifiableUUIDModel[0]));
 	}
 
 	protected void doVerify(VerifiableUUIDModel... verifiableUUIDModels)
@@ -77,6 +77,24 @@ public class VerifyUUID extends VerifyProcess {
 	protected void verifyUUID(VerifiableUUIDModel verifiableUUIDModel)
 		throws Exception {
 
+		DB db = DBManagerUtil.getDB();
+
+		if (db.isSupportsNewUuidFunction()) {
+			try (LoggingTimer loggingTimer = new LoggingTimer(
+					verifiableUUIDModel.getTableName());
+				Connection con = DataAccess.getConnection();
+				PreparedStatement ps = con.prepareStatement(
+					StringBundler.concat(
+						"update ", verifiableUUIDModel.getTableName(),
+						" set uuid_ = ", db.getNewUuidFunctionName(),
+						" where uuid_ is null or uuid_ = ''"))) {
+
+				ps.executeUpdate();
+
+				return;
+			}
+		}
+
 		StringBundler sb = new StringBundler(5);
 
 		sb.append("update ");
@@ -87,11 +105,12 @@ public class VerifyUUID extends VerifyProcess {
 
 		try (LoggingTimer loggingTimer = new LoggingTimer(
 				verifiableUUIDModel.getTableName());
-			Connection con = DataAccess.getUpgradeOptimizedConnection();
+			Connection con = DataAccess.getConnection();
 			PreparedStatement ps1 = con.prepareStatement(
-				"select " + verifiableUUIDModel.getPrimaryKeyColumnName() +
-					" from " + verifiableUUIDModel.getTableName() +
-						" where uuid_ is null or uuid_ = ''");
+				StringBundler.concat(
+					"select ", verifiableUUIDModel.getPrimaryKeyColumnName(),
+					" from ", verifiableUUIDModel.getTableName(),
+					" where uuid_ is null or uuid_ = ''"));
 			ResultSet rs = ps1.executeQuery();
 			PreparedStatement ps2 = AutoBatchPreparedStatementUtil.autoBatch(
 				con.prepareStatement(sb.toString()))) {

@@ -17,23 +17,24 @@ package com.liferay.portal.kernel.search;
 /**
  * @author     Brian Wing Shun Chan
  * @author     Raymond Augé
- * @deprecated As of 7.0.0, , replaced by {@link
+ * @deprecated As of Wilberforce (7.0.x), , replaced by {@link
  *             com.liferay.portal.kernel.search.generic.BooleanQueryImpl}
  */
 @Deprecated
 public class BooleanQueryFactoryUtil {
 
 	public static BooleanQuery create(SearchContext searchContext) {
-		return getBooleanQueryFactory(searchContext).create();
+		BooleanQueryFactory booleanQueryFactory = getBooleanQueryFactory(
+			searchContext);
+
+		return booleanQueryFactory.create();
 	}
 
 	public static BooleanQueryFactory getBooleanQueryFactory(
 		SearchContext searchContext) {
 
-		String searchEngineId = searchContext.getSearchEngineId();
-
 		SearchEngine searchEngine = SearchEngineHelperUtil.getSearchEngine(
-			searchEngineId);
+			searchContext.getSearchEngineId());
 
 		return searchEngine.getBooleanQueryFactory();
 	}

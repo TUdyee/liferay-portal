@@ -17,7 +17,9 @@ package com.liferay.document.library.google.docs.internal.util;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
-import com.liferay.dynamic.data.mapping.io.DDMFormXSDDeserializer;
+import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
+import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
+import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -48,7 +50,7 @@ public class GoogleDocsDLFileEntryTypeHelper {
 
 	public GoogleDocsDLFileEntryTypeHelper(
 		Company company, ClassNameLocalService classNameLocalService, DDM ddm,
-		DDMFormXSDDeserializer ddmFormXSDDeserializer,
+		DDMFormDeserializer xsdDDMFormDeserializer,
 		DDMStructureLocalService ddmStructureLocalService,
 		DLFileEntryTypeLocalService dlFileEntryTypeLocalService,
 		UserLocalService userLocalService) {
@@ -56,7 +58,7 @@ public class GoogleDocsDLFileEntryTypeHelper {
 		_company = company;
 		_classNameLocalService = classNameLocalService;
 		_ddm = ddm;
-		_ddmFormXSDDeserializer = ddmFormXSDDeserializer;
+		_xsdDDMFormDeserializer = xsdDDMFormDeserializer;
 		_ddmStructureLocalService = ddmStructureLocalService;
 		_dlFileEntryTypeLocalService = dlFileEntryTypeLocalService;
 		_userLocalService = userLocalService;
@@ -90,7 +92,20 @@ public class GoogleDocsDLFileEntryTypeHelper {
 			throw new PortalException(ioe);
 		}
 
-		DDMForm ddmForm = _ddmFormXSDDeserializer.deserialize(definition);
+		Locale locale = _company.getLocale();
+
+		definition = StringUtil.replace(
+			definition, "[$LOCALE_DEFAULT$]", locale.toString());
+
+		DDMFormDeserializerDeserializeRequest.Builder builder =
+			DDMFormDeserializerDeserializeRequest.Builder.newBuilder(
+				definition);
+
+		DDMFormDeserializerDeserializeResponse
+			ddmFormDeserializerDeserializeResponse =
+				_xsdDDMFormDeserializer.deserialize(builder.build());
+
+		DDMForm ddmForm = ddmFormDeserializerDeserializeResponse.getDDMForm();
 
 		DDMFormLayout ddmFormLayout = _ddm.getDefaultDDMFormLayout(ddmForm);
 
@@ -140,11 +155,11 @@ public class GoogleDocsDLFileEntryTypeHelper {
 
 		Map<Locale, String> nameMap = new HashMap<>();
 
-		nameMap.put(LocaleUtil.getDefault(), "Google Docs");
+		nameMap.put(
+			LocaleUtil.getDefault(),
+			GoogleDocsConstants.DL_FILE_ENTRY_TYPE_NAME);
 
 		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getDefault(), "Google Docs");
 
 		ServiceContext serviceContext = new ServiceContext();
 
@@ -162,10 +177,10 @@ public class GoogleDocsDLFileEntryTypeHelper {
 	private final ClassNameLocalService _classNameLocalService;
 	private final Company _company;
 	private final DDM _ddm;
-	private final DDMFormXSDDeserializer _ddmFormXSDDeserializer;
 	private final DDMStructureLocalService _ddmStructureLocalService;
 	private final long _dlFileEntryMetadataClassNameId;
 	private final DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
 	private final UserLocalService _userLocalService;
+	private final DDMFormDeserializer _xsdDDMFormDeserializer;
 
 }

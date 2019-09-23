@@ -22,8 +22,9 @@ import com.liferay.document.library.kernel.exception.InvalidFileVersionException
 import com.liferay.document.library.kernel.exception.SourceFileNameException;
 import com.liferay.document.library.kernel.util.DLValidator;
 import com.liferay.document.library.kernel.util.DLValidatorUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeFormatter;
 import com.liferay.portal.kernel.util.Validator;
@@ -34,7 +35,7 @@ import java.io.InputStream;
 
 /**
  * @author     Adolfo Pérez
- * @deprecated As of 7.0.0, replaced by {@link
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.document.library.internal.util.DLValidatorImpl}
  */
 @Deprecated
@@ -156,8 +157,9 @@ public final class DLValidatorImpl implements DLValidator {
 					return nameWithoutExtension + StringPool.UNDERLINE;
 				}
 
-				return nameWithoutExtension + StringPool.UNDERLINE +
-					StringPool.PERIOD + extension;
+				return StringBundler.concat(
+					nameWithoutExtension, StringPool.UNDERLINE,
+					StringPool.PERIOD, extension);
 			}
 		}
 

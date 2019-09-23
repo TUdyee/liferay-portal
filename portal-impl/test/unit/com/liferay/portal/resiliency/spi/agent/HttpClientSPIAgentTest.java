@@ -14,6 +14,7 @@
 
 package com.liferay.portal.resiliency.spi.agent;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.io.Serializer;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
@@ -34,19 +35,15 @@ import com.liferay.portal.kernel.servlet.ReadOnlyServletResponse;
 import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
-import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.PropsUtilAdvice;
 import com.liferay.portal.kernel.util.SocketUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.impl.PortletImpl;
-import com.liferay.portal.test.rule.AdviseWith;
-import com.liferay.portal.test.rule.AspectJNewEnvTestRule;
 import com.liferay.portal.util.PropsImpl;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.registry.BasicRegistryImpl;
@@ -69,7 +66,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -84,7 +83,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -96,10 +94,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 public class HttpClientSPIAgentTest {
 
 	@ClassRule
-	@Rule
-	public static final AggregateTestRule aggregateTestRule =
-		new AggregateTestRule(
-			AspectJNewEnvTestRule.INSTANCE, CodeCoverageAssertor.INSTANCE);
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -208,7 +204,7 @@ public class HttpClientSPIAgentTest {
 
 				socket.close();
 
-				Assert.assertTrue(logRecords.isEmpty());
+				Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 
 				// Clean up when input is shutdown, failed with log
 
@@ -298,7 +294,7 @@ public class HttpClientSPIAgentTest {
 			PropsValues.PORTAL_RESILIENCY_SPI_AGENT_CLIENT_POOL_MAX_SIZE,
 			socketBlockingQueue.remainingCapacity());
 
-		StringBundler sb = new StringBundler();
+		StringBundler sb = new StringBundler(6);
 
 		sb.append("POST ");
 		sb.append(HttpClientSPIAgent.SPI_AGENT_CONTEXT_PATH);
@@ -420,7 +416,7 @@ public class HttpClientSPIAgentTest {
 
 				closePeers(socket, serverSocket);
 
-				Assert.assertTrue(logRecords.isEmpty());
+				Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 
 				// Error with log
 
@@ -475,7 +471,7 @@ public class HttpClientSPIAgentTest {
 
 				closePeers(socket, serverSocket);
 
-				Assert.assertTrue(logRecords.isEmpty());
+				Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 			}
 		}
 	}
@@ -532,16 +528,19 @@ public class HttpClientSPIAgentTest {
 		}
 	}
 
-	@AdviseWith(adviceClasses = {PropsUtilAdvice.class})
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testPrepareRequest() throws Exception {
-		PropsUtilAdvice.setProps(
+		Map<String, Object> properties = new HashMap<>();
+
+		properties.put(
 			PropsKeys.INTRABAND_MAILBOX_REAPER_THREAD_ENABLED,
 			Boolean.FALSE.toString());
-		PropsUtilAdvice.setProps(
+		properties.put(
 			PropsKeys.INTRABAND_MAILBOX_STORAGE_LIFE,
 			String.valueOf(Long.MAX_VALUE));
+
+		PropsTestUtil.setProps(properties);
 
 		Serializer serializer = new Serializer();
 
@@ -673,7 +672,7 @@ public class HttpClientSPIAgentTest {
 
 				closePeers(socket, serverSocket);
 
-				Assert.assertTrue(logRecords.isEmpty());
+				Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 
 				// Force close, failed with log
 
@@ -862,7 +861,7 @@ public class HttpClientSPIAgentTest {
 				Assert.assertSame(IOException.class, throwable.getClass());
 			}
 
-			Assert.assertTrue(logRecords.isEmpty());
+			Assert.assertTrue(logRecords.toString(), logRecords.isEmpty());
 
 			swapSocketImpl(socket, socketImpl);
 
@@ -1026,7 +1025,7 @@ public class HttpClientSPIAgentTest {
 			mockHttpServletRequest.getAttribute(
 				WebKeys.SPI_AGENT_ORIGINAL_RESPONSE));
 		Assert.assertEquals(8, mockHttpServletResponse.getContentLength());
-		Assert.assertNull(recordSPIAgentResponse._request);
+		Assert.assertNull(recordSPIAgentResponse._httpServletRequest);
 		Assert.assertNull(recordSPIAgentResponse._bufferCacheServletResponse);
 		Assert.assertSame(
 			mockRegistrationReference,
@@ -1077,7 +1076,7 @@ public class HttpClientSPIAgentTest {
 				WebKeys.SPI_AGENT_ORIGINAL_RESPONSE));
 		Assert.assertEquals(8, mockHttpServletResponse.getContentLength());
 		Assert.assertSame(
-			mockHttpServletRequest, recordSPIAgentResponse._request);
+			mockHttpServletRequest, recordSPIAgentResponse._httpServletRequest);
 		Assert.assertSame(
 			bufferCacheServletResponse,
 			recordSPIAgentResponse._bufferCacheServletResponse);
@@ -1123,7 +1122,7 @@ public class HttpClientSPIAgentTest {
 		Set<String> files = ReflectionTestUtil.getFieldValue(
 			Class.forName("java.io.DeleteOnExitHook"), "files");
 
-		Assert.assertTrue(files.contains(tempFile.getPath()));
+		Assert.assertTrue(files.toString(), files.contains(tempFile.getPath()));
 	}
 
 	protected void closePeers(Socket socket, ServerSocket serverSocket)
@@ -1187,10 +1186,10 @@ public class HttpClientSPIAgentTest {
 
 		@Override
 		public void captureResponse(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			BufferCacheServletResponse bufferCacheServletResponse) {
 
-			_request = request;
+			_httpServletRequest = httpServletRequest;
 			_bufferCacheServletResponse = bufferCacheServletResponse;
 		}
 
@@ -1204,9 +1203,9 @@ public class HttpClientSPIAgentTest {
 		}
 
 		private BufferCacheServletResponse _bufferCacheServletResponse;
+		private HttpServletRequest _httpServletRequest;
 		private OutputStream _outputStream;
 		private RegistrationReference _registrationReference;
-		private HttpServletRequest _request;
 
 	}
 

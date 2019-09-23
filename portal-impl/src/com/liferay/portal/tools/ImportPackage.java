@@ -14,7 +14,7 @@
 
 package com.liferay.portal.tools;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
 /**
@@ -42,9 +42,8 @@ public class ImportPackage implements Comparable<ImportPackage> {
 			if (_isStatic) {
 				return -1;
 			}
-			else {
-				return 1;
-			}
+
+			return 1;
 		}
 
 		String importPackageImportString = importPackage.getImportString();

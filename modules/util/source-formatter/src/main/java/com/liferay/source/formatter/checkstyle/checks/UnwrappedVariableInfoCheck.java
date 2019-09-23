@@ -38,23 +38,24 @@ public class UnwrappedVariableInfoCheck extends BaseCheck {
 			return;
 		}
 
-		String line = fileContents.getLine(detailAST.getLineNo() - 1);
+		String line = getLine(detailAST.getLineNo() - 1);
 
 		if (!line.contains("private static final VariableInfo[]")) {
 			return;
 		}
 
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
 		while (true) {
-			if (parentAST == null) {
+			if (parentDetailAST == null) {
 				return;
 			}
 
-			if (parentAST.getType() == TokenTypes.CLASS_DEF) {
-				DetailAST nameAST = parentAST.findFirstToken(TokenTypes.IDENT);
+			if (parentDetailAST.getType() == TokenTypes.CLASS_DEF) {
+				DetailAST nameDetailAST = parentDetailAST.findFirstToken(
+					TokenTypes.IDENT);
 
-				String className = nameAST.getText();
+				String className = nameDetailAST.getText();
 
 				if (className.equals("Concealer")) {
 					return;
@@ -63,14 +64,12 @@ public class UnwrappedVariableInfoCheck extends BaseCheck {
 				break;
 			}
 
-			parentAST = parentAST.getParent();
+			parentDetailAST = parentDetailAST.getParent();
 		}
 
-		DetailAST nameAST = detailAST.findFirstToken(TokenTypes.IDENT);
+		DetailAST nameDetailAST = detailAST.findFirstToken(TokenTypes.IDENT);
 
-		log(
-			detailAST.getLineNo(), _MSG_UNWRAPPED_VARIABLE_INFO,
-			nameAST.getText());
+		log(detailAST, _MSG_UNWRAPPED_VARIABLE_INFO, nameDetailAST.getText());
 	}
 
 	private static final String _MSG_UNWRAPPED_VARIABLE_INFO =

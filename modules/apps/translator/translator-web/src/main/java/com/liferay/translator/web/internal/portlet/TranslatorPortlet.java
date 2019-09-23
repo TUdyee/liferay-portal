@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webcache.WebCacheException;
-import com.liferay.translator.web.configuration.TranslatorConfiguration;
+import com.liferay.translator.web.internal.configuration.TranslatorConfiguration;
 import com.liferay.translator.web.internal.constants.TranslatorPortletKeys;
 import com.liferay.translator.web.internal.model.Translation;
 import com.liferay.translator.web.internal.util.TranslatorUtil;
@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Peter Fellwock
  */
 @Component(
-	configurationPid = "com.liferay.translator.web.configuration.TranslatorConfiguration",
+	configurationPid = "com.liferay.translator.web.internal.configuration.TranslatorConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-translator",
@@ -57,12 +57,11 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.icon=/icons/translator.png",
 		"com.liferay.portlet.private-request-attributes=false",
 		"com.liferay.portlet.private-session-attributes=false",
-		"com.liferay.portlet.remoteable=true",
 		"com.liferay.portlet.render-weight=50",
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Translator",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + TranslatorPortletKeys.TRANSLATOR,
 		"javax.portlet.resource-bundle=content.Language",
@@ -92,13 +91,14 @@ public class TranslatorPortlet extends MVCPortlet {
 			TranslatorConfiguration.class.getName(), _translatorConfiguration);
 
 		try {
-			String fromLanguageId = ParamUtil.getString(
-				actionRequest, "fromLanguageId");
-			String toLanguageId = ParamUtil.getString(
-				actionRequest, "toLanguageId");
 			String fromText = ParamUtil.getString(actionRequest, "text");
 
 			if (Validator.isNotNull(fromText)) {
+				String fromLanguageId = ParamUtil.getString(
+					actionRequest, "fromLanguageId");
+				String toLanguageId = ParamUtil.getString(
+					actionRequest, "toLanguageId");
+
 				Translation translation = TranslatorUtil.getTranslation(
 					fromLanguageId, toLanguageId, fromText);
 
@@ -130,7 +130,7 @@ public class TranslatorPortlet extends MVCPortlet {
 	}
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.translator.web)(release.schema.version=1.0.0))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.translator.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

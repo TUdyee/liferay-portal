@@ -44,8 +44,9 @@ portletURL.setParameter("tabs2", tabs2);
 		%>
 
 		<liferay-ui:icon
-			iconCssClass="icon-plus"
+			icon="plus"
 			label="<%= true %>"
+			markupView="lexicon"
 			message="add-task"
 			onClick="<%= taglibOnClick %>"
 			url="javascript:;"
@@ -62,8 +63,9 @@ portletURL.setParameter("tabs2", tabs2);
 		/>
 
 		<liferay-ui:icon
-			iconCssClass="icon-lock"
+			icon="lock"
 			label="<%= true %>"
+			markupView="lexicon"
 			message="permissions"
 			method="get"
 			url="<%= permissionsURL %>"
@@ -73,8 +75,9 @@ portletURL.setParameter("tabs2", tabs2);
 
 	<liferay-ui:icon
 		cssClass="filter-tasks"
-		iconCssClass="icon-tag"
+		icon="tag"
 		label="<%= true %>"
+		markupView="lexicon"
 		message="filter"
 		onClick="Liferay.Tasks.toggleTasksFilter()"
 		url="javascript:;"
@@ -95,7 +98,7 @@ portletURL.setParameter("tabs2", tabs2);
 	<table>
 		<tr>
 			<td>
-				<input name="all-tasks" onclick="Liferay.Tasks.updateTaskList(null, this.checked);" type="checkbox" <%= (tabs2.equals("all") ? "checked" : StringPool.BLANK) %> />
+				<input name="all-tasks" onclick="Liferay.Tasks.updateTaskList(null, this.checked);" type="checkbox" <%= tabs2.equals("all") ? "checked" : StringPool.BLANK %> />
 			</td>
 			<td>
 				<liferay-ui:message key="show-completed-tasks" />
@@ -104,17 +107,13 @@ portletURL.setParameter("tabs2", tabs2);
 	</table>
 </div>
 
-<aui:script>
-	AUI().ready(
-		function() {
-			Liferay.Tasks.init(
-				{
-					baseActionURL: '<%= PortletURLFactoryUtil.create(request, portletDisplay.getId(), themeDisplay.getPlid(), PortletRequest.ACTION_PHASE) %>',
-					currentTab: '<%= HtmlUtil.escape(tabs1) %>',
-					namespace: '<portlet:namespace />',
-					taskListURL: '<portlet:renderURL windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcPath" value="/tasks/view_tasks.jsp" /></portlet:renderURL>'
-				}
-			);
+<aui:script use="liferay-tasks">
+	Liferay.Tasks.init(
+		{
+			baseActionURL: '<%= PortletURLFactoryUtil.create(request, portletDisplay.getId(), themeDisplay.getPlid(), PortletRequest.ACTION_PHASE) %>',
+			currentTab: '<%= HtmlUtil.escape(tabs1) %>',
+			namespace: '<portlet:namespace />',
+			taskListURL: '<portlet:renderURL windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcPath" value="/tasks/view_tasks.jsp" /></portlet:renderURL>'
 		}
 	);
 </aui:script>

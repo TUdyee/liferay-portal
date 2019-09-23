@@ -14,6 +14,8 @@
 
 package com.liferay.portal.spring.transaction;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
@@ -26,24 +28,10 @@ public class TransactionStatusAdapter
 	extends DefaultTransactionStatus
 	implements com.liferay.portal.kernel.transaction.TransactionStatus {
 
-	public TransactionStatusAdapter(
-		PlatformTransactionManager platformTransactionManager,
-		TransactionStatus transactionStatus) {
-
+	public TransactionStatusAdapter(TransactionStatus transactionStatus) {
 		super(null, false, false, false, false, null);
 
-		_platformTransactionManager = platformTransactionManager;
 		_transactionStatus = transactionStatus;
-	}
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
-	 *             #TransactionStatusAdapter(PlatformTransactionManager,
-	 *             TransactionStatus)}
-	 */
-	@Deprecated
-	public TransactionStatusAdapter(TransactionStatus transactionStatus) {
-		this(null, transactionStatus);
 	}
 
 	@Override
@@ -56,9 +44,13 @@ public class TransactionStatusAdapter
 		_transactionStatus.flush();
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public PlatformTransactionManager getPlatformTransactionManager() {
-		return _platformTransactionManager;
+		return null;
 	}
 
 	public TransactionStatus getTransactionStatus() {
@@ -90,6 +82,17 @@ public class TransactionStatusAdapter
 		_transactionStatus.releaseSavepoint(savepoint);
 	}
 
+	void reportLifecycleListenerThrowables(Throwable throwable) {
+		if (_lifecycleListenerThrowable != null) {
+			if (throwable == null) {
+				ReflectionUtil.throwException(_lifecycleListenerThrowable);
+			}
+			else {
+				throwable.addSuppressed(_lifecycleListenerThrowable);
+			}
+		}
+	}
+
 	@Override
 	public void rollbackToSavepoint(Object savepoint)
 		throws TransactionException {
@@ -102,7 +105,20 @@ public class TransactionStatusAdapter
 		_transactionStatus.setRollbackOnly();
 	}
 
-	private final PlatformTransactionManager _platformTransactionManager;
+	@Override
+	public void suppressLifecycleListenerThrowable(
+		Throwable lifecycleListenerThrowable) {
+
+		if (_lifecycleListenerThrowable == null) {
+			_lifecycleListenerThrowable = lifecycleListenerThrowable;
+		}
+		else {
+			_lifecycleListenerThrowable.addSuppressed(
+				lifecycleListenerThrowable);
+		}
+	}
+
+	private Throwable _lifecycleListenerThrowable;
 	private final TransactionStatus _transactionStatus;
 
 }

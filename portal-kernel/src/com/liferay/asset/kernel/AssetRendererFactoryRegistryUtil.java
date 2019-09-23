@@ -14,9 +14,8 @@
 
 package com.liferay.asset.kernel;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -38,7 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Bruno Farache
  * @author Marcellus Tavares
  */
-@ProviderType
 public class AssetRendererFactoryRegistryUtil {
 
 	public static List<AssetRendererFactory<?>> getAssetRendererFactories(
@@ -120,8 +118,9 @@ public class AssetRendererFactoryRegistryUtil {
 
 		ServiceRegistration<AssetRendererFactory<?>> serviceRegistration =
 			registry.registerService(
-				(Class<AssetRendererFactory<?>>)(Class<?>)
-					AssetRendererFactory.class, assetRendererFactory);
+				(Class<AssetRendererFactory<?>>)
+					(Class<?>)AssetRendererFactory.class,
+				assetRendererFactory);
 
 		_serviceRegistrations.put(assetRendererFactory, serviceRegistration);
 	}
@@ -194,9 +193,8 @@ public class AssetRendererFactoryRegistryUtil {
 		_assetRenderFactoriesMapByClassType = new ConcurrentHashMap<>();
 	private static final ServiceRegistrationMap<AssetRendererFactory<?>>
 		_serviceRegistrations = new ServiceRegistrationMapImpl<>();
-	private static final
-		ServiceTracker<AssetRendererFactory<?>, AssetRendererFactory<?>>
-			_serviceTracker;
+	private static final ServiceTracker
+		<AssetRendererFactory<?>, AssetRendererFactory<?>> _serviceTracker;
 
 	private static class AssetRendererFactoryServiceTrackerCustomizer
 		implements ServiceTrackerCustomizer
@@ -221,9 +219,10 @@ public class AssetRendererFactoryRegistryUtil {
 				(classNameAssetRendererFactory != null)) {
 
 				_log.warn(
-					"Replacing " + classNameAssetRendererFactory +
-						" for class name " + className + " with " +
-							assetRendererFactory);
+					StringBundler.concat(
+						"Replacing ", classNameAssetRendererFactory,
+						" for class name ", className, " with ",
+						assetRendererFactory));
 			}
 
 			String type = assetRendererFactory.getType();
@@ -234,8 +233,9 @@ public class AssetRendererFactoryRegistryUtil {
 
 			if (_log.isWarnEnabled() && (typeAssetRendererFactory != null)) {
 				_log.warn(
-					"Replacing " + typeAssetRendererFactory + " for type " +
-						type + " with " + assetRendererFactory);
+					StringBundler.concat(
+						"Replacing ", typeAssetRendererFactory, " for type ",
+						type, " with ", assetRendererFactory));
 			}
 
 			return assetRendererFactory;
@@ -268,8 +268,8 @@ public class AssetRendererFactoryRegistryUtil {
 		Registry registry = RegistryUtil.getRegistry();
 
 		_serviceTracker = registry.trackServices(
-			(Class<AssetRendererFactory<?>>)(Class<?>)
-				AssetRendererFactory.class,
+			(Class<AssetRendererFactory<?>>)
+				(Class<?>)AssetRendererFactory.class,
 			new AssetRendererFactoryServiceTrackerCustomizer());
 
 		_serviceTracker.open();

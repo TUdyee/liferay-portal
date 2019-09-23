@@ -17,6 +17,7 @@ package com.liferay.knowledge.base.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
+import com.liferay.knowledge.base.exception.InvalidKBFolderNameException;
 import com.liferay.knowledge.base.exception.KBFolderParentException;
 import com.liferay.knowledge.base.exception.NoSuchFolderException;
 import com.liferay.knowledge.base.model.KBArticle;
@@ -27,14 +28,14 @@ import com.liferay.knowledge.base.util.comparator.KBObjectsModifiedDateComparato
 import com.liferay.knowledge.base.util.comparator.KBObjectsPriorityComparator;
 import com.liferay.knowledge.base.util.comparator.KBObjectsTitleComparator;
 import com.liferay.knowledge.base.util.comparator.KBObjectsViewCountComparator;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.test.rule.Sync;
-import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -58,15 +59,12 @@ import org.junit.runner.RunWith;
  * @author Roberto Díaz
  */
 @RunWith(Arquillian.class)
-@Sync
 public class KBFolderLocalServiceTest {
 
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new AggregateTestRule(
-			new LiferayIntegrationTestRule(),
-			SynchronousDestinationTestRule.INSTANCE);
+		new LiferayIntegrationTestRule();
 
 	@Before
 	public void setUp() throws Exception {
@@ -699,6 +697,18 @@ public class KBFolderLocalServiceTest {
 			parentKBFolder.getKbFolderId(), kbFolder.getParentKBFolderId());
 	}
 
+	@Test(expected = InvalidKBFolderNameException.class)
+	public void testUpdateKBFolderWithEmptyName() throws Exception {
+		KBFolder kbFolder = addKBFolder(_kbFolder.getKbFolderId());
+
+		KBFolderLocalServiceUtil.updateKBFolder(
+			PortalUtil.getClassNameId(KBFolderConstants.getClassName()),
+			_kbFolder.getKbFolderId(), kbFolder.getKbFolderId(),
+			StringPool.BLANK, kbFolder.getDescription(),
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
+	}
+
 	protected KBArticle addChildKBArticle(KBArticle kbArticle, String title)
 		throws Exception {
 
@@ -747,7 +757,7 @@ public class KBFolderLocalServiceTest {
 	}
 
 	protected KBFolder addKBFolder(long parentResourcePrimKey)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());

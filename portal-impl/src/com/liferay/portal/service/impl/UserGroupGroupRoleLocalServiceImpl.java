@@ -198,9 +198,8 @@ public class UserGroupGroupRoleLocalServiceImpl
 		if (userGroupGroupRole != null) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -211,13 +210,10 @@ public class UserGroupGroupRoleLocalServiceImpl
 		UserGroup userGroup = userGroupPersistence.findByPrimaryKey(
 			userGroupId);
 
-		long companyId = userGroup.getCompanyId();
+		Role role = rolePersistence.findByC_N(
+			userGroup.getCompanyId(), roleName);
 
-		Role role = rolePersistence.findByC_N(companyId, roleName);
-
-		long roleId = role.getRoleId();
-
-		return hasUserGroupGroupRole(userGroupId, groupId, roleId);
+		return hasUserGroupGroupRole(userGroupId, groupId, role.getRoleId());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

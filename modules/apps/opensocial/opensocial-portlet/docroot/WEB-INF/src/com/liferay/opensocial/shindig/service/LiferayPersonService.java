@@ -15,13 +15,17 @@
 package com.liferay.opensocial.shindig.service;
 
 import com.liferay.opensocial.shindig.util.ShindigUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.EmailAddress;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.EmailAddressLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -30,8 +34,6 @@ import com.liferay.portal.kernel.service.PhoneServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 import com.liferay.social.kernel.model.SocialRelationConstants;
 
@@ -53,10 +55,8 @@ import org.apache.shindig.social.core.model.ListFieldImpl;
 import org.apache.shindig.social.core.model.NameImpl;
 import org.apache.shindig.social.core.model.PersonImpl;
 import org.apache.shindig.social.opensocial.model.ListField;
-import org.apache.shindig.social.opensocial.model.ListField.Field;
 import org.apache.shindig.social.opensocial.model.Name;
 import org.apache.shindig.social.opensocial.model.Person;
-import org.apache.shindig.social.opensocial.model.Person.Gender;
 import org.apache.shindig.social.opensocial.spi.CollectionOptions;
 import org.apache.shindig.social.opensocial.spi.GroupId;
 import org.apache.shindig.social.opensocial.spi.PersonService;
@@ -121,15 +121,14 @@ public class LiferayPersonService implements PersonService {
 		for (UserId userId : userIds) {
 			Person person = null;
 
-			String userIdString = userId.getUserId(securityToken);
-
 			GroupId.Type groupIdType = groupId.getType();
 
 			if (groupIdType.equals(GroupId.Type.all) ||
 				groupIdType.equals(GroupId.Type.friends) ||
 				groupIdType.equals(GroupId.Type.groupId)) {
 
-				long userIdLong = GetterUtil.getLong(userIdString);
+				long userIdLong = GetterUtil.getLong(
+					userId.getUserId(securityToken));
 
 				User user = UserLocalServiceUtil.getUserById(userIdLong);
 
@@ -187,7 +186,7 @@ public class LiferayPersonService implements PersonService {
 		List<ListField> emails = new ArrayList<>();
 
 		ListField email = new ListFieldImpl(
-			Field.PRIMARY.toString(), user.getEmailAddress());
+			ListField.Field.PRIMARY.toString(), user.getEmailAddress());
 
 		emails.add(email);
 
@@ -196,8 +195,10 @@ public class LiferayPersonService implements PersonService {
 				user.getCompanyId(), User.class.getName(), user.getUserId());
 
 		for (EmailAddress emailAddress : emailAddresses) {
+			ListType listType = emailAddress.getType();
+
 			email = new ListFieldImpl(
-				emailAddress.getType().getName(), emailAddress.getAddress());
+				listType.getName(), emailAddress.getAddress());
 
 			emails.add(email);
 		}
@@ -233,7 +234,7 @@ public class LiferayPersonService implements PersonService {
 			person = new PersonImpl(groupId, name.getFormatted(), name);
 		}
 
-		person.setGender(Gender.male);
+		person.setGender(Person.Gender.male);
 
 		return person;
 	}
@@ -243,14 +244,14 @@ public class LiferayPersonService implements PersonService {
 
 		List<ListField> phoneNumbers = new ArrayList<>();
 
-		List<com.liferay.portal.kernel.model.Phone> liferayPhones =
-			PhoneServiceUtil.getPhones(className, classPK);
+		List<Phone> liferayPhones = PhoneServiceUtil.getPhones(
+			className, classPK);
 
-		for (com.liferay.portal.kernel.model.Phone liferayPhone :
-				liferayPhones) {
+		for (Phone liferayPhone : liferayPhones) {
+			ListType listType = liferayPhone.getType();
 
 			ListField phoneNumber = new ListFieldImpl(
-				liferayPhone.getType().getName(), liferayPhone.getNumber());
+				listType.getName(), liferayPhone.getNumber());
 
 			phoneNumbers.add(phoneNumber);
 		}
@@ -321,10 +322,10 @@ public class LiferayPersonService implements PersonService {
 
 		if (fields.contains(Person.Field.GENDER.toString())) {
 			if (user.isFemale()) {
-				person.setGender(Gender.female);
+				person.setGender(Person.Gender.female);
 			}
 			else {
-				person.setGender(Gender.male);
+				person.setGender(Person.Gender.male);
 			}
 		}
 
@@ -346,11 +347,15 @@ public class LiferayPersonService implements PersonService {
 				Long.valueOf(timeZone.getOffset(System.currentTimeMillis())));
 		}
 
-		if (securityToken.getOwnerId().equals(person.getId())) {
+		String ownerId = securityToken.getOwnerId();
+
+		if (ownerId.equals(person.getId())) {
 			person.setIsOwner(true);
 		}
 
-		if (securityToken.getViewerId().equals(person.getId())) {
+		String viewerId = securityToken.getViewerId();
+
+		if (viewerId.equals(person.getId())) {
 			person.setIsViewer(true);
 		}
 

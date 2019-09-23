@@ -27,8 +27,8 @@ import java.util.ResourceBundle;
 import javax.portlet.PortletURL;
 
 /**
- * @author Preston Crary
- * @deprecated As of 7.0.0, moved to {@link
+ * @author     Preston Crary
+ * @deprecated As of Judson (7.1.x), moved to {@link
  *             com.liferay.asset.util.impl.AssetPublisherAddItemHolder}
  */
 @Deprecated

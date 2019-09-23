@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class XMLEmptyLinesCheck extends EmptyLinesCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -47,6 +47,20 @@ public class XMLEmptyLinesCheck extends EmptyLinesCheck {
 
 		content = _fixMissingEmptyLinesAroundComments(content);
 
+		Matcher matcher = _missingEmptyLinePattern.matcher(content);
+
+		if (matcher.find()) {
+			return StringUtil.replaceFirst(
+				content, "\n", "\n\n", matcher.start());
+		}
+
+		matcher = _redundantEmptyLinePattern.matcher(content);
+
+		if (matcher.find()) {
+			return StringUtil.replaceFirst(
+				content, "\n\n", "\n", matcher.start());
+		}
+
 		return content;
 	}
 
@@ -57,7 +71,8 @@ public class XMLEmptyLinesCheck extends EmptyLinesCheck {
 			return content;
 		}
 
-		if (fileName.endsWith("-log4j.xml") ||
+		if (fileName.endsWith("-log4j-ext.xml") ||
+			fileName.endsWith("-log4j.xml") ||
 			fileName.endsWith("-logback.xml") ||
 			fileName.endsWith("/ivy.xml") ||
 			fileName.endsWith("/struts-config.xml") ||
@@ -94,11 +109,15 @@ public class XMLEmptyLinesCheck extends EmptyLinesCheck {
 		return content;
 	}
 
-	private final Pattern _emptyLineBetweenTagsPattern = Pattern.compile(
+	private static final Pattern _emptyLineBetweenTagsPattern = Pattern.compile(
 		"\n(\t*)<[\\w/].*[^-]>(\n\n)(\t*)<(\\w)");
-	private final Pattern _missingEmptyLineAfterCommentPattern =
+	private static final Pattern _missingEmptyLineAfterCommentPattern =
 		Pattern.compile("[\t ]-->\n[\t<]");
-	private final Pattern _missingEmptyLineBeforeCommentPattern =
+	private static final Pattern _missingEmptyLineBeforeCommentPattern =
 		Pattern.compile(">\n\t+<!--[\n ]");
+	private static final Pattern _missingEmptyLinePattern = Pattern.compile(
+		"^(<\\?xml .*\\?>|<\\!DOCTYPE .*>)\n<\\w", Pattern.MULTILINE);
+	private static final Pattern _redundantEmptyLinePattern = Pattern.compile(
+		"<\\?xml .*\\?>\n\n<\\!DOCTYPE");
 
 }

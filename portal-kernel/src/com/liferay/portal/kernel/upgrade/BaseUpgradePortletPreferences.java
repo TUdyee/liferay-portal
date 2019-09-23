@@ -14,13 +14,12 @@
 
 package com.liferay.portal.kernel.upgrade;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -37,7 +36,7 @@ import javax.portlet.ReadOnlyException;
 public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void deletePortletPreferences(long portletPreferencesId)
@@ -125,8 +124,9 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 				boolean privateLayout = rs.getBoolean("privateLayout");
 				long layoutId = rs.getLong("layoutId");
 
-				layout =
-					new Object[] {groupId, companyId, privateLayout, layoutId};
+				layout = new Object[] {
+					groupId, companyId, privateLayout, layoutId
+				};
 			}
 		}
 		finally {
@@ -163,8 +163,9 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 				boolean privateLayout = rs.getBoolean("privateLayout");
 				long layoutId = rs.getLong("layoutRevisionId");
 
-				layoutRevision =
-					new Object[] {groupId, companyId, privateLayout, layoutId};
+				layoutRevision = new Object[] {
+					groupId, companyId, privateLayout, layoutId
+				};
 			}
 		}
 		finally {
@@ -229,7 +230,7 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 		for (int i = 0; i < portletIds.length; i++) {
 			String portletId = portletIds[i];
 
-			sb.append("portletId ");
+			sb.append("PortletPreferences.portletId ");
 
 			if (portletId.contains(StringPool.PERCENT)) {
 				sb.append(" like '");
@@ -252,10 +253,11 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 
 	protected void updatePortletPreferences() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			StringBundler sb = new StringBundler(4);
+			StringBundler sb = new StringBundler(5);
 
-			sb.append("select portletPreferencesId, ownerId, ownerType, ");
-			sb.append("plid, portletId, preferences from PortletPreferences");
+			sb.append("select portletPreferencesId, companyId, ownerId, ");
+			sb.append("ownerType, plid, portletId, preferences from ");
+			sb.append("PortletPreferences");
 
 			String whereClause = getUpdatePortletPreferencesWhereClause();
 
@@ -281,59 +283,16 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 				while (rs.next()) {
 					long portletPreferencesId = rs.getLong(
 						"portletPreferencesId");
-					long ownerId = rs.getLong("ownerId");
-					int ownerType = rs.getInt("ownerType");
-					long plid = rs.getLong("plid");
-					String portletId = rs.getString("portletId");
-					String preferences = GetterUtil.getString(
-						rs.getString("preferences"));
-
-					long companyId = 0;
-
-					if (ownerType == PortletKeys.PREFS_OWNER_TYPE_ARCHIVED) {
-						companyId = getCompanyId(
-							"select companyId from PortletItem where " +
-								"portletItemId = ?",
-							ownerId);
-					}
-					else if (ownerType ==
-								PortletKeys.PREFS_OWNER_TYPE_COMPANY) {
-
-						companyId = ownerId;
-					}
-					else if (ownerType == PortletKeys.PREFS_OWNER_TYPE_GROUP) {
-						Object[] group = getGroup(ownerId);
-
-						if (group != null) {
-							companyId = (Long)group[1];
-						}
-					}
-					else if (ownerType == PortletKeys.PREFS_OWNER_TYPE_LAYOUT) {
-						Object[] layout = getLayout(plid);
-
-						if (layout != null) {
-							companyId = (Long)layout[1];
-						}
-					}
-					else if (ownerType ==
-								PortletKeys.PREFS_OWNER_TYPE_ORGANIZATION) {
-
-						companyId = getCompanyId(
-							"select companyId from Organization_ where " +
-								"organizationId = ?",
-							ownerId);
-					}
-					else if (ownerType == PortletKeys.PREFS_OWNER_TYPE_USER) {
-						companyId = getCompanyId(
-							"select companyId from User_ where userId = ?",
-							ownerId);
-					}
-					else {
-						throw new UnsupportedOperationException(
-							"Unsupported owner type " + ownerType);
-					}
+					long companyId = rs.getLong("companyId");
 
 					if (companyId > 0) {
+						int ownerType = rs.getInt("ownerType");
+						long plid = rs.getLong("plid");
+						long ownerId = rs.getLong("ownerId");
+						String portletId = rs.getString("portletId");
+						String preferences = GetterUtil.getString(
+							rs.getString("preferences"));
+
 						String newPreferences = upgradePreferences(
 							companyId, ownerId, ownerType, plid, portletId,
 							preferences);
@@ -350,17 +309,17 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 
 						ps3.addBatch();
 					}
-
-					ps2.executeBatch();
-
-					ps3.executeBatch();
 				}
+
+				ps2.executeBatch();
+
+				ps3.executeBatch();
 			}
 		}
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void updatePortletPreferences(

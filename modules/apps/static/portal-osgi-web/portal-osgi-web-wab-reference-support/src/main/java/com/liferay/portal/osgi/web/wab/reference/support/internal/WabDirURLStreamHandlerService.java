@@ -14,14 +14,11 @@
 
 package com.liferay.portal.osgi.web.wab.reference.support.internal;
 
-import aQute.bnd.osgi.Constants;
-import aQute.bnd.osgi.Jar;
-
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
@@ -32,6 +29,7 @@ import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.osgi.web.wab.generator.WabGenerator;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.net.URI;
@@ -41,6 +39,7 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,7 +57,7 @@ import org.osgi.service.url.URLStreamHandlerService;
  */
 @Component(
 	immediate = true,
-	property = {URLConstants.URL_HANDLER_PROTOCOL + "=webbundledir"},
+	property = URLConstants.URL_HANDLER_PROTOCOL + "=webbundledir",
 	service = URLStreamHandlerService.class
 )
 public class WabDirURLStreamHandlerService
@@ -74,7 +73,7 @@ public class WabDirURLStreamHandlerService
 			File warDir = new File(uri);
 
 			String bundleSymbolicName = _http.getParameter(
-				url.toExternalForm(), Constants.BUNDLE_SYMBOLICNAME);
+				url.toExternalForm(), "Bundle-SymbolicName");
 
 			if (bundleSymbolicName.equals(StringPool.BLANK)) {
 				bundleSymbolicName = _getNameFromDirectory(warDir);
@@ -84,9 +83,12 @@ public class WabDirURLStreamHandlerService
 				bundleSymbolicName = _getNameFromXMLFile(warDir);
 			}
 
+			if (bundleSymbolicName.equals(StringPool.BLANK)) {
+				bundleSymbolicName = _getNameFromProperties(warDir);
+			}
+
 			parameters.put(
-				Constants.BUNDLE_SYMBOLICNAME,
-				new String[] {bundleSymbolicName});
+				"Bundle-SymbolicName", new String[] {bundleSymbolicName});
 
 			String contextName = _http.getParameter(
 				url.toExternalForm(), "Web-ContextPath");
@@ -97,6 +99,10 @@ public class WabDirURLStreamHandlerService
 
 			if (contextName.equals(StringPool.BLANK)) {
 				contextName = _getNameFromXMLFile(warDir);
+			}
+
+			if (contextName.equals(StringPool.BLANK)) {
+				contextName = _getNameFromProperties(warDir);
 			}
 
 			if (contextName.equals(StringPool.BLANK)) {
@@ -113,8 +119,8 @@ public class WabDirURLStreamHandlerService
 			File generatedJarFile = _wabGenerator.generate(
 				_classLoader, warDir, parameters);
 
-			try (Jar generatedJar = new Jar(generatedJarFile)) {
-				generatedJar.expand(warDir);
+			if (generatedJarFile != null) {
+				_file.unzip(generatedJarFile, warDir);
 			}
 
 			uri = warDir.toURI();
@@ -129,11 +135,6 @@ public class WabDirURLStreamHandlerService
 		}
 
 		return null;
-	}
-
-	@Reference(unbind = "-")
-	public void setWabGenerator(WabGenerator wabGenerator) {
-		_wabGenerator = wabGenerator;
 	}
 
 	@Activate
@@ -155,9 +156,32 @@ public class WabDirURLStreamHandlerService
 		return StringPool.BLANK;
 	}
 
+	private String _getNameFromProperties(File warDir) throws IOException {
+		File liferayPluginPackagePropertiesFile = new File(
+			warDir, "WEB-INF/liferay-plugin-package.properties");
+
+		if (!liferayPluginPackagePropertiesFile.exists()) {
+			return StringPool.BLANK;
+		}
+
+		try (FileInputStream fileInputStream = new FileInputStream(
+				liferayPluginPackagePropertiesFile)) {
+
+			Properties properties = new Properties();
+
+			properties.load(fileInputStream);
+
+			return properties.getProperty("name");
+		}
+	}
+
 	private String _getNameFromXMLFile(File warDir) throws IOException {
 		File lookAndFeelXmlFile = new File(
 			warDir, "WEB-INF/liferay-look-and-feel.xml");
+
+		if (!lookAndFeelXmlFile.exists()) {
+			return StringPool.BLANK;
+		}
 
 		Document document = _readDocument(lookAndFeelXmlFile);
 
@@ -202,8 +226,12 @@ public class WabDirURLStreamHandlerService
 	private ClassLoader _classLoader;
 
 	@Reference
+	private com.liferay.portal.kernel.util.File _file;
+
+	@Reference
 	private Http _http;
 
+	@Reference
 	private WabGenerator _wabGenerator;
 
 }

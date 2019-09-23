@@ -14,11 +14,11 @@
 
 package com.liferay.portal.xmlrpc;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.xmlrpc.Response;
 import com.liferay.portal.kernel.xmlrpc.XmlRpcException;
@@ -128,9 +128,7 @@ public class XmlRpcParser {
 						xmlStreamReader.nextTag();
 					}
 					else {
-						String text = xmlStreamReader.getText();
-
-						arguments.add(text);
+						arguments.add(xmlStreamReader.getText());
 
 						xmlStreamReader.nextTag();
 						xmlStreamReader.nextTag();

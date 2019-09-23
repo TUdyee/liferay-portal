@@ -14,12 +14,9 @@
 
 package com.liferay.portal.kernel.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class ImageResolutionException extends PortalException {
 
 	public ImageResolutionException() {

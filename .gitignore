@@ -44,6 +44,7 @@
 /intellij
 /jacoco
 /modules/.releng/private
+/modules/node_modules_cache
 /modules/private
 /nbproject/private
 /out
@@ -55,12 +56,12 @@
 /portal-client/src
 /portal-impl/*.ipr
 /portal-impl/*.iws
+/portal-impl/build
 /portal-impl/classes
 /portal-impl/portal-impl*.asc
 /portal-impl/portal-impl*.jar
 /portal-impl/service.xml
 /portal-impl/ServiceBuilder.temp
-/portal-impl/src/META-INF/MANIFEST.MF.JOnAS
 /portal-impl/src/META-INF/portal-log4j-ext.xml
 /portal-impl/src/portal-ext.properties
 /portal-impl/src/system-ext.properties
@@ -72,6 +73,7 @@
 /portal-impl/woven-classes
 /portal-kernel/*.ipr
 /portal-kernel/*.iws
+/portal-kernel/build
 /portal-kernel/classes
 /portal-kernel/portal-kernel*.asc
 /portal-kernel/portal-kernel*.jar
@@ -86,6 +88,7 @@
 /portal-test-integration/portal-test-integration*.jar
 /portal-test/*.ipr
 /portal-test/*.iws
+/portal-test/build
 /portal-test/classes
 /portal-test/portal-test*.asc
 /portal-test/portal-test*.jar
@@ -96,7 +99,6 @@
 /portal-web/docroot/aui
 /portal-web/docroot/dtd
 /portal-web/docroot/html/icons/_sprite.*
-/portal-web/docroot/resin-data
 /portal-web/docroot/WEB-INF/classes
 /portal-web/docroot/WEB-INF/lib
 /portal-web/docroot/WEB-INF/liferay-portlet-ext.xml
@@ -107,7 +109,6 @@
 /portal-web/docroot/WEB-INF/tld/ddm.tld
 /portal-web/docroot/WEB-INF/tld/liferay-*.tld
 /portal-web/docroot/WEB-INF/tmp
-/portal-web/docroot/wsrp
 /portal-web/liferay-portal.war
 /portal-web/portal-web.war
 /portal-web/portal-web.war.asc
@@ -142,10 +143,6 @@
 /sql/sql.*.properties
 /sql/update-*
 /sql/velocity.log*
-/support-resin/*.ipr
-/support-resin/*.iws
-/support-resin/classes
-/support-resin/support-resin*.jar
 /support-tomcat/*.ipr
 /support-tomcat/*.iws
 /support-tomcat/classes
@@ -165,7 +162,6 @@
 /tools/sdk
 /tools/selenium/*.exe
 /tools/selenium/extensions/ide.*.js
-/tools/tck
 /tools/zip_tmpl/license
 /tunnel-web/docroot/WEB-INF/classes
 /tunnel-web/docroot/WEB-INF/lib
@@ -173,11 +169,13 @@
 /tunnel-web/tunnel-web.war
 /util-bridges/*.ipr
 /util-bridges/*.iws
+/util-bridges/build
 /util-bridges/classes
 /util-bridges/util-bridges*.asc
 /util-bridges/util-bridges*.jar
 /util-java/*.ipr
 /util-java/*.iws
+/util-java/build
 /util-java/classes
 /util-java/test-classes
 /util-java/test-coverage
@@ -186,6 +184,7 @@
 /util-java/util-java*.jar
 /util-slf4j/*.ipr
 /util-slf4j/*.iws
+/util-slf4j/build
 /util-slf4j/classes
 /util-slf4j/test-classes
 /util-slf4j/test-results
@@ -193,7 +192,11 @@
 /util-slf4j/util-slf4j*.jar
 /util-taglib/*.ipr
 /util-taglib/*.iws
+/util-taglib/build
 /util-taglib/classes
+/util-taglib/test-classes
+/util-taglib/test-coverage
+/util-taglib/test-results
 /util-taglib/util-taglib*.asc
 /util-taglib/util-taglib*.jar
 /working.dir.properties

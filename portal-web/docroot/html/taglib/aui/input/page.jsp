@@ -23,12 +23,16 @@ if (type.equals("textarea") && BrowserSnifferUtil.isIe(request) && ((BrowserSnif
 %>
 
 <c:if test="<%= Validator.isNotNull(helpMessage) %>">
-	<liferay-util:buffer var="helpMessageContent">
+	<liferay-util:buffer
+		var="helpMessageContent"
+	>
 		<liferay-ui:icon-help message="<%= helpMessage %>" />
 	</liferay-util:buffer>
 </c:if>
 
-<liferay-util:buffer var="labelContent">
+<liferay-util:buffer
+	var="labelContent"
+>
 	<c:if test="<%= Validator.isNotNull(label) %>">
 		<c:if test='<%= type.equals("toggle-switch") %>'>
 			<span class="toggle-switch-label">
@@ -118,7 +122,7 @@ if (type.equals("textarea") && BrowserSnifferUtil.isIe(request) && ((BrowserSnif
 
 		<c:if test='<%= type.equals("toggle-switch") %>'>
 			<span aria-hidden="true" class="toggle-switch-bar">
-				<span class="toggle-switch-handle" data-label-off="<%= (Validator.isNotNull(labelOff) ? HtmlUtil.escapeAttribute(labelOff) : LanguageUtil.get(resourceBundle, "no")) %>" data-label-on="<%= (Validator.isNotNull(labelOn) ? HtmlUtil.escapeAttribute(labelOn) : LanguageUtil.get(resourceBundle, "yes")) %>">
+				<span class="toggle-switch-handle" data-label-off="<%= Validator.isNotNull(labelOff) ? HtmlUtil.escapeAttribute(labelOff) : LanguageUtil.get(resourceBundle, "no") %>" data-label-on="<%= Validator.isNotNull(labelOn) ? HtmlUtil.escapeAttribute(labelOn) : LanguageUtil.get(resourceBundle, "yes") %>">
 					<c:if test="<%= Validator.isNotNull(buttonIconOn) %>">
 						<span class="button-icon <%= Validator.isNotNull(buttonIconOff) ? "button-icon-on" : StringPool.BLANK %> toggle-switch-icon <%= buttonIconOn %>"></span>
 					</c:if>
@@ -258,7 +262,11 @@ boolean choiceField = checkboxField || radioField;
 		<input <%= checked ? "checked" : StringPool.BLANK %> class="<%= fieldCssClass %>" <%= disabled ? "disabled" : StringPool.BLANK %> id="<%= namespace + id %>" name="<%= namespace + name %>" <%= Validator.isNotNull(onChange) ? "onChange=\"" + onChange + "\"" : StringPool.BLANK %> <%= Validator.isNotNull(onClick) ? "onClick=\"" + onClick + "\"" : StringPool.BLANK %> <%= Validator.isNotNull(title) ? "title=\"" + LanguageUtil.get(resourceBundle, title) + "\"" : StringPool.BLANK %> type="radio" value="<%= HtmlUtil.escapeAttribute(valueString) %>" <%= AUIUtil.buildData(data) %> <%= InlineUtil.buildDynamicAttributes(dynamicAttributes) %> />
 	</c:when>
 	<c:when test='<%= type.equals("resource") %>'>
-		<liferay-ui:input-resource id="<%= id %>" title="<%= title %>" url="<%= String.valueOf(value) %>" />
+		<liferay-ui:input-resource
+			id="<%= id %>"
+			title="<%= title %>"
+			url="<%= String.valueOf(value) %>"
+		/>
 	</c:when>
 	<c:when test='<%= type.equals("timeZone") %>'>
 
@@ -298,7 +306,7 @@ boolean choiceField = checkboxField || radioField;
 		if (type.equals("hidden") && (value == null)) {
 			valueString = BeanPropertiesUtil.getStringSilent(bean, name);
 		}
-		else if (!ignoreRequestValue && (Validator.isNull(type) || ArrayUtil.contains(_TYPES, type))) {
+		else if (!ignoreRequestValue && (Validator.isNull(type) || _TYPES.contains(type))) {
 			valueString = BeanParamUtil.getStringSilent(bean, request, name, valueString);
 
 			if (Validator.isNotNull(fieldParam)) {
@@ -311,11 +319,12 @@ boolean choiceField = checkboxField || radioField;
 			<c:when test='<%= localized && (type.equals("editor") || type.equals("text") || type.equals("textarea")) %>'>
 				<liferay-ui:input-localized
 					autoFocus="<%= autoFocus %>"
-					availableLocales="<%= LanguageUtil.getAvailableLocales(themeDisplay.getSiteGroupId()) %>"
+					availableLocales='<%= LanguageUtil.getAvailableLocales(BeanPropertiesUtil.getLongSilent(bean, "groupId", themeDisplay.getSiteGroupId())) %>'
 					cssClass="<%= fieldCssClass %>"
 					defaultLanguageId="<%= defaultLanguageId %>"
 					disabled="<%= disabled %>"
 					formName="<%= formName %>"
+					helpMessage="<%= helpMessage %>"
 					id="<%= id %>"
 					ignoreRequestValue="<%= ignoreRequestValue %>"
 					languageId="<%= languageId %>"
@@ -352,14 +361,14 @@ boolean choiceField = checkboxField || radioField;
 				</c:if>
 
 				<c:if test="<%= resizable %>">
-					<aui:script use="liferay-store,resize-base">
+					<aui:script use="resize-base">
 						var textareaNode = A.one('#<%= namespace + id %>');
 
 						var resizeInstance = new A.Resize(
 							{
 								after: {
 									'end': function(event) {
-										Liferay.Store('<%= _TEXTAREA_WIDTH_HEIGHT_PREFIX %><%= namespace + id %>', textareaNode.getStyle('height') + ',' + textareaNode.getStyle('width'));
+										Liferay.Util.Session.set('<%= _TEXTAREA_WIDTH_HEIGHT_PREFIX %><%= namespace + id %>', textareaNode.getStyle('height') + ',' + textareaNode.getStyle('width'));
 									}
 								},
 								autoHide: true,
@@ -425,5 +434,5 @@ private long _getClassPK(Object bean, long classPK) {
 
 private static final String _TEXTAREA_WIDTH_HEIGHT_PREFIX = "liferay_resize_";
 
-private static final String[] _TYPES = {"color", "email", "number", "range", "tel", "text", "textarea"};
+private static final Set<String> _TYPES = new HashSet<>(Arrays.asList("color", "email", "number", "range", "tel", "text", "textarea"));
 %>

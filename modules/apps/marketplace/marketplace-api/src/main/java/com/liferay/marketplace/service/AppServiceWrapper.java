@@ -14,8 +14,6 @@
 
 package com.liferay.marketplace.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,44 +23,53 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see AppService
  * @generated
  */
-@ProviderType
-public class AppServiceWrapper implements AppService,
-	ServiceWrapper<AppService> {
+public class AppServiceWrapper
+	implements AppService, ServiceWrapper<AppService> {
+
 	public AppServiceWrapper(AppService appService) {
 		_appService = appService;
 	}
 
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never modify or reference this interface directly. Always use {@link AppServiceUtil} to access the app remote service. Add custom service methods to <code>com.liferay.marketplace.service.impl.AppServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 */
 	@Override
 	public com.liferay.marketplace.model.App deleteApp(long appId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _appService.deleteApp(appId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _appService.getOSGiServiceIdentifier();
 	}
 
 	@Override
 	public void installApp(long remoteAppId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_appService.installApp(remoteAppId);
 	}
 
 	@Override
 	public void uninstallApp(long remoteAppId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_appService.uninstallApp(remoteAppId);
 	}
 
 	@Override
 	public com.liferay.marketplace.model.App updateApp(java.io.File file)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _appService.updateApp(file);
 	}
 
@@ -77,4 +84,5 @@ public class AppServiceWrapper implements AppService,
 	}
 
 	private AppService _appService;
+
 }

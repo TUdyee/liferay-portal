@@ -14,8 +14,6 @@
 
 package com.liferay.external.data.source.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,8 +25,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class TestEntitySoap implements Serializable {
+
 	public static TestEntitySoap toSoapModel(TestEntity model) {
 		TestEntitySoap soapModel = new TestEntitySoap();
 
@@ -66,7 +64,8 @@ public class TestEntitySoap implements Serializable {
 	}
 
 	public static TestEntitySoap[] toSoapModels(List<TestEntity> models) {
-		List<TestEntitySoap> soapModels = new ArrayList<TestEntitySoap>(models.size());
+		List<TestEntitySoap> soapModels = new ArrayList<TestEntitySoap>(
+			models.size());
 
 		for (TestEntity model : models) {
 			soapModels.add(toSoapModel(model));
@@ -104,4 +103,5 @@ public class TestEntitySoap implements Serializable {
 
 	private long _id;
 	private String _data;
+
 }

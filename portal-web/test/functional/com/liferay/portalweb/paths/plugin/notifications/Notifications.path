@@ -15,7 +15,7 @@
 </tr>
 <tr>
 	<td>USER_NAVIGATION_BAR_BADGE_COUNT</td>
-	<td>//div[contains(@class,'user-personal-bar')]//span[@class='user-avatar-link']//span[contains(@class,'panel-notifications-count')]</td>
+	<td>//div[contains(@class,'user-personal-bar')]//span[contains(@class,'badge-item')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -30,7 +30,7 @@
 </tr>
 <tr>
 	<td>NOTIFICATIONS_BADGE_COUNT</td>
-	<td>//a[contains(@class,'list-group-heading') and (@aria-expanded='true')]/..//span[contains(@class,'badge')]</td>
+	<td>//a[contains(@class,'list-group-heading') and (@aria-expanded='true')]/..//a[contains(.,'Notifications')]//span[contains(@class,'badge')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -46,17 +46,22 @@
 </tr>
 <tr>
 	<td>NOTIFICATIONS_TITLE</td>
-	<td>//div[@class='title']</td>
+	<td>//div[@class='title'] | //h4/a[contains(.,'${key_portletName} ${key_publicationType} ${key_contentBody}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>NOTIFICATIONS_VERTICAL_ELLIPSIS</td>
-	<td>//li[contains(.,'${key_contentBody}')]//span/*[name()='svg'][contains(@class,'icon-ellipsis')]</td>
+	<td>//li[contains(.,'${key_contentBody}')]//a[span/*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NOTIFICATIONS_PORTLET_VERTICAL_ELLIPSIS</td>
+	<td>//a[span/*[contains(@class,'lexicon-icon-ellipsis-v')]]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>NOTIFICATIONS_WORKFLOW_TITLE</td>
-	<td>//div[@class='user-notifications']//li[contains(@class,'unread')]//h4/a</td>
+	<td>//div[@class='user-notifications']//div[contains(@data-qa-id,'rowItemContent')]//a</td>
 	<td></td>
 </tr>
 <tr>
@@ -81,6 +86,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>NOTIFICATIONS_CONFIGURATION_MENUITEM</td>
+	<td>//span[contains(@class,'taglib-text-icon') and contains(.,'${key_menuItem}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>NOTIFICATIONS_CONFIGURATION_WEBSITE_SWITCH</td>
 	<td>//div[contains(@id,'${key_contentType}Content')]//td[contains(.,'${key_actionType}')]//following-sibling::td/following-sibling::td[contains(@class,'lfr-website-column')]//span</td>
 	<td></td>
@@ -94,16 +104,6 @@
 <tr>
 	<td>NOTIFICATION_DELIVERY_CHECKBOX</td>
 	<td>//table[contains(.,'${key_contentType}')]//tr[contains(.,'${key_actionType}')]//label[contains(.,'${key_notificationType}')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NOTIFICATION_DELIVERY_CHECKBOX_1</td>
-	<td>//table[contains(.,'${key_contentType}')]//tr/td[2]//input</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NOTIFICATION_DELIVERY_CHECKBOX_2</td>
-	<td>//table[contains(.,'${key_contentType}')]//div[2]/div/label/input</td>
 	<td></td>
 </tr>
 <tr>
@@ -123,7 +123,7 @@
 </tr>
 <tr>
 	<td>NOTIFICATION_DELIVERY_PANEL</td>
-	<td>//div[contains(@class,'panel-title')]/a[contains(.,'${key_contentType}')]</td>
+	<td>//div[contains(@class,'panel-heading')]//a[contains(.,'${key_contentType}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -157,16 +157,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>NOTIFICATION_DELIVERY_CONTACTS_CENTER_WEBSITE_CHECKBOX</td>
-	<td>//table[contains(.,'Contacts Center')]//tr[contains(.,'sends you a social relationship request.')]//label[contains(.,'Website')]/input[@type='checkbox' and contains(@class,'disabled')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NOTIFICATION_DELIVERY_INVITE_MEMBERS_WEBSITE_CHECKBOX</td>
-	<td>//table[contains(.,'Invite Members')]//tr[contains(.,'sends you a membership request.')]//label[contains(.,'Website')]/input[@type='checkbox' and contains(@class,'disabled')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -174,7 +164,7 @@
 <!--REQUESTS-->
 <tr>
 	<td>REQUESTS_LIST_TAB</td>
-	<td>//a[@title='Requests List']</td>
+	<td>//a[contains(@class,'nav-link') and contains(.,'${key_navLinkOption}')]</td>
 	<td></td>
 </tr>
 </tbody>

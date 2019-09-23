@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.test.AssertUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -272,6 +273,7 @@ public class ArrayUtilTest {
 	@Test
 	public void testContainsUserArray() throws Exception {
 		User brian = new User("brian", 20);
+
 		User julio = new User("julio", 20);
 		User sergio = new User("sergio", 20);
 
@@ -286,61 +288,27 @@ public class ArrayUtilTest {
 	public void testCountStringArray() {
 		String[] array = {"a", "b", "c"};
 
-		PredicateFilter<String> predicateFilter =
-			new PredicateFilter<String>() {
-
-				@Override
-				public boolean filter(String string) {
-					if (string.equals("b")) {
-						return true;
-					}
-
-					return false;
-				}
-
-			};
-
-		Assert.assertEquals(1, ArrayUtil.count(array, predicateFilter));
+		Assert.assertEquals(1, ArrayUtil.count(array, s -> s.equals("b")));
 	}
 
 	@Test
 	public void testCountStringEmptyArray() {
 		String[] array = {};
 
-		PredicateFilter<String> predicateFilter =
-			new PredicateFilter<String>() {
-
-				@Override
-				public boolean filter(String string) {
-					return true;
-				}
-
-			};
-
-		Assert.assertEquals(0, ArrayUtil.count(array, predicateFilter));
+		Assert.assertEquals(0, ArrayUtil.count(array, s -> true));
 	}
 
 	@Test
 	public void testCountStringNullArray() {
 		String[] array = null;
 
-		PredicateFilter<String> predicateFilter =
-			new PredicateFilter<String>() {
-
-				@Override
-				public boolean filter(String string) {
-					return true;
-				}
-
-			};
-
-		Assert.assertEquals(0, ArrayUtil.count(array, predicateFilter));
+		Assert.assertEquals(0, ArrayUtil.count(array, s -> true));
 	}
 
 	@Test
 	public void testFilterDoubleArray() {
 		double[] array = ArrayUtil.filter(
-			new double[] {0.1, 0.2, 1.2, 1.3}, _doublePredicateFilter);
+			new double[] {0.1, 0.2, 1.2, 1.3}, _doublePredicate);
 
 		Assert.assertEquals(Arrays.toString(array), 2, array.length);
 		AssertUtils.assertEquals(new double[] {1.2, 1.3}, array);
@@ -348,8 +316,7 @@ public class ArrayUtilTest {
 
 	@Test
 	public void testFilterDoubleEmptyArray() {
-		double[] array = ArrayUtil.filter(
-			new double[0], _doublePredicateFilter);
+		double[] array = ArrayUtil.filter(new double[0], _doublePredicate);
 
 		Assert.assertEquals(Arrays.toString(array), 0, array.length);
 		AssertUtils.assertEquals(new double[0], array);
@@ -359,8 +326,7 @@ public class ArrayUtilTest {
 	public void testFilterDoubleNullArray() {
 		double[] array = null;
 
-		double[] filteredArray = ArrayUtil.filter(
-			array, _doublePredicateFilter);
+		double[] filteredArray = ArrayUtil.filter(array, _doublePredicate);
 
 		Assert.assertNull(filteredArray);
 	}
@@ -368,7 +334,7 @@ public class ArrayUtilTest {
 	@Test
 	public void testFilterIntegerArray() {
 		int[] array = ArrayUtil.filter(
-			new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, _integerPredicateFilter);
+			new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, _integerPredicate);
 
 		Assert.assertEquals(Arrays.toString(array), 5, array.length);
 		Assert.assertArrayEquals(new int[] {5, 6, 7, 8, 9}, array);
@@ -376,7 +342,7 @@ public class ArrayUtilTest {
 
 	@Test
 	public void testFilterIntegerEmptyArray() {
-		int[] array = ArrayUtil.filter(new int[0], _integerPredicateFilter);
+		int[] array = ArrayUtil.filter(new int[0], _integerPredicate);
 
 		Assert.assertEquals(Arrays.toString(array), 0, array.length);
 		Assert.assertArrayEquals(new int[0], array);
@@ -386,7 +352,7 @@ public class ArrayUtilTest {
 	public void testFilterIntegerNullArray() {
 		int[] array = null;
 
-		int[] filteredArray = ArrayUtil.filter(array, _integerPredicateFilter);
+		int[] filteredArray = ArrayUtil.filter(array, _integerPredicate);
 
 		Assert.assertNull(filteredArray);
 	}
@@ -395,7 +361,7 @@ public class ArrayUtilTest {
 	public void testFilterUserArray() {
 		User[] array = ArrayUtil.filter(
 			new User[] {new User("james", 17), new User("john", 26)},
-			_userPredicateFilter);
+			_userPredicate);
 
 		Assert.assertEquals(Arrays.toString(array), 1, array.length);
 
@@ -405,14 +371,14 @@ public class ArrayUtilTest {
 
 	@Test
 	public void testFilterUserEmptyArray() {
-		User[] array = ArrayUtil.filter(new User[0], _userPredicateFilter);
+		User[] array = ArrayUtil.filter(new User[0], _userPredicate);
 
 		Assert.assertEquals(Arrays.toString(array), 0, array.length);
 	}
 
 	@Test
 	public void testFilterUserNullArray() {
-		User[] array = ArrayUtil.filter(null, _userPredicateFilter);
+		User[] array = ArrayUtil.filter(null, _userPredicate);
 
 		Assert.assertNull(array);
 	}
@@ -862,6 +828,159 @@ public class ArrayUtilTest {
 	}
 
 	@Test
+	public void testSoredUnique() {
+		byte[] bytes = {2, 3, 1};
+
+		byte[] sortedUniqueBytes = ArrayUtil.sortedUnique(bytes);
+
+		Assert.assertSame(bytes, sortedUniqueBytes);
+		Assert.assertArrayEquals(new byte[] {1, 2, 3}, sortedUniqueBytes);
+
+		bytes = new byte[] {2, 3, 1, 2, 3, 3, 1};
+
+		sortedUniqueBytes = ArrayUtil.sortedUnique(bytes);
+
+		Assert.assertNotSame(bytes, sortedUniqueBytes);
+		Assert.assertArrayEquals(new byte[] {1, 2, 3}, sortedUniqueBytes);
+
+		double[] doubles = {2.0, 3.0, 1.0};
+
+		double[] sortedUniqueDoubles = ArrayUtil.sortedUnique(doubles);
+
+		Assert.assertSame(doubles, sortedUniqueDoubles);
+		Assert.assertArrayEquals(
+			new double[] {1.0, 2.0, 3.0}, sortedUniqueDoubles, 0.0001);
+
+		doubles = new double[] {2.0, 3.0, 1.0, 2.0, 3.0, 3.0, 1.0};
+
+		sortedUniqueDoubles = ArrayUtil.sortedUnique(doubles);
+
+		Assert.assertNotSame(doubles, sortedUniqueDoubles);
+		Assert.assertArrayEquals(
+			new double[] {1.0, 2.0, 3.0}, sortedUniqueDoubles, 0.0001);
+
+		float[] floats = {2.0F, 3.0F, 1.0F};
+
+		float[] sortedUniqueFloats = ArrayUtil.sortedUnique(floats);
+
+		Assert.assertSame(floats, sortedUniqueFloats);
+		Assert.assertArrayEquals(
+			new float[] {1.0F, 2.0F, 3.0F}, sortedUniqueFloats, 0.0001F);
+
+		floats = new float[] {2.0F, 3.0F, 1.0F, 2.0F, 3.0F, 3.0F, 1.0F};
+
+		sortedUniqueFloats = ArrayUtil.sortedUnique(floats);
+
+		Assert.assertNotSame(floats, sortedUniqueFloats);
+		Assert.assertArrayEquals(
+			new float[] {1.0F, 2.0F, 3.0F}, sortedUniqueFloats, 0.0001F);
+
+		int[] ints = {2, 3, 1};
+
+		int[] sortedUniqueInts = ArrayUtil.sortedUnique(ints);
+
+		Assert.assertSame(ints, sortedUniqueInts);
+		Assert.assertArrayEquals(new int[] {1, 2, 3}, sortedUniqueInts);
+
+		ints = new int[] {2, 3, 1, 2, 3, 3, 1};
+
+		sortedUniqueInts = ArrayUtil.sortedUnique(ints);
+
+		Assert.assertNotSame(ints, sortedUniqueInts);
+		Assert.assertArrayEquals(new int[] {1, 2, 3}, sortedUniqueInts);
+
+		long[] longs = {2, 3, 1};
+
+		long[] sortedUniqueLongs = ArrayUtil.sortedUnique(longs);
+
+		Assert.assertSame(longs, sortedUniqueLongs);
+		Assert.assertArrayEquals(new long[] {1, 2, 3}, sortedUniqueLongs);
+
+		longs = new long[] {2, 3, 1, 2, 3, 3, 1};
+
+		sortedUniqueLongs = ArrayUtil.sortedUnique(longs);
+
+		Assert.assertNotSame(longs, sortedUniqueLongs);
+		Assert.assertArrayEquals(new long[] {1, 2, 3}, sortedUniqueLongs);
+
+		short[] shorts = {2, 3, 1};
+
+		short[] sortedUniqueShorts = ArrayUtil.sortedUnique(shorts);
+
+		Assert.assertSame(shorts, sortedUniqueShorts);
+		Assert.assertArrayEquals(new short[] {1, 2, 3}, sortedUniqueShorts);
+
+		shorts = new short[] {2, 3, 1, 2, 3, 3, 1};
+
+		sortedUniqueShorts = ArrayUtil.sortedUnique(shorts);
+
+		Assert.assertNotSame(shorts, sortedUniqueShorts);
+		Assert.assertArrayEquals(new short[] {1, 2, 3}, sortedUniqueShorts);
+
+		String[] strings = {"world", "hello"};
+
+		String[] sortedUniqueStrings = ArrayUtil.sortedUnique(strings);
+
+		Assert.assertSame(strings, sortedUniqueStrings);
+		Assert.assertArrayEquals(
+			new String[] {"hello", "world"}, sortedUniqueStrings);
+
+		strings = new String[] {"world", "hello", null, "hello", null, "world"};
+
+		sortedUniqueStrings = ArrayUtil.sortedUnique(strings);
+
+		Assert.assertNotSame(strings, sortedUniqueStrings);
+		Assert.assertArrayEquals(
+			new String[] {"hello", "world", null}, sortedUniqueStrings);
+	}
+
+	@Test
+	public void testSplitEmptyArray() {
+		int[] array = new int[0];
+
+		int[][] arraySplit = (int[][])ArrayUtil.split(array, 2);
+
+		Assert.assertEquals(Arrays.toString(arraySplit), 0, arraySplit.length);
+	}
+
+	@Test
+	public void testSplitEqualToSplitSize() {
+		int[] array = {1, 2};
+
+		int[][] arraySplit = (int[][])ArrayUtil.split(array, 2);
+
+		Assert.assertEquals(Arrays.toString(arraySplit), 1, arraySplit.length);
+
+		Assert.assertSame(array, arraySplit[0]);
+	}
+
+	@Test
+	public void testSplitGreaterThanSplitSize() {
+		int[] array = {1, 2};
+
+		int[][] expected = {{1}, {2}};
+
+		int[][] arraySplit = (int[][])ArrayUtil.split(array, 1);
+
+		Assert.assertEquals(Arrays.toString(arraySplit), 2, arraySplit.length);
+
+		for (int i = 0; i < arraySplit.length; i++) {
+			Assert.assertArrayEquals(expected[i], arraySplit[i]);
+		}
+	}
+
+	@Test
+	public void testSplitLessThanSplitSize() {
+		int[] array = {0, 1, 2, 3};
+
+		int[][] arraySplit = (int[][])ArrayUtil.split(array, 5);
+
+		Assert.assertEquals(Arrays.toString(arraySplit), 1, arraySplit.length);
+
+		Assert.assertSame(array, arraySplit[0]);
+	}
+
+	@Test
 	public void testSubset() {
 		Assert.assertArrayEquals(
 			new boolean[] {true, false},
@@ -967,71 +1086,58 @@ public class ArrayUtilTest {
 
 	@Test
 	public void testUnique() {
+		byte[] bytes = {1, 2, 3};
+
 		Assert.assertArrayEquals(
-			new byte[] {1, 2, 3}, ArrayUtil.unique(new byte[] {1, 2, 3, 3, 2}));
+			bytes, ArrayUtil.unique(new byte[] {1, 2, 3, 3, 2}));
+		Assert.assertSame(bytes, ArrayUtil.unique(bytes));
+
+		double[] doubles = {1.0, 2.0, 3.0};
+
 		Assert.assertArrayEquals(
-			new double[] {1.0, 2.0, 3.0},
+			doubles,
 			ArrayUtil.unique(new double[] {1.0, 2.0, 3.0, 1.0, 2.0, 3.0}),
 			0.0001);
+		Assert.assertSame(doubles, ArrayUtil.unique(doubles));
+
+		float[] floats = {1.0F, 2.0F, 3.0F};
+
 		Assert.assertArrayEquals(
-			new float[] {1.0F, 2.0F, 3.0F},
+			floats,
 			ArrayUtil.unique(new float[] {1.0F, 2.0F, 3.0F, 3.0F, 2.0F}),
 			0.0001F);
+		Assert.assertSame(floats, ArrayUtil.unique(floats));
+
+		int[] ints = {1, 2, 3};
+
 		Assert.assertArrayEquals(
-			new int[] {1, 2, 3}, ArrayUtil.unique(new int[] {1, 2, 3, 3, 2}));
+			ints, ArrayUtil.unique(new int[] {1, 2, 3, 3, 2}));
+		Assert.assertSame(ints, ArrayUtil.unique(ints));
+
+		long[] longs = {1L, 2L, 3L};
+
 		Assert.assertArrayEquals(
-			new long[] {1L, 2L, 3L},
-			ArrayUtil.unique(new long[] {1L, 2L, 3L, 3L, 2L}));
+			longs, ArrayUtil.unique(new long[] {1L, 2L, 3L, 3L, 2L}));
+		Assert.assertSame(longs, ArrayUtil.unique(longs));
+
+		short[] shorts = {1, 2, 3};
+
 		Assert.assertArrayEquals(
-			new short[] {1, 2, 3},
-			ArrayUtil.unique(new short[] {1, 2, 3, 3, 2}));
+			shorts, ArrayUtil.unique(new short[] {1, 2, 3, 3, 2}));
+		Assert.assertSame(shorts, ArrayUtil.unique(shorts));
+
+		String[] strings = {"hello", null, "world"};
+
 		Assert.assertArrayEquals(
-			new String[] {"hello", "world"},
+			strings,
 			ArrayUtil.unique(
-				new String[] {"hello", "hello", "world", "world"}));
+				new String[] {"hello", null, "hello", null, "world", "world"}));
+		Assert.assertSame(strings, ArrayUtil.unique(strings));
 	}
 
-	private final PredicateFilter<Double> _doublePredicateFilter =
-		new PredicateFilter<Double>() {
-
-			@Override
-			public boolean filter(Double d) {
-				if (d >= 1.1) {
-					return true;
-				}
-
-				return false;
-			}
-
-		};
-
-	private final PredicateFilter<Integer> _integerPredicateFilter =
-		new PredicateFilter<Integer>() {
-
-			@Override
-			public boolean filter(Integer i) {
-				if (i >= 5) {
-					return true;
-				}
-
-				return false;
-			}
-
-		};
-
-	private final PredicateFilter<User> _userPredicateFilter =
-		new PredicateFilter<User>() {
-
-			@Override
-			public boolean filter(User user) {
-				if (user.getAge() > 18) {
-					return true;
-				}
-
-				return false;
-			}
-
-		};
+	private final Predicate<Double> _doublePredicate = d -> d >= 1.1;
+	private final Predicate<Integer> _integerPredicate = i -> i >= 5;
+	private final Predicate<User> _userPredicate = user -> user.getAge() > 18;
 
 	private static class User {
 

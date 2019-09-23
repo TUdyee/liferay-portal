@@ -53,7 +53,7 @@ public class WarsProjectConfigurator extends BaseProjectConfigurator {
 
 		_defaultRepositoryEnabled = GradleUtil.getProperty(
 			settings,
-			WorkspacePlugin.PROPERTY_PREFIX + _NAME +
+			WorkspacePlugin.PROPERTY_PREFIX + NAME +
 				".default.repository.enabled",
 			_DEFAULT_REPOSITORY_ENABLED);
 	}
@@ -73,12 +73,14 @@ public class WarsProjectConfigurator extends BaseProjectConfigurator {
 
 		_addTaskDeploy(war, workspaceExtension);
 
+		addTaskDockerDeploy(project, war, workspaceExtension);
+
 		_configureRootTaskDistBundle(war);
 	}
 
 	@Override
 	public String getName() {
-		return _NAME;
+		return NAME;
 	}
 
 	public boolean isDefaultRepositoryEnabled() {
@@ -115,6 +117,8 @@ public class WarsProjectConfigurator extends BaseProjectConfigurator {
 
 		return projectDirs;
 	}
+
+	protected static final String NAME = "wars";
 
 	private Copy _addTaskDeploy(
 		War war, final WorkspaceExtension workspaceExtension) {
@@ -160,8 +164,6 @@ public class WarsProjectConfigurator extends BaseProjectConfigurator {
 	}
 
 	private static final boolean _DEFAULT_REPOSITORY_ENABLED = true;
-
-	private static final String _NAME = "wars";
 
 	private boolean _defaultRepositoryEnabled;
 

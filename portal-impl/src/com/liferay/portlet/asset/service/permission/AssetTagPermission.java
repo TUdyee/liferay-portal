@@ -21,8 +21,10 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 
 /**
- * @author Eduardo Lundgren
+ * @author     Eduardo Lundgren
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
+@Deprecated
 public class AssetTagPermission {
 
 	public static void check(
@@ -65,9 +67,9 @@ public class AssetTagPermission {
 			PermissionChecker permissionChecker, long tagId, String actionId)
 		throws PortalException {
 
-		AssetTag tag = AssetTagLocalServiceUtil.getTag(tagId);
-
-		return contains(permissionChecker, tag, actionId);
+		return contains(
+			permissionChecker, AssetTagLocalServiceUtil.getTag(tagId),
+			actionId);
 	}
 
 }

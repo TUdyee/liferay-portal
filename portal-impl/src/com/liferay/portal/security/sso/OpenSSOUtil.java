@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.sso;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.security.sso.OpenSSO;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -36,26 +34,25 @@ import javax.servlet.http.HttpServletRequest;
  * @author Brian Wing Shun Chan
  * @author Wesley Gong
  */
-@ProviderType
 public class OpenSSOUtil {
 
 	public static Map<String, String> getAttributes(
-		HttpServletRequest request, String serviceUrl) {
+		HttpServletRequest httpServletRequest, String serviceUrl) {
 
-		return _getOpenSSO().getAttributes(request, serviceUrl);
+		return _getOpenSSO().getAttributes(httpServletRequest, serviceUrl);
 	}
 
 	public static String getSubjectId(
-		HttpServletRequest request, String serviceUrl) {
+		HttpServletRequest httpServletRequest, String serviceUrl) {
 
-		return _getOpenSSO().getSubjectId(request, serviceUrl);
+		return _getOpenSSO().getSubjectId(httpServletRequest, serviceUrl);
 	}
 
 	public static boolean isAuthenticated(
-			HttpServletRequest request, String serviceUrl)
+			HttpServletRequest httpServletRequest, String serviceUrl)
 		throws IOException {
 
-		return _getOpenSSO().isAuthenticated(request, serviceUrl);
+		return _getOpenSSO().isAuthenticated(httpServletRequest, serviceUrl);
 	}
 
 	public static boolean isValidServiceUrl(String serviceUrl) {

@@ -14,10 +14,10 @@
 
 package com.liferay.portal.kernel.servlet.taglib.aui;
 
-import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Mergeable;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -25,11 +25,16 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Pattern;
 
 /**
  * @author Brian Wing Shun Chan
@@ -84,84 +89,40 @@ public class ScriptData implements Mergeable<ScriptData>, Serializable {
 	public void writeTo(Writer writer) throws IOException {
 		writer.write("<script type=\"text/javascript\">\n// <![CDATA[\n");
 
-		StringBundler auiModulesSB = new StringBundler(_portletDataMap.size());
-		Set<String> auiModulesSet = new HashSet<>();
-		StringBundler es6ModulesSB = new StringBundler(_portletDataMap.size());
-		Set<String> es6ModulesSet = new HashSet<>();
-
 		for (PortletData portletData : _portletDataMap.values()) {
 			portletData._rawSB.writeTo(writer);
-
-			if (!portletData._auiModulesSet.isEmpty()) {
-				auiModulesSB.append(portletData._auiCallbackSB);
-			}
-
-			if (!portletData._es6ModulesSet.isEmpty()) {
-				es6ModulesSB.append(portletData._es6CallbackSB);
-			}
-
-			auiModulesSet.addAll(portletData._auiModulesSet);
-			es6ModulesSet.addAll(portletData._es6ModulesSet);
 		}
 
-		if ((auiModulesSB.index() == 0) && (es6ModulesSB.index() == 0)) {
-			writer.write("\n// ]]>\n</script>");
+		Collection<PortletData> portletDataCollection =
+			_portletDataMap.values();
 
+		_writeEs6ModulesTo(writer, portletDataCollection);
+
+		_writeAuiModulesTo(writer, portletDataCollection);
+
+		writer.write("\n// ]]>\n</script>");
+	}
+
+	public void writeTo(Writer writer, String portletId) throws IOException {
+		PortletData portletData = _portletDataMap.remove(portletId);
+
+		if (portletData == null) {
 			return;
 		}
 
-		if (!es6ModulesSet.isEmpty()) {
-			writer.write("Liferay.Loader.require(");
+		writer.write("<script type=\"text/javascript\">\n// <![CDATA[\n");
 
-			Iterator<String> iterator = es6ModulesSet.iterator();
+		portletData._rawSB.writeTo(writer);
 
-			while (iterator.hasNext()) {
-				writer.write(StringPool.APOSTROPHE);
-				writer.write(iterator.next());
-				writer.write(StringPool.APOSTROPHE);
+		Collection<PortletData> portletDataCollection = Collections.singleton(
+			portletData);
 
-				if (iterator.hasNext()) {
-					writer.write(StringPool.COMMA_AND_SPACE);
-				}
-			}
-
-			writer.write(StringPool.COMMA_AND_SPACE);
-			writer.write("function(");
-
-			iterator = es6ModulesSet.iterator();
-
-			Set<String> variableNames = new HashSet<>(es6ModulesSet.size());
-
-			while (iterator.hasNext()) {
-				writer.write(_generateVariable(iterator.next(), variableNames));
-
-				if (iterator.hasNext()) {
-					writer.write(StringPool.COMMA_AND_SPACE);
-				}
-			}
-
-			writer.write(") {\n");
-
-			es6ModulesSB.writeTo(writer);
-
-			writer.write("},\nfunction(error) {\nconsole.error(error);\n});");
+		if (!portletData._es6ModulesSet.isEmpty()) {
+			_writeEs6ModulesTo(writer, portletDataCollection);
 		}
 
-		if (!auiModulesSet.isEmpty()) {
-			writer.write("AUI().use(");
-
-			for (String use : auiModulesSet) {
-				writer.write(StringPool.APOSTROPHE);
-				writer.write(use);
-				writer.write(StringPool.APOSTROPHE);
-				writer.write(StringPool.COMMA_AND_SPACE);
-			}
-
-			writer.write("function(A) {");
-
-			auiModulesSB.writeTo(writer);
-
-			writer.write("});");
+		if (!portletData._auiModulesSet.isEmpty()) {
+			_writeAuiModulesTo(writer, portletDataCollection);
 		}
 
 		writer.write("\n// ]]>\n</script>");
@@ -173,14 +134,30 @@ public class ScriptData implements Mergeable<ScriptData>, Serializable {
 
 	}
 
-	private String _generateVariable(String name, Set<String> names) {
+	private String _generateModuleName(String name) {
+		String[] nameAlias = _splitNameAlias(name);
+
+		return nameAlias[0];
+	}
+
+	private String _generateVariable(
+		String name, Set<String> names, boolean useAlias) {
+
+		String[] nameAlias = _splitNameAlias(name);
+
+		if (useAlias && !Validator.isBlank(nameAlias[1])) {
+			return nameAlias[1];
+		}
+
+		name = nameAlias[0];
+
 		StringBuilder sb = new StringBuilder(name.length());
 
 		char c = name.charAt(0);
 
 		boolean modified = true;
 
-		if ((CharPool.LOWER_CASE_A <= c) && (c <= CharPool.LOWER_CASE_Z) ||
+		if (((CharPool.LOWER_CASE_A <= c) && (c <= CharPool.LOWER_CASE_Z)) ||
 			(c == CharPool.UNDERLINE)) {
 
 			sb.append(c);
@@ -209,8 +186,8 @@ public class ScriptData implements Mergeable<ScriptData>, Serializable {
 					sb.append(c);
 				}
 			}
-			else if ((CharPool.UPPER_CASE_A <= c) &&
-					 (c <= CharPool.UPPER_CASE_Z) ||
+			else if (((CharPool.UPPER_CASE_A <= c) &&
+					  (c <= CharPool.UPPER_CASE_Z)) ||
 					 ((CharPool.NUMBER_0 <= c) && (c <= CharPool.NUMBER_9)) ||
 					 (c == CharPool.UNDERLINE)) {
 
@@ -223,6 +200,10 @@ public class ScriptData implements Mergeable<ScriptData>, Serializable {
 
 				startNewWord = true;
 			}
+		}
+
+		if (_reservedWords.contains(name)) {
+			name = StringPool.UNDERLINE + name;
 		}
 
 		String safeName = name;
@@ -263,6 +244,130 @@ public class ScriptData implements Mergeable<ScriptData>, Serializable {
 		return portletData;
 	}
 
+	private String[] _splitNameAlias(String name) {
+		String[] parts = _whitespacePattern.split(name, 4);
+
+		if ((parts.length == 3) &&
+			StringUtil.equalsIgnoreCase(parts[1], "as")) {
+
+			return new String[] {parts[0], parts[2]};
+		}
+
+		return new String[] {name, StringPool.BLANK};
+	}
+
+	private void _writeAuiModulesTo(
+			Writer writer, Collection<PortletData> portletDataCollection)
+		throws IOException {
+
+		StringBundler auiModulesSB = new StringBundler(
+			portletDataCollection.size());
+		Set<String> auiModulesSet = new HashSet<>();
+
+		for (PortletData portletData : portletDataCollection) {
+			if (!portletData._auiModulesSet.isEmpty()) {
+				auiModulesSB.append(portletData._auiCallbackSB);
+				auiModulesSet.addAll(portletData._auiModulesSet);
+			}
+		}
+
+		if (!auiModulesSet.isEmpty()) {
+			writer.write("AUI().use(");
+
+			for (String use : auiModulesSet) {
+				writer.write(StringPool.APOSTROPHE);
+				writer.write(use);
+				writer.write(StringPool.APOSTROPHE);
+				writer.write(StringPool.COMMA_AND_SPACE);
+			}
+
+			writer.write("function(A) {");
+
+			auiModulesSB.writeTo(writer);
+
+			writer.write("});");
+		}
+	}
+
+	private void _writeEs6ModulesTo(
+			Writer writer, Collection<PortletData> portletDataCollection)
+		throws IOException {
+
+		StringBundler es6CallbacksSB = new StringBundler(
+			portletDataCollection.size());
+		List<String> es6Modules = new ArrayList<>();
+		List<String> es6Variables = new ArrayList<>();
+		Set<String> variableNames = new HashSet<>();
+
+		for (PortletData portletData : portletDataCollection) {
+			if (!portletData._es6ModulesSet.isEmpty()) {
+				es6CallbacksSB.append("(function(){\n");
+
+				for (String es6Module : portletData._es6ModulesSet) {
+					es6Modules.add(_generateModuleName(es6Module));
+
+					String rawVariable = _generateVariable(
+						es6Module, variableNames, false);
+
+					es6Variables.add(rawVariable);
+
+					es6CallbacksSB.append("var ");
+
+					String aliasedVariable = _generateVariable(
+						es6Module, variableNames, true);
+
+					es6CallbacksSB.append(aliasedVariable);
+
+					es6CallbacksSB.append(" = ");
+					es6CallbacksSB.append(rawVariable);
+					es6CallbacksSB.append(";\n");
+				}
+
+				es6CallbacksSB.append(portletData._es6CallbackSB);
+
+				es6CallbacksSB.append("})();\n");
+			}
+		}
+
+		if (!es6Modules.isEmpty()) {
+			writer.write("Liferay.Loader.require(");
+
+			for (String es6Module : es6Modules) {
+				writer.write(StringPool.APOSTROPHE);
+				writer.write(es6Module);
+				writer.write(StringPool.APOSTROPHE);
+				writer.write(StringPool.COMMA_AND_SPACE);
+			}
+
+			writer.write("function(");
+
+			String delimiter = StringPool.BLANK;
+
+			for (String es6Variable : es6Variables) {
+				writer.write(delimiter);
+				writer.write(es6Variable);
+
+				delimiter = StringPool.COMMA_AND_SPACE;
+			}
+
+			writer.write(") {\n");
+
+			es6CallbacksSB.writeTo(writer);
+
+			writer.write("});");
+		}
+	}
+
+	private static final Set<String> _reservedWords = new HashSet<>(
+		Arrays.asList(
+			"arguments", "await", "break", "case", "catch", "class", "const",
+			"continue", "debugger", "default", "delete", "do", "else", "enum",
+			"eval", "export", "extends", "false", "finally", "for", "function",
+			"if", "implements", "import", "in", "instanceof", "interface",
+			"let", "new", "null", "package", "private", "protected", "public",
+			"return", "static", "super", "switch", "this", "throw", "true",
+			"try", "typeof", "var", "void", "while", "with", "yield"));
+	private static final Pattern _whitespacePattern = Pattern.compile("\\s+");
 	private static final long serialVersionUID = 1L;
 
 	private final ConcurrentMap<String, PortletData> _portletDataMap =
@@ -289,8 +394,13 @@ public class ScriptData implements Mergeable<ScriptData>, Serializable {
 					}
 				}
 				else {
-					_es6CallbackSB.append("(function() {");
+					_es6CallbackSB.append("(function() {\n");
+					_es6CallbackSB.append("try {\n");
 					_es6CallbackSB.append(content);
+					_es6CallbackSB.append("\n}\n");
+					_es6CallbackSB.append("catch (err) {\n");
+					_es6CallbackSB.append("console.error(err);\n");
+					_es6CallbackSB.append("}\n");
 					_es6CallbackSB.append("})();");
 
 					for (String module : modulesArray) {

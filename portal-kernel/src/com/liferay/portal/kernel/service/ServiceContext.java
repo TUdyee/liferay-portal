@@ -14,6 +14,8 @@
 
 package com.liferay.portal.kernel.service;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -21,8 +23,8 @@ import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.PortletPreferencesIds;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
@@ -36,7 +38,6 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ReflectionUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -113,8 +114,6 @@ public class ServiceContext implements Cloneable, Serializable {
 		serviceContext.setCurrentURL(getCurrentURL());
 		serviceContext.setExpandoBridgeAttributes(getExpandoBridgeAttributes());
 		serviceContext.setFailOnPortalException(isFailOnPortalException());
-		serviceContext.setGroupPermissions(getGroupPermissions());
-		serviceContext.setGuestPermissions(getGuestPermissions());
 
 		if (_headers != null) {
 			serviceContext.setHeaders(_headers);
@@ -124,8 +123,12 @@ public class ServiceContext implements Cloneable, Serializable {
 		serviceContext.setLanguageId(getLanguageId());
 		serviceContext.setLayoutFullURL(getLayoutFullURL());
 		serviceContext.setLayoutURL(getLayoutURL());
-		serviceContext.setModelPermissions(
-			(ModelPermissions)_modelPermissions.clone());
+
+		if (_modelPermissions != null) {
+			serviceContext.setModelPermissions(
+				(ModelPermissions)_modelPermissions.clone());
+		}
+
 		serviceContext.setModifiedDate(getModifiedDate());
 		serviceContext.setPathFriendlyURLPrivateGroup(
 			getPathFriendlyURLPrivateGroup());
@@ -204,15 +207,21 @@ public class ServiceContext implements Cloneable, Serializable {
 			}
 		}
 
-		String[] groupPermissions = groupPermissionsList.toArray(
-			new String[groupPermissionsList.size()]);
+		String[] groupPermissions = groupPermissionsList.toArray(new String[0]);
+		String[] guestPermissions = guestPermissionsList.toArray(new String[0]);
 
-		setGroupPermissions(groupPermissions);
+		ModelPermissions modelPermissions = getModelPermissions();
 
-		String[] guestPermissions = guestPermissionsList.toArray(
-			new String[guestPermissionsList.size()]);
+		if (modelPermissions == null) {
+			modelPermissions = new ModelPermissions(modelName);
+		}
 
-		setGuestPermissions(guestPermissions);
+		modelPermissions.addRolePermissions(
+			RoleConstants.PLACEHOLDER_DEFAULT_GROUP_ROLE, groupPermissions);
+		modelPermissions.addRolePermissions(
+			RoleConstants.GUEST, guestPermissions);
+
+		setModelPermissions(modelPermissions);
 	}
 
 	/**
@@ -324,9 +333,8 @@ public class ServiceContext implements Cloneable, Serializable {
 		else if (defaultCreateDate != null) {
 			return defaultCreateDate;
 		}
-		else {
-			return new Date();
-		}
+
+		return new Date();
 	}
 
 	/**
@@ -382,9 +390,15 @@ public class ServiceContext implements Cloneable, Serializable {
 	 * context is being passed as a parameter to a method which manipulates the
 	 * resource.
 	 *
-	 * @return the specific group permissions
+	 * @return     the specific group permissions
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
+	@Deprecated
 	public String[] getGroupPermissions() {
+		if (_modelPermissions == null) {
+			return StringPool.EMPTY_ARRAY;
+		}
+
 		return _modelPermissions.getActionIds(
 			RoleConstants.PLACEHOLDER_DEFAULT_GROUP_ROLE);
 	}
@@ -418,9 +432,15 @@ public class ServiceContext implements Cloneable, Serializable {
 	 * context is being passed as a parameter to a method which manipulates the
 	 * resource.
 	 *
-	 * @return the specific guest permissions
+	 * @return     the specific guest permissions
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
+	@Deprecated
 	public String[] getGuestPermissions() {
+		if (_modelPermissions == null) {
+			return StringPool.EMPTY_ARRAY;
+		}
+
 		return _modelPermissions.getActionIds(RoleConstants.GUEST);
 	}
 
@@ -433,15 +453,15 @@ public class ServiceContext implements Cloneable, Serializable {
 	 */
 	@JSON(include = false)
 	public Map<String, String> getHeaders() {
-		if ((_headers == null) && (_request != null)) {
+		if ((_headers == null) && (_httpServletRequest != null)) {
 			Map<String, String> headerMap = new HashMap<>();
 
-			Enumeration<String> enu = _request.getHeaderNames();
+			Enumeration<String> enu = _httpServletRequest.getHeaderNames();
 
 			while (enu.hasMoreElements()) {
 				String header = enu.nextElement();
 
-				String value = _request.getHeader(header);
+				String value = _httpServletRequest.getHeader(header);
 
 				headerMap.put(header, value);
 			}
@@ -488,12 +508,13 @@ public class ServiceContext implements Cloneable, Serializable {
 
 	@JSON(include = false)
 	public LiferayPortletRequest getLiferayPortletRequest() {
-		if (_request == null) {
+		if (_httpServletRequest == null) {
 			return null;
 		}
 
-		PortletRequest portletRequest = (PortletRequest)_request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+		PortletRequest portletRequest =
+			(PortletRequest)_httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
 
 		if (portletRequest == null) {
 			return null;
@@ -504,12 +525,12 @@ public class ServiceContext implements Cloneable, Serializable {
 
 	@JSON(include = false)
 	public LiferayPortletResponse getLiferayPortletResponse() {
-		if (_request == null) {
+		if (_httpServletRequest == null) {
 			return null;
 		}
 
 		PortletResponse portletResponse =
-			(PortletResponse)_request.getAttribute(
+			(PortletResponse)_httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		if (portletResponse == null) {
@@ -553,9 +574,8 @@ public class ServiceContext implements Cloneable, Serializable {
 		else if (defaultModifiedDate != null) {
 			return defaultModifiedDate;
 		}
-		else {
-			return new Date();
-		}
+
+		return new Date();
 	}
 
 	public String getPathFriendlyURLPrivateGroup() {
@@ -650,7 +670,7 @@ public class ServiceContext implements Cloneable, Serializable {
 			try {
 				_portletPreferencesIds =
 					PortletPreferencesFactoryUtil.getPortletPreferencesIds(
-						_request, _portletId);
+						_httpServletRequest, _portletId);
 			}
 			catch (PortalException pe) {
 				ReflectionUtil.throwException(pe);
@@ -682,7 +702,7 @@ public class ServiceContext implements Cloneable, Serializable {
 
 	@JSON(include = false)
 	public HttpServletRequest getRequest() {
-		return _request;
+		return _httpServletRequest;
 	}
 
 	@JSON(include = false)
@@ -723,11 +743,12 @@ public class ServiceContext implements Cloneable, Serializable {
 	}
 
 	public ThemeDisplay getThemeDisplay() {
-		if (_request == null) {
+		if (_httpServletRequest == null) {
 			return null;
 		}
 
-		return (ThemeDisplay)_request.getAttribute(WebKeys.THEME_DISPLAY);
+		return (ThemeDisplay)_httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 	}
 
 	public TimeZone getTimeZone() {
@@ -741,11 +762,11 @@ public class ServiceContext implements Cloneable, Serializable {
 	 * @see    HttpHeaders
 	 */
 	public String getUserAgent() {
-		if (_request == null) {
+		if (_httpServletRequest == null) {
 			return null;
 		}
 
-		return _request.getHeader(HttpHeaders.USER_AGENT);
+		return _httpServletRequest.getHeader(HttpHeaders.USER_AGENT);
 	}
 
 	/**
@@ -862,9 +883,8 @@ public class ServiceContext implements Cloneable, Serializable {
 
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	/**
@@ -881,9 +901,8 @@ public class ServiceContext implements Cloneable, Serializable {
 
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	public boolean isDeriveDefaultPermissions() {
@@ -1004,14 +1023,6 @@ public class ServiceContext implements Cloneable, Serializable {
 
 		setFailOnPortalException(serviceContext.isFailOnPortalException());
 
-		if (serviceContext.getGroupPermissions() != null) {
-			setGroupPermissions(serviceContext.getGroupPermissions());
-		}
-
-		if (serviceContext.getGuestPermissions() != null) {
-			setGuestPermissions(serviceContext.getGuestPermissions());
-		}
-
 		if (serviceContext._headers != null) {
 			setHeaders(serviceContext._headers);
 		}
@@ -1025,6 +1036,10 @@ public class ServiceContext implements Cloneable, Serializable {
 
 		if (Validator.isNotNull(serviceContext.getLayoutURL())) {
 			setLayoutURL(serviceContext.getLayoutURL());
+		}
+
+		if (serviceContext.getModelPermissions() != null) {
+			setModelPermissions(serviceContext.getModelPermissions());
 		}
 
 		if (serviceContext.getModifiedDate() != null) {
@@ -1314,9 +1329,16 @@ public class ServiceContext implements Cloneable, Serializable {
 	 * this service context is being passed as a parameter to a method which
 	 * manipulates the resource.
 	 *
-	 * @param groupPermissions the permissions (optionally <code>null</code>)
+	 * @param      groupPermissions the permissions (optionally
+	 *             <code>null</code>)
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
+	@Deprecated
 	public void setGroupPermissions(String[] groupPermissions) {
+		if (_modelPermissions == null) {
+			_modelPermissions = new ModelPermissions();
+		}
+
 		_modelPermissions.addRolePermissions(
 			RoleConstants.PLACEHOLDER_DEFAULT_GROUP_ROLE, groupPermissions);
 	}
@@ -1326,10 +1348,16 @@ public class ServiceContext implements Cloneable, Serializable {
 	 * this service context is being passed as a parameter to a method which
 	 * manipulates the resource.
 	 *
-	 * @param guestPermissions the guest permissions (optionally
-	 *        <code>null</code>)
+	 * @param      guestPermissions the guest permissions (optionally
+	 *             <code>null</code>)
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
+	@Deprecated
 	public void setGuestPermissions(String[] guestPermissions) {
+		if (_modelPermissions == null) {
+			_modelPermissions = new ModelPermissions();
+		}
+
 		_modelPermissions.addRolePermissions(
 			RoleConstants.GUEST, guestPermissions);
 	}
@@ -1503,10 +1531,10 @@ public class ServiceContext implements Cloneable, Serializable {
 	 * Sets the optional request used when instantiating this service context.
 	 * The field is volatile and so will be discarded on serialization.
 	 *
-	 * @param request the request
+	 * @param httpServletRequest the request
 	 */
-	public void setRequest(HttpServletRequest request) {
-		_request = request;
+	public void setRequest(HttpServletRequest httpServletRequest) {
+		_httpServletRequest = httpServletRequest;
 	}
 
 	/**
@@ -1575,9 +1603,7 @@ public class ServiceContext implements Cloneable, Serializable {
 	}
 
 	public String translate(String pattern, Object... arguments) {
-		Locale locale = getLocale();
-
-		return LanguageUtil.format(locale, pattern, arguments);
+		return LanguageUtil.format(getLocale(), pattern, arguments);
 	}
 
 	public void validateModifiedDate(
@@ -1617,11 +1643,12 @@ public class ServiceContext implements Cloneable, Serializable {
 	private boolean _failOnPortalException = true;
 	private Date _formDate;
 	private transient Map<String, String> _headers;
+	private transient HttpServletRequest _httpServletRequest;
 	private boolean _indexingEnabled = true;
 	private String _languageId;
 	private String _layoutFullURL;
 	private String _layoutURL;
-	private ModelPermissions _modelPermissions = new ModelPermissions();
+	private ModelPermissions _modelPermissions;
 	private Date _modifiedDate;
 	private String _pathFriendlyURLPrivateGroup;
 	private String _pathFriendlyURLPrivateUser;
@@ -1633,7 +1660,6 @@ public class ServiceContext implements Cloneable, Serializable {
 	private PortletPreferencesIds _portletPreferencesIds;
 	private String _remoteAddr;
 	private String _remoteHost;
-	private transient HttpServletRequest _request;
 	private long _scopeGroupId;
 	private boolean _signedIn;
 	private TimeZone _timeZone;

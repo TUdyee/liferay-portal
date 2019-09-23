@@ -14,6 +14,8 @@
 
 package com.liferay.portal.image;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.concurrent.FutureConverter;
 import com.liferay.portal.kernel.exception.ImageResolutionException;
 import com.liferay.portal.kernel.image.ImageBag;
@@ -23,12 +25,9 @@ import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Image;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.ImageImpl;
 import com.liferay.portal.module.framework.ModuleFrameworkUtilAdapter;
@@ -47,6 +46,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.IndexColorModel;
+import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
@@ -83,129 +83,10 @@ import org.monte.media.jpeg.CMYKJPEGImageReaderSpi;
  * @author Alexander Chow
  * @author Shuyang Zhou
  */
-@DoPrivileged
 public class ImageToolImpl implements ImageTool {
 
 	public static ImageTool getInstance() {
 		return _instance;
-	}
-
-	public void afterPropertiesSet() {
-		Class<?> clazz = getClass();
-
-		ClassLoader classLoader = clazz.getClassLoader();
-
-		try {
-			InputStream inputStream = classLoader.getResourceAsStream(
-				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_SPACER));
-
-			if (inputStream == null) {
-				_log.error("Default spacer is not available");
-			}
-
-			_defaultSpacer = getImage(inputStream);
-		}
-		catch (Exception e) {
-			_log.error(
-				"Unable to configure the default spacer: " + e.getMessage());
-		}
-
-		try {
-			InputStream inputStream = null;
-
-			String imageDefaultCompanyLogo = PropsUtil.get(
-				PropsKeys.IMAGE_DEFAULT_COMPANY_LOGO);
-
-			int index = imageDefaultCompanyLogo.indexOf(CharPool.SEMICOLON);
-
-			if (index == -1) {
-				inputStream = classLoader.getResourceAsStream(
-					PropsUtil.get(PropsKeys.IMAGE_DEFAULT_COMPANY_LOGO));
-			}
-			else {
-				String bundleIdString = imageDefaultCompanyLogo.substring(
-					0, index);
-
-				int bundleId = GetterUtil.getInteger(bundleIdString, -1);
-
-				String name = imageDefaultCompanyLogo.substring(index + 1);
-
-				if (bundleId < 0) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Fallback to portal class loader because of " +
-								"invalid bundle ID " + bundleIdString);
-					}
-
-					inputStream = classLoader.getResourceAsStream(name);
-				}
-				else {
-					URL url = ModuleFrameworkUtilAdapter.getBundleResource(
-						bundleId, name);
-
-					inputStream = url.openStream();
-				}
-			}
-
-			if (inputStream == null) {
-				_log.error("Default company logo is not available");
-			}
-
-			_defaultCompanyLogo = getImage(inputStream);
-		}
-		catch (Exception e) {
-			_log.error(
-				"Unable to configure the default company logo: " +
-					e.getMessage());
-		}
-
-		try {
-			InputStream is = classLoader.getResourceAsStream(
-				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_ORGANIZATION_LOGO));
-
-			if (is == null) {
-				_log.error("Default organization logo is not available");
-			}
-
-			_defaultOrganizationLogo = getImage(is);
-		}
-		catch (Exception e) {
-			_log.error(
-				"Unable to configure the default organization logo: " +
-					e.getMessage());
-		}
-
-		try {
-			InputStream is = classLoader.getResourceAsStream(
-				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_USER_FEMALE_PORTRAIT));
-
-			if (is == null) {
-				_log.error("Default user female portrait is not available");
-			}
-
-			_defaultUserFemalePortrait = getImage(is);
-		}
-		catch (Exception e) {
-			_log.error(
-				"Unable to configure the default user female portrait: " +
-					e.getMessage());
-		}
-
-		try {
-			InputStream is = classLoader.getResourceAsStream(
-				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_USER_MALE_PORTRAIT));
-
-			if (is == null) {
-				_log.error("Default user male portrait is not available");
-			}
-
-			_defaultUserMalePortrait = getImage(is);
-		}
-		catch (Exception e) {
-			_log.error(
-				"Unable to configure the default user male portrait: " +
-					e.getMessage());
-		}
 	}
 
 	@Override
@@ -363,7 +244,9 @@ public class ImageToolImpl implements ImageTool {
 			os.write(toMultiByte(bufferedImage.getWidth()));
 			os.write(toMultiByte(bufferedImage.getHeight()));
 
-			DataBuffer dataBuffer = bufferedImage.getData().getDataBuffer();
+			Raster data = bufferedImage.getData();
+
+			DataBuffer dataBuffer = data.getDataBuffer();
 
 			int size = dataBuffer.getSize();
 
@@ -447,27 +330,196 @@ public class ImageToolImpl implements ImageTool {
 
 	@Override
 	public Image getDefaultCompanyLogo() {
+		if (_defaultCompanyLogo != null) {
+			return _defaultCompanyLogo;
+		}
+
+		ClassLoader classLoader = ImageToolImpl.class.getClassLoader();
+
+		try {
+			InputStream inputStream = null;
+
+			String imageDefaultCompanyLogo = PropsUtil.get(
+				PropsKeys.IMAGE_DEFAULT_COMPANY_LOGO);
+
+			int index = imageDefaultCompanyLogo.indexOf(CharPool.SEMICOLON);
+
+			if (index == -1) {
+				inputStream = classLoader.getResourceAsStream(
+					PropsUtil.get(PropsKeys.IMAGE_DEFAULT_COMPANY_LOGO));
+			}
+			else {
+				String bundleIdString = imageDefaultCompanyLogo.substring(
+					0, index);
+
+				int bundleId = GetterUtil.getInteger(bundleIdString, -1);
+
+				String name = imageDefaultCompanyLogo.substring(index + 1);
+
+				if (bundleId < 0) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Fallback to portal class loader because of " +
+								"invalid bundle ID " + bundleIdString);
+					}
+
+					inputStream = classLoader.getResourceAsStream(name);
+				}
+				else {
+					URL url = ModuleFrameworkUtilAdapter.getBundleResource(
+						bundleId, name);
+
+					inputStream = url.openStream();
+				}
+			}
+
+			if (inputStream == null) {
+				_log.error("Default company logo is not available");
+			}
+
+			_defaultCompanyLogo = getImage(inputStream);
+		}
+		catch (Exception e) {
+			_log.error(
+				"Unable to configure the default company logo: " +
+					e.getMessage());
+		}
+
 		return _defaultCompanyLogo;
 	}
 
 	@Override
 	public Image getDefaultOrganizationLogo() {
+		if (_defaultOrganizationLogo != null) {
+			return _defaultOrganizationLogo;
+		}
+
+		ClassLoader classLoader = ImageToolImpl.class.getClassLoader();
+
+		try {
+			InputStream is = classLoader.getResourceAsStream(
+				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_ORGANIZATION_LOGO));
+
+			if (is == null) {
+				_log.error("Default organization logo is not available");
+			}
+
+			_defaultOrganizationLogo = getImage(is);
+		}
+		catch (Exception e) {
+			_log.error(
+				"Unable to configure the default organization logo: " +
+					e.getMessage());
+		}
+
 		return _defaultOrganizationLogo;
 	}
 
 	@Override
 	public Image getDefaultSpacer() {
+		if (_defaultSpacer != null) {
+			return _defaultSpacer;
+		}
+
+		ClassLoader classLoader = ImageToolImpl.class.getClassLoader();
+
+		try {
+			InputStream inputStream = classLoader.getResourceAsStream(
+				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_SPACER));
+
+			if (inputStream == null) {
+				_log.error("Default spacer is not available");
+			}
+
+			_defaultSpacer = getImage(inputStream);
+		}
+		catch (Exception e) {
+			_log.error(
+				"Unable to configure the default spacer: " + e.getMessage());
+		}
+
 		return _defaultSpacer;
 	}
 
 	@Override
 	public Image getDefaultUserFemalePortrait() {
+		if (_defaultUserFemalePortrait != null) {
+			return _defaultUserFemalePortrait;
+		}
+
+		ClassLoader classLoader = ImageToolImpl.class.getClassLoader();
+
+		try {
+			InputStream is = classLoader.getResourceAsStream(
+				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_USER_FEMALE_PORTRAIT));
+
+			if (is == null) {
+				_log.error("Default user female portrait is not available");
+			}
+
+			_defaultUserFemalePortrait = getImage(is);
+		}
+		catch (Exception e) {
+			_log.error(
+				"Unable to configure the default user female portrait: " +
+					e.getMessage());
+		}
+
 		return _defaultUserFemalePortrait;
 	}
 
 	@Override
 	public Image getDefaultUserMalePortrait() {
+		if (_defaultUserMalePortrait != null) {
+			return _defaultUserMalePortrait;
+		}
+
+		ClassLoader classLoader = ImageToolImpl.class.getClassLoader();
+
+		try {
+			InputStream is = classLoader.getResourceAsStream(
+				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_USER_MALE_PORTRAIT));
+
+			if (is == null) {
+				_log.error("Default user male portrait is not available");
+			}
+
+			_defaultUserMalePortrait = getImage(is);
+		}
+		catch (Exception e) {
+			_log.error(
+				"Unable to configure the default user male portrait: " +
+					e.getMessage());
+		}
+
 		return _defaultUserMalePortrait;
+	}
+
+	@Override
+	public Image getDefaultUserPortrait() {
+		if (_defaultUserPortrait != null) {
+			return _defaultUserPortrait;
+		}
+
+		ClassLoader classLoader = ImageToolImpl.class.getClassLoader();
+
+		try {
+			InputStream is = classLoader.getResourceAsStream(
+				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_USER_PORTRAIT));
+
+			if (is == null) {
+				_log.error("Default user portrait is not available");
+			}
+
+			_defaultUserPortrait = getImage(is);
+		}
+		catch (Exception e) {
+			_log.error(
+				"Unable to configure the default user portrait: " +
+					e.getMessage());
+		}
+
+		return _defaultUserPortrait;
 	}
 
 	@Override
@@ -537,9 +589,8 @@ public class ImageToolImpl implements ImageTool {
 
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -680,7 +731,7 @@ public class ImageToolImpl implements ImageTool {
 		affineTransform.translate(
 			rotatedImageWidth / 2, rotatedImageHeight / 2);
 		affineTransform.rotate(radians);
-		affineTransform.translate(imageWidth / (-2), imageHeight / (-2));
+		affineTransform.translate(imageWidth / -2, imageHeight / -2);
 
 		Graphics2D graphics2D = rotatedBufferedImage.createGraphics();
 
@@ -698,6 +749,7 @@ public class ImageToolImpl implements ImageTool {
 		}
 
 		int imageHeight = renderedImage.getHeight();
+
 		int imageWidth = renderedImage.getWidth();
 
 		double factor = (double)width / imageWidth;
@@ -770,8 +822,14 @@ public class ImageToolImpl implements ImageTool {
 
 		BufferedImage originalBufferedImage = getBufferedImage(renderedImage);
 
+		int type = originalBufferedImage.getType();
+
+		if (type == BufferedImage.TYPE_CUSTOM) {
+			type = BufferedImage.TYPE_INT_ARGB;
+		}
+
 		BufferedImage scaledBufferedImage = new BufferedImage(
-			scaledWidth, scaledHeight, originalBufferedImage.getType());
+			scaledWidth, scaledHeight, type);
 
 		int originalHeight = originalBufferedImage.getHeight();
 		int originalWidth = originalBufferedImage.getWidth();
@@ -780,6 +838,16 @@ public class ImageToolImpl implements ImageTool {
 			((scaledWidth * 2) >= originalWidth)) {
 
 			Graphics2D scaledGraphics2D = scaledBufferedImage.createGraphics();
+
+			scaledGraphics2D.setRenderingHint(
+				RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+			scaledGraphics2D.setRenderingHint(
+				RenderingHints.KEY_INTERPOLATION,
+				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			scaledGraphics2D.setRenderingHint(
+				RenderingHints.KEY_RENDERING,
+				RenderingHints.VALUE_RENDER_QUALITY);
 
 			scaledGraphics2D.drawImage(
 				originalBufferedImage, 0, 0, scaledWidth, scaledHeight, null);
@@ -940,5 +1008,6 @@ public class ImageToolImpl implements ImageTool {
 	private Image _defaultSpacer;
 	private Image _defaultUserFemalePortrait;
 	private Image _defaultUserMalePortrait;
+	private Image _defaultUserPortrait;
 
 }

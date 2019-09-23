@@ -14,16 +14,14 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LongWrapper;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -38,11 +36,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Zsolt Berentey
  * @author Daniel Kocsis
  */
-@ProviderType
 public class ManifestSummary implements Serializable {
 
 	public static String getManifestSummaryKey(
@@ -189,7 +186,7 @@ public class ManifestSummary implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getModelAdditionCount(StagedModel)}
 	 */
 	@Deprecated
@@ -198,7 +195,7 @@ public class ManifestSummary implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getModelAdditionCount(StagedModelType)}
 	 */
 	@Deprecated
@@ -235,7 +232,8 @@ public class ManifestSummary implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getAllModelDeletionCounts()}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getAllModelDeletionCounts()}
 	 */
 	@Deprecated
 	public long getModelDeletionCount() {
@@ -243,7 +241,7 @@ public class ManifestSummary implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getModelDeletionCount(StagedModel)}
 	 */
 	@Deprecated
@@ -367,7 +365,11 @@ public class ManifestSummary implements Serializable {
 			return modelName;
 		}
 
-		return modelName.concat(StringPool.POUND).concat(referrerModelName);
+		return modelName.concat(
+			StringPool.POUND
+		).concat(
+			referrerModelName
+		);
 	}
 
 	protected long getModelAdditionCount(

@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.webdav.methods.Method;
 
 import java.io.InputStream;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -42,9 +41,6 @@ public class GetMethodImpl implements Method {
 
 		try {
 			WebDAVStorage storage = webDAVRequest.getWebDAVStorage();
-			HttpServletRequest request = webDAVRequest.getHttpServletRequest();
-			HttpServletResponse response =
-				webDAVRequest.getHttpServletResponse();
 
 			Resource resource = storage.getResource(webDAVRequest);
 
@@ -73,12 +69,13 @@ public class GetMethodImpl implements Method {
 
 				try {
 					ServletResponseUtil.sendFileWithRangeHeader(
-						request, response, fileName, is, resource.getSize(),
-						resource.getContentType());
+						webDAVRequest.getHttpServletRequest(),
+						webDAVRequest.getHttpServletResponse(), fileName, is,
+						resource.getSize(), resource.getContentType());
 				}
 				catch (Exception e) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(e);
+						_log.warn(e, e);
 					}
 				}
 

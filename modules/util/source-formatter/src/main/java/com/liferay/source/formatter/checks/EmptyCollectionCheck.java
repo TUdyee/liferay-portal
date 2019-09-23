@@ -42,11 +42,11 @@ public class EmptyCollectionCheck extends BaseFileCheck {
 
 			addMessage(
 				fileName, "Use Collections.empty" + collectionType + "()",
-				getLineCount(content, matcher.start()));
+				getLineNumber(content, matcher.start()));
 		}
 	}
 
-	private final Pattern _emptyCollectionPattern = Pattern.compile(
+	private static final Pattern _emptyCollectionPattern = Pattern.compile(
 		"Collections\\.EMPTY_(LIST|MAP|SET)");
 
 }

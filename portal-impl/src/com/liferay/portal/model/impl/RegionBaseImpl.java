@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.Region;
 
 /**
@@ -30,11 +28,12 @@ import com.liferay.portal.kernel.model.Region;
  * @see Region
  * @generated
  */
-@ProviderType
 public abstract class RegionBaseImpl extends RegionModelImpl implements Region {
-	/*
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a region model instance should use the {@link Region} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a region model instance should use the <code>Region</code> interface instead.
 	 */
+
 }

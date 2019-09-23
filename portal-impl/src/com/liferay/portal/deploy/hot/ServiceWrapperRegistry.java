@@ -20,8 +20,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.spring.aop.ServiceBeanAopCacheManagerUtil;
-import com.liferay.portal.spring.aop.ServiceBeanAopProxy;
+import com.liferay.portal.spring.aop.AopInvocationHandler;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceReference;
@@ -29,9 +28,6 @@ import com.liferay.registry.ServiceTracker;
 import com.liferay.registry.ServiceTrackerCustomizer;
 
 import java.lang.reflect.Method;
-
-import org.springframework.aop.TargetSource;
-import org.springframework.aop.framework.AdvisedSupport;
 
 /**
  * @author Raymond Augé
@@ -79,9 +75,6 @@ public class ServiceWrapperRegistry {
 						serviceWrapper.getClass(),
 					t);
 			}
-			finally {
-				ServiceBeanAopCacheManagerUtil.reset();
-			}
 
 			return null;
 		}
@@ -103,8 +96,6 @@ public class ServiceWrapperRegistry {
 
 			try {
 				serviceBag.replace();
-
-				ServiceBeanAopCacheManagerUtil.reset();
 			}
 			catch (Exception e) {
 				_log.error(e, e);
@@ -113,11 +104,9 @@ public class ServiceWrapperRegistry {
 
 		private <T> ServiceBag<?> _getServiceBag(
 				ServiceWrapper<T> serviceWrapper)
-			throws Throwable {
+			throws NoSuchMethodException {
 
 			Class<?> clazz = serviceWrapper.getClass();
-
-			ClassLoader classLoader = clazz.getClassLoader();
 
 			Method method = clazz.getMethod(
 				"getWrappedService", new Class<?>[0]);
@@ -154,16 +143,18 @@ public class ServiceWrapperRegistry {
 				return null;
 			}
 
+			ClassLoader classLoader = clazz.getClassLoader();
+
 			try {
-				AdvisedSupport advisedSupport =
-					ServiceBeanAopProxy.getAdvisedSupport(serviceProxy);
+				AopInvocationHandler aopInvocationHandler =
+					ProxyUtil.fetchInvocationHandler(
+						serviceProxy, AopInvocationHandler.class);
 
-				TargetSource targetSource = advisedSupport.getTargetSource();
-
-				serviceWrapper.setWrappedService((T)targetSource.getTarget());
+				serviceWrapper.setWrappedService(
+					(T)aopInvocationHandler.getTarget());
 
 				return new ServiceBag<>(
-					classLoader, advisedSupport, serviceTypeClass,
+					classLoader, aopInvocationHandler, serviceTypeClass,
 					serviceWrapper);
 			}
 			finally {

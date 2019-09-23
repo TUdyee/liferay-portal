@@ -28,9 +28,12 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.RepositoryHandler;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
+import org.gradle.api.plugins.BasePluginConvention;
+import org.gradle.api.tasks.TaskContainer;
 
 /**
  * @author Andrea Di Giorgi
+ * @author Gregory Amerson
  */
 public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 
@@ -50,6 +53,13 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 				}
 
 			});
+	}
+
+	public static String getArchivesBaseName(Project project) {
+		BasePluginConvention basePluginConvention = getConvention(
+			project, BasePluginConvention.class);
+
+		return basePluginConvention.getArchivesBaseName();
 	}
 
 	public static String getProjectPath(File projectDir, File rootDir) {
@@ -120,6 +130,16 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 		return toString(value);
 	}
 
+	public static boolean hasTask(Project project, String name) {
+		TaskContainer taskContainer = project.getTasks();
+
+		if (taskContainer.findByName(name) != null) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public static boolean toBoolean(Object object) {
 		object = toObject(object);
 
@@ -166,7 +186,6 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 	}
 
 	private static final String _DEFAULT_REPOSITORY_URL =
-		"https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups" +
-			"/public";
+		"https://repository-cdn.liferay.com/nexus/content/groups/public";
 
 }

@@ -14,9 +14,12 @@
 
 package com.liferay.portal.kernel.portlet.configuration.icon;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.configuration.icon.locator.PortletConfigurationIconLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.registry.collections.ServiceTrackerCollections;
 import com.liferay.registry.collections.ServiceTrackerList;
@@ -27,10 +30,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.filter.PortletRequestWrapper;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -58,7 +64,11 @@ public class PortletConfigurationIconTracker {
 	}
 
 	protected static String getKey(String portletId, String path) {
-		return portletId.concat(StringPool.COLON).concat(path);
+		return portletId.concat(
+			StringPool.COLON
+		).concat(
+			path
+		);
 	}
 
 	protected static Set<String> getPaths(
@@ -107,19 +117,26 @@ public class PortletConfigurationIconTracker {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletRequestWrapper portletRequestWrapper =
-			new PortletRequestWrapper(portletRequest) {
+		PortletRequestWrapper portletRequestWrapper = new PortletRequestWrapper(
+			portletRequest) {
 
-				@Override
-				public Object getAttribute(String name) {
-					if (name == WebKeys.THEME_DISPLAY) {
-						return themeDisplay;
-					}
-
-					return super.getAttribute(name);
+			@Override
+			public Object getAttribute(String name) {
+				if (Objects.equals(name, WebKeys.THEME_DISPLAY)) {
+					return themeDisplay;
 				}
 
-			};
+				return super.getAttribute(name);
+			}
+
+		};
+
+		HttpServletRequest originalHttpServletRequest =
+			PortalUtil.getOriginalServletRequest(
+				PortalUtil.getHttpServletRequest(portletRequest));
+
+		String layoutMode = ParamUtil.getString(
+			originalHttpServletRequest, "p_l_mode", Constants.VIEW);
 
 		for (String path : getPaths(portletId, portletRequest)) {
 			List<PortletConfigurationIcon> portletPortletConfigurationIcons =
@@ -128,6 +145,13 @@ public class PortletConfigurationIconTracker {
 			if (portletPortletConfigurationIcons != null) {
 				for (PortletConfigurationIcon portletConfigurationIcon :
 						portletPortletConfigurationIcons) {
+
+					if (Objects.equals(layoutMode, Constants.EDIT) &&
+						!portletConfigurationIcon.isShowInEditMode(
+							portletRequest)) {
+
+						continue;
+					}
 
 					if (!filter ||
 						portletConfigurationIcon.isShow(
@@ -148,6 +172,13 @@ public class PortletConfigurationIconTracker {
 			for (PortletConfigurationIcon portletConfigurationIcon :
 					portletPortletConfigurationIcons) {
 
+				if (Objects.equals(layoutMode, Constants.EDIT) &&
+					!portletConfigurationIcon.isShowInEditMode(
+						portletRequestWrapper)) {
+
+					continue;
+				}
+
 				if (!portletConfigurationIcons.contains(
 						portletConfigurationIcon) &&
 					(!filter ||
@@ -167,8 +198,8 @@ public class PortletConfigurationIconTracker {
 		_serviceTrackerList = ServiceTrackerCollections.openList(
 			PortletConfigurationIconLocator.class);
 	private static final ServiceTrackerMap
-		<String, List<PortletConfigurationIcon>>
-			_serviceTrackerMap = ServiceTrackerCollections.openMultiValueMap(
+		<String, List<PortletConfigurationIcon>> _serviceTrackerMap =
+			ServiceTrackerCollections.openMultiValueMap(
 				PortletConfigurationIcon.class, null,
 				new PortletConfigurationIconServiceReferenceMapper());
 

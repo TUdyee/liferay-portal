@@ -17,9 +17,12 @@ package com.liferay.powwow.util;
 import com.liferay.calendar.model.CalendarBooking;
 import com.liferay.calendar.service.CalendarBookingLocalServiceUtil;
 import com.liferay.petra.content.ContentUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -50,8 +53,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.powwow.model.PowwowMeeting;
@@ -103,15 +104,16 @@ public class PowwowUtil {
 
 	public static String getInvitationURL(
 			long powwowMeetingId, PowwowParticipant powwowParticipant,
-			HttpServletRequest request)
+			HttpServletRequest httpServletRequest)
 		throws Exception {
 
 		StringBundler sb = new StringBundler(9);
 
 		Layout layout = null;
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Group group = GroupLocalServiceUtil.fetchGroup(
 			themeDisplay.getCompanyId(),
@@ -213,15 +215,16 @@ public class PowwowUtil {
 				participantsJSONArray.getJSONObject(i);
 
 			String name = participantJSONObject.getString("name");
-			long participantUserId = participantJSONObject.getLong(
-				"participantUserId");
 			String emailAddress = participantJSONObject.getString(
 				"emailAddress");
-			int type = participantJSONObject.getInt("type");
 
 			if (Validator.isNull(name) && Validator.isNull(emailAddress)) {
 				continue;
 			}
+
+			long participantUserId = participantJSONObject.getLong(
+				"participantUserId");
+			int type = participantJSONObject.getInt("type");
 
 			PowwowParticipant powwowParticipant = _getPowwowParticipant(
 				powwowMeetingId, name, participantUserId, emailAddress, type);
@@ -333,7 +336,7 @@ public class PowwowUtil {
 		powwowSubscriptionSender.setReplyToAddress(fromAddress);
 		powwowSubscriptionSender.setScopeGroupId(powwowMeeting.getGroupId());
 		powwowSubscriptionSender.setServiceContext(serviceContext);
-		powwowSubscriptionSender.setUserId(powwowMeeting.getUserId());
+		powwowSubscriptionSender.setCurrentUserId(powwowMeeting.getUserId());
 
 		return powwowSubscriptionSender;
 	}
@@ -419,13 +422,11 @@ public class PowwowUtil {
 			return;
 		}
 
-		JSONObject notificationEventJSONObject =
-			JSONFactoryUtil.createJSONObject();
-
-		notificationEventJSONObject.put(
-			"classPK", powwowParticipant.getPowwowMeetingId());
-		notificationEventJSONObject.put(
-			"userId", powwowParticipant.getUserId());
+		JSONObject notificationEventJSONObject = JSONUtil.put(
+			"classPK", powwowParticipant.getPowwowMeetingId()
+		).put(
+			"userId", powwowParticipant.getUserId()
+		);
 
 		NotificationEvent notificationEvent =
 			NotificationEventFactoryUtil.createNotificationEvent(

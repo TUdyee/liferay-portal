@@ -4,12 +4,14 @@
 
 <@insertGroup
 	_groupModel=dataFactory.globalGroupModel
-	_publicPageCount=1
 />
 
 <@insertGroup
 	_groupModel=dataFactory.guestGroupModel
-	_publicPageCount=1
+/>
+
+<@insertGroup
+	_groupModel=dataFactory.userPersonalSiteGroupModel
 />
 
 <#list dataFactory.groupModels as groupModel>
@@ -42,11 +44,8 @@
 		<@insertLayout _layoutModel=publicLayoutModel />
 	</#list>
 
-	<#assign publicPageCount = publicLayoutModels?size + dataFactory.maxDDLRecordSetCount + dataFactory.maxJournalArticleCount />
-
 	<@insertGroup
 		_groupModel=groupModel
-		_publicPageCount=publicPageCount
 	/>
 
 	${dataFactory.getCSVWriter("repository").write(groupId + ", " + groupModel.name + "\n")}

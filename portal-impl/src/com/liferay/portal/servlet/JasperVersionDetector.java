@@ -14,12 +14,12 @@
 
 package com.liferay.portal.servlet;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ReflectionUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
@@ -124,9 +124,8 @@ public class JasperVersionDetector {
 			Method method = ReflectionUtil.getDeclaredMethod(
 				clazz, "getDependants");
 
-			Class<?> returnType = method.getReturnType();
-
-			_jspServletDependantsMap = Map.class.isAssignableFrom(returnType);
+			_jspServletDependantsMap = Map.class.isAssignableFrom(
+				method.getReturnType());
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -139,9 +138,8 @@ public class JasperVersionDetector {
 
 			return false;
 		}
-		else {
-			return true;
-		}
+
+		return true;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -14,18 +14,14 @@
 
 package com.liferay.opensocial.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.opensocial.exception.NoSuchGadgetException;
 import com.liferay.opensocial.model.Gadget;
 import com.liferay.opensocial.model.impl.GadgetImpl;
 import com.liferay.opensocial.model.impl.GadgetModelImpl;
 import com.liferay.opensocial.service.persistence.GadgetPersistence;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
-import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -35,29 +31,24 @@ import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.ReflectionUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,51 +62,31 @@ import java.util.Set;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see GadgetPersistence
- * @see com.liferay.opensocial.service.persistence.GadgetUtil
  * @generated
  */
-@ProviderType
-public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
-	implements GadgetPersistence {
-	/*
+public class GadgetPersistenceImpl
+	extends BasePersistenceImpl<Gadget> implements GadgetPersistence {
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link GadgetUtil} to access the gadget persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>GadgetUtil</code> to access the gadget persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = GadgetImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
-			new String[] {
-				String.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] { String.class.getName() },
-			GadgetModelImpl.UUID_COLUMN_BITMASK |
-			GadgetModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] { String.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		GadgetImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByUuid;
+	private FinderPath _finderPathWithoutPaginationFindByUuid;
+	private FinderPath _finderPathCountByUuid;
 
 	/**
 	 * Returns all the gadgets where uuid = &#63;.
@@ -132,7 +103,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns a range of all the gadgets where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -149,7 +120,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -159,8 +130,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the ordered range of matching gadgets
 	 */
 	@Override
-	public List<Gadget> findByUuid(String uuid, int start, int end,
+	public List<Gadget> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<Gadget> orderByComparator) {
+
 		return findByUuid(uuid, start, end, orderByComparator, true);
 	}
 
@@ -168,43 +141,51 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
 	 * @param start the lower bound of the range of gadgets
 	 * @param end the upper bound of the range of gadgets (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching gadgets
 	 */
 	@Override
-	public List<Gadget> findByUuid(String uuid, int start, int end,
-		OrderByComparator<Gadget> orderByComparator, boolean retrieveFromCache) {
+	public List<Gadget> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<Gadget> orderByComparator, boolean useFinderCache) {
+
+		uuid = Objects.toString(uuid, "");
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID;
-			finderArgs = new Object[] { uuid };
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByUuid;
+				finderArgs = new Object[] {uuid};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID;
-			finderArgs = new Object[] { uuid, start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByUuid;
+			finderArgs = new Object[] {uuid, start, end, orderByComparator};
 		}
 
 		List<Gadget> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Gadget>)finderCache.getResult(finderPath, finderArgs,
-					this);
+		if (useFinderCache) {
+			list = (List<Gadget>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Gadget gadget : list) {
-					if (!Objects.equals(uuid, gadget.getUuid())) {
+					if (!uuid.equals(gadget.getUuid())) {
 						list = null;
 
 						break;
@@ -217,8 +198,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -228,10 +209,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_UUID_1);
-			}
-			else if (uuid.equals(StringPool.BLANK)) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
@@ -241,11 +219,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			}
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(GadgetModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -265,24 +242,28 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 				}
 
 				if (!pagination) {
-					list = (List<Gadget>)QueryUtil.list(q, getDialect(), start,
-							end, false);
+					list = (List<Gadget>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Gadget>)QueryUtil.list(q, getDialect(), start,
-							end);
+					list = (List<Gadget>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				if (useFinderCache) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
 				throw processException(e);
 			}
@@ -303,9 +284,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget findByUuid_First(String uuid,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget findByUuid_First(
+			String uuid, OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = fetchByUuid_First(uuid, orderByComparator);
 
 		if (gadget != null) {
@@ -319,7 +301,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		msg.append("uuid=");
 		msg.append(uuid);
 
-		msg.append(StringPool.CLOSE_CURLY_BRACE);
+		msg.append("}");
 
 		throw new NoSuchGadgetException(msg.toString());
 	}
@@ -332,8 +314,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the first matching gadget, or <code>null</code> if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget fetchByUuid_First(String uuid,
-		OrderByComparator<Gadget> orderByComparator) {
+	public Gadget fetchByUuid_First(
+		String uuid, OrderByComparator<Gadget> orderByComparator) {
+
 		List<Gadget> list = findByUuid(uuid, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -352,9 +335,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget findByUuid_Last(String uuid,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget findByUuid_Last(
+			String uuid, OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = fetchByUuid_Last(uuid, orderByComparator);
 
 		if (gadget != null) {
@@ -368,7 +352,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		msg.append("uuid=");
 		msg.append(uuid);
 
-		msg.append(StringPool.CLOSE_CURLY_BRACE);
+		msg.append("}");
 
 		throw new NoSuchGadgetException(msg.toString());
 	}
@@ -381,15 +365,17 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the last matching gadget, or <code>null</code> if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget fetchByUuid_Last(String uuid,
-		OrderByComparator<Gadget> orderByComparator) {
+	public Gadget fetchByUuid_Last(
+		String uuid, OrderByComparator<Gadget> orderByComparator) {
+
 		int count = countByUuid(uuid);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Gadget> list = findByUuid(uuid, count - 1, count, orderByComparator);
+		List<Gadget> list = findByUuid(
+			uuid, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -408,9 +394,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a gadget with the primary key could not be found
 	 */
 	@Override
-	public Gadget[] findByUuid_PrevAndNext(long gadgetId, String uuid,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget[] findByUuid_PrevAndNext(
+			long gadgetId, String uuid,
+			OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
+		uuid = Objects.toString(uuid, "");
+
 		Gadget gadget = findByPrimaryKey(gadgetId);
 
 		Session session = null;
@@ -420,13 +410,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			Gadget[] array = new GadgetImpl[3];
 
-			array[0] = getByUuid_PrevAndNext(session, gadget, uuid,
-					orderByComparator, true);
+			array[0] = getByUuid_PrevAndNext(
+				session, gadget, uuid, orderByComparator, true);
 
 			array[1] = gadget;
 
-			array[2] = getByUuid_PrevAndNext(session, gadget, uuid,
-					orderByComparator, false);
+			array[2] = getByUuid_PrevAndNext(
+				session, gadget, uuid, orderByComparator, false);
 
 			return array;
 		}
@@ -438,14 +428,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	protected Gadget getByUuid_PrevAndNext(Session session, Gadget gadget,
-		String uuid, OrderByComparator<Gadget> orderByComparator,
-		boolean previous) {
+	protected Gadget getByUuid_PrevAndNext(
+		Session session, Gadget gadget, String uuid,
+		OrderByComparator<Gadget> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -456,10 +447,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1);
-		}
-		else if (uuid.equals(StringPool.BLANK)) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_UUID_3);
 		}
 		else {
@@ -469,7 +457,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -541,10 +530,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(gadget);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(gadget)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -566,14 +555,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public List<Gadget> filterFindByUuid(String uuid) {
-		return filterFindByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+		return filterFindByUuid(
+			uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the gadgets that the user has permission to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -590,7 +580,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets that the user has permissions to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -600,17 +590,21 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the ordered range of matching gadgets that the user has permission to view
 	 */
 	@Override
-	public List<Gadget> filterFindByUuid(String uuid, int start, int end,
+	public List<Gadget> filterFindByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<Gadget> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled()) {
 			return findByUuid(uuid, start, end, orderByComparator);
 		}
 
+		uuid = Objects.toString(uuid, "");
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(3 +
-					(orderByComparator.getOrderByFields().length * 2));
+			query = new StringBundler(
+				3 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
 			query = new StringBundler(4);
@@ -625,10 +619,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1_SQL);
-		}
-		else if (uuid.equals(StringPool.BLANK)) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
 		}
 		else {
@@ -643,12 +634,12 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
@@ -660,8 +651,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
@@ -703,12 +695,16 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a gadget with the primary key could not be found
 	 */
 	@Override
-	public Gadget[] filterFindByUuid_PrevAndNext(long gadgetId, String uuid,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget[] filterFindByUuid_PrevAndNext(
+			long gadgetId, String uuid,
+			OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		if (!InlineSQLHelperUtil.isEnabled()) {
 			return findByUuid_PrevAndNext(gadgetId, uuid, orderByComparator);
 		}
+
+		uuid = Objects.toString(uuid, "");
 
 		Gadget gadget = findByPrimaryKey(gadgetId);
 
@@ -719,13 +715,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			Gadget[] array = new GadgetImpl[3];
 
-			array[0] = filterGetByUuid_PrevAndNext(session, gadget, uuid,
-					orderByComparator, true);
+			array[0] = filterGetByUuid_PrevAndNext(
+				session, gadget, uuid, orderByComparator, true);
 
 			array[1] = gadget;
 
-			array[2] = filterGetByUuid_PrevAndNext(session, gadget, uuid,
-					orderByComparator, false);
+			array[2] = filterGetByUuid_PrevAndNext(
+				session, gadget, uuid, orderByComparator, false);
 
 			return array;
 		}
@@ -737,14 +733,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	protected Gadget filterGetByUuid_PrevAndNext(Session session,
-		Gadget gadget, String uuid,
+	protected Gadget filterGetByUuid_PrevAndNext(
+		Session session, Gadget gadget, String uuid,
 		OrderByComparator<Gadget> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -760,10 +757,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1_SQL);
-		}
-		else if (uuid.equals(StringPool.BLANK)) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
 		}
 		else {
@@ -777,7 +771,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -785,13 +780,17 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
@@ -817,13 +816,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
@@ -852,8 +853,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
@@ -874,10 +876,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(gadget);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(gadget)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -898,8 +900,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public void removeByUuid(String uuid) {
-		for (Gadget gadget : findByUuid(uuid, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null)) {
+		for (Gadget gadget :
+				findByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(gadget);
 		}
 	}
@@ -912,11 +915,14 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public int countByUuid(String uuid) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid };
+		FinderPath finderPath = _finderPathCountByUuid;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Object[] finderArgs = new Object[] {uuid};
+
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
 			StringBundler query = new StringBundler(2);
@@ -925,10 +931,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_UUID_1);
-			}
-			else if (uuid.equals(StringPool.BLANK)) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
@@ -954,10 +957,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -981,16 +984,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			return countByUuid(uuid);
 		}
 
+		uuid = Objects.toString(uuid, "");
+
 		StringBundler query = new StringBundler(2);
 
 		query.append(_FILTER_SQL_COUNT_GADGET_WHERE);
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1_SQL);
-		}
-		else if (uuid.equals(StringPool.BLANK)) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
 		}
 		else {
@@ -999,8 +1001,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			query.append(_FINDER_COLUMN_UUID_UUID_2_SQL);
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
@@ -1009,8 +1012,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			q.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
 			QueryPos qPos = QueryPos.getInstance(q);
 
@@ -1030,33 +1033,20 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	private static final String _FINDER_COLUMN_UUID_UUID_1 = "gadget.uuid IS NULL";
 	private static final String _FINDER_COLUMN_UUID_UUID_2 = "gadget.uuid = ?";
-	private static final String _FINDER_COLUMN_UUID_UUID_3 = "(gadget.uuid IS NULL OR gadget.uuid = '')";
-	private static final String _FINDER_COLUMN_UUID_UUID_1_SQL = "gadget.uuid_ IS NULL";
-	private static final String _FINDER_COLUMN_UUID_UUID_2_SQL = "gadget.uuid_ = ?";
-	private static final String _FINDER_COLUMN_UUID_UUID_3_SQL = "(gadget.uuid_ IS NULL OR gadget.uuid_ = '')";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID_C = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
-			new String[] {
-				String.class.getName(), Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C =
-		new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
-			new String[] { String.class.getName(), Long.class.getName() },
-			GadgetModelImpl.UUID_COLUMN_BITMASK |
-			GadgetModelImpl.COMPANYID_COLUMN_BITMASK |
-			GadgetModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID_C = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] { String.class.getName(), Long.class.getName() });
+
+	private static final String _FINDER_COLUMN_UUID_UUID_3 =
+		"(gadget.uuid IS NULL OR gadget.uuid = '')";
+
+	private static final String _FINDER_COLUMN_UUID_UUID_2_SQL =
+		"gadget.uuid_ = ?";
+
+	private static final String _FINDER_COLUMN_UUID_UUID_3_SQL =
+		"(gadget.uuid_ IS NULL OR gadget.uuid_ = '')";
+
+	private FinderPath _finderPathWithPaginationFindByUuid_C;
+	private FinderPath _finderPathWithoutPaginationFindByUuid_C;
+	private FinderPath _finderPathCountByUuid_C;
 
 	/**
 	 * Returns all the gadgets where uuid = &#63; and companyId = &#63;.
@@ -1067,15 +1057,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public List<Gadget> findByUuid_C(String uuid, long companyId) {
-		return findByUuid_C(uuid, companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByUuid_C(
+			uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the gadgets where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1085,8 +1075,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the range of matching gadgets
 	 */
 	@Override
-	public List<Gadget> findByUuid_C(String uuid, long companyId, int start,
-		int end) {
+	public List<Gadget> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
 		return findByUuid_C(uuid, companyId, start, end, null);
 	}
 
@@ -1094,7 +1085,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1105,16 +1096,19 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the ordered range of matching gadgets
 	 */
 	@Override
-	public List<Gadget> findByUuid_C(String uuid, long companyId, int start,
-		int end, OrderByComparator<Gadget> orderByComparator) {
-		return findByUuid_C(uuid, companyId, start, end, orderByComparator, true);
+	public List<Gadget> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Gadget> orderByComparator) {
+
+		return findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the gadgets where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1122,42 +1116,48 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @param start the lower bound of the range of gadgets
 	 * @param end the upper bound of the range of gadgets (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching gadgets
 	 */
 	@Override
-	public List<Gadget> findByUuid_C(String uuid, long companyId, int start,
-		int end, OrderByComparator<Gadget> orderByComparator,
-		boolean retrieveFromCache) {
+	public List<Gadget> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Gadget> orderByComparator, boolean useFinderCache) {
+
+		uuid = Objects.toString(uuid, "");
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C;
-			finderArgs = new Object[] { uuid, companyId };
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByUuid_C;
+				finderArgs = new Object[] {uuid, companyId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID_C;
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByUuid_C;
 			finderArgs = new Object[] {
-					uuid, companyId,
-					
-					start, end, orderByComparator
-				};
+				uuid, companyId, start, end, orderByComparator
+			};
 		}
 
 		List<Gadget> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Gadget>)finderCache.getResult(finderPath, finderArgs,
-					this);
+		if (useFinderCache) {
+			list = (List<Gadget>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Gadget gadget : list) {
-					if (!Objects.equals(uuid, gadget.getUuid()) ||
-							(companyId != gadget.getCompanyId())) {
+					if (!uuid.equals(gadget.getUuid()) ||
+						(companyId != gadget.getCompanyId())) {
+
 						list = null;
 
 						break;
@@ -1170,8 +1170,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(4 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(4);
@@ -1181,10 +1181,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-			}
-			else if (uuid.equals(StringPool.BLANK)) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
@@ -1196,11 +1193,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(GadgetModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -1222,24 +1218,28 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 				qPos.add(companyId);
 
 				if (!pagination) {
-					list = (List<Gadget>)QueryUtil.list(q, getDialect(), start,
-							end, false);
+					list = (List<Gadget>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Gadget>)QueryUtil.list(q, getDialect(), start,
-							end);
+					list = (List<Gadget>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				if (useFinderCache) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
 				throw processException(e);
 			}
@@ -1261,9 +1261,11 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget findByUuid_C_First(String uuid, long companyId,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget findByUuid_C_First(
+			String uuid, long companyId,
+			OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = fetchByUuid_C_First(uuid, companyId, orderByComparator);
 
 		if (gadget != null) {
@@ -1280,7 +1282,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		msg.append(", companyId=");
 		msg.append(companyId);
 
-		msg.append(StringPool.CLOSE_CURLY_BRACE);
+		msg.append("}");
 
 		throw new NoSuchGadgetException(msg.toString());
 	}
@@ -1294,10 +1296,12 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the first matching gadget, or <code>null</code> if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget fetchByUuid_C_First(String uuid, long companyId,
+	public Gadget fetchByUuid_C_First(
+		String uuid, long companyId,
 		OrderByComparator<Gadget> orderByComparator) {
-		List<Gadget> list = findByUuid_C(uuid, companyId, 0, 1,
-				orderByComparator);
+
+		List<Gadget> list = findByUuid_C(
+			uuid, companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1316,9 +1320,11 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget findByUuid_C_Last(String uuid, long companyId,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget findByUuid_C_Last(
+			String uuid, long companyId,
+			OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = fetchByUuid_C_Last(uuid, companyId, orderByComparator);
 
 		if (gadget != null) {
@@ -1335,7 +1341,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		msg.append(", companyId=");
 		msg.append(companyId);
 
-		msg.append(StringPool.CLOSE_CURLY_BRACE);
+		msg.append("}");
 
 		throw new NoSuchGadgetException(msg.toString());
 	}
@@ -1349,16 +1355,18 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the last matching gadget, or <code>null</code> if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget fetchByUuid_C_Last(String uuid, long companyId,
+	public Gadget fetchByUuid_C_Last(
+		String uuid, long companyId,
 		OrderByComparator<Gadget> orderByComparator) {
+
 		int count = countByUuid_C(uuid, companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Gadget> list = findByUuid_C(uuid, companyId, count - 1, count,
-				orderByComparator);
+		List<Gadget> list = findByUuid_C(
+			uuid, companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1378,9 +1386,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a gadget with the primary key could not be found
 	 */
 	@Override
-	public Gadget[] findByUuid_C_PrevAndNext(long gadgetId, String uuid,
-		long companyId, OrderByComparator<Gadget> orderByComparator)
+	public Gadget[] findByUuid_C_PrevAndNext(
+			long gadgetId, String uuid, long companyId,
+			OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
+		uuid = Objects.toString(uuid, "");
+
 		Gadget gadget = findByPrimaryKey(gadgetId);
 
 		Session session = null;
@@ -1390,13 +1402,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			Gadget[] array = new GadgetImpl[3];
 
-			array[0] = getByUuid_C_PrevAndNext(session, gadget, uuid,
-					companyId, orderByComparator, true);
+			array[0] = getByUuid_C_PrevAndNext(
+				session, gadget, uuid, companyId, orderByComparator, true);
 
 			array[1] = gadget;
 
-			array[2] = getByUuid_C_PrevAndNext(session, gadget, uuid,
-					companyId, orderByComparator, false);
+			array[2] = getByUuid_C_PrevAndNext(
+				session, gadget, uuid, companyId, orderByComparator, false);
 
 			return array;
 		}
@@ -1408,14 +1420,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	protected Gadget getByUuid_C_PrevAndNext(Session session, Gadget gadget,
-		String uuid, long companyId,
+	protected Gadget getByUuid_C_PrevAndNext(
+		Session session, Gadget gadget, String uuid, long companyId,
 		OrderByComparator<Gadget> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -1426,10 +1439,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-		}
-		else if (uuid.equals(StringPool.BLANK)) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 		}
 		else {
@@ -1441,7 +1451,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1515,10 +1526,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		qPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(gadget);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(gadget)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1541,15 +1552,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public List<Gadget> filterFindByUuid_C(String uuid, long companyId) {
-		return filterFindByUuid_C(uuid, companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return filterFindByUuid_C(
+			uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the gadgets that the user has permission to view where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1559,8 +1570,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the range of matching gadgets that the user has permission to view
 	 */
 	@Override
-	public List<Gadget> filterFindByUuid_C(String uuid, long companyId,
-		int start, int end) {
+	public List<Gadget> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
 		return filterFindByUuid_C(uuid, companyId, start, end, null);
 	}
 
@@ -1568,7 +1580,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets that the user has permissions to view where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1579,17 +1591,21 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the ordered range of matching gadgets that the user has permission to view
 	 */
 	@Override
-	public List<Gadget> filterFindByUuid_C(String uuid, long companyId,
-		int start, int end, OrderByComparator<Gadget> orderByComparator) {
+	public List<Gadget> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Gadget> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return findByUuid_C(uuid, companyId, start, end, orderByComparator);
 		}
 
+		uuid = Objects.toString(uuid, "");
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByFields().length * 2));
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
 			query = new StringBundler(5);
@@ -1604,10 +1620,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1_SQL);
-		}
-		else if (uuid.equals(StringPool.BLANK)) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
 		}
 		else {
@@ -1624,12 +1637,12 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
@@ -1641,8 +1654,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
@@ -1687,13 +1701,17 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a gadget with the primary key could not be found
 	 */
 	@Override
-	public Gadget[] filterFindByUuid_C_PrevAndNext(long gadgetId, String uuid,
-		long companyId, OrderByComparator<Gadget> orderByComparator)
+	public Gadget[] filterFindByUuid_C_PrevAndNext(
+			long gadgetId, String uuid, long companyId,
+			OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByUuid_C_PrevAndNext(gadgetId, uuid, companyId,
-				orderByComparator);
+			return findByUuid_C_PrevAndNext(
+				gadgetId, uuid, companyId, orderByComparator);
 		}
+
+		uuid = Objects.toString(uuid, "");
 
 		Gadget gadget = findByPrimaryKey(gadgetId);
 
@@ -1704,13 +1722,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			Gadget[] array = new GadgetImpl[3];
 
-			array[0] = filterGetByUuid_C_PrevAndNext(session, gadget, uuid,
-					companyId, orderByComparator, true);
+			array[0] = filterGetByUuid_C_PrevAndNext(
+				session, gadget, uuid, companyId, orderByComparator, true);
 
 			array[1] = gadget;
 
-			array[2] = filterGetByUuid_C_PrevAndNext(session, gadget, uuid,
-					companyId, orderByComparator, false);
+			array[2] = filterGetByUuid_C_PrevAndNext(
+				session, gadget, uuid, companyId, orderByComparator, false);
 
 			return array;
 		}
@@ -1722,14 +1740,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	protected Gadget filterGetByUuid_C_PrevAndNext(Session session,
-		Gadget gadget, String uuid, long companyId,
+	protected Gadget filterGetByUuid_C_PrevAndNext(
+		Session session, Gadget gadget, String uuid, long companyId,
 		OrderByComparator<Gadget> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -1745,10 +1764,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1_SQL);
-		}
-		else if (uuid.equals(StringPool.BLANK)) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
 		}
 		else {
@@ -1764,7 +1780,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1772,13 +1789,17 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
@@ -1804,13 +1825,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
@@ -1839,8 +1862,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
@@ -1863,10 +1887,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		qPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(gadget);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(gadget)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1888,8 +1912,11 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public void removeByUuid_C(String uuid, long companyId) {
-		for (Gadget gadget : findByUuid_C(uuid, companyId, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null)) {
+		for (Gadget gadget :
+				findByUuid_C(
+					uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
 			remove(gadget);
 		}
 	}
@@ -1903,11 +1930,14 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public int countByUuid_C(String uuid, long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID_C;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid, companyId };
+		FinderPath finderPath = _finderPathCountByUuid_C;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Object[] finderArgs = new Object[] {uuid, companyId};
+
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
 			StringBundler query = new StringBundler(3);
@@ -1916,10 +1946,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-			}
-			else if (uuid.equals(StringPool.BLANK)) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
@@ -1949,10 +1976,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -1977,16 +2004,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			return countByUuid_C(uuid, companyId);
 		}
 
+		uuid = Objects.toString(uuid, "");
+
 		StringBundler query = new StringBundler(3);
 
 		query.append(_FILTER_SQL_COUNT_GADGET_WHERE);
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1_SQL);
-		}
-		else if (uuid.equals(StringPool.BLANK)) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
 		}
 		else {
@@ -1997,8 +2023,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
@@ -2007,8 +2034,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			q.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
 			QueryPos qPos = QueryPos.getInstance(q);
 
@@ -2030,34 +2057,24 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	private static final String _FINDER_COLUMN_UUID_C_UUID_1 = "gadget.uuid IS NULL AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_2 = "gadget.uuid = ? AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_3 = "(gadget.uuid IS NULL OR gadget.uuid = '') AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_1_SQL = "gadget.uuid_ IS NULL AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_2_SQL = "gadget.uuid_ = ? AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_3_SQL = "(gadget.uuid_ IS NULL OR gadget.uuid_ = '') AND ";
-	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 = "gadget.companyId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] { Long.class.getName() },
-			GadgetModelImpl.COMPANYID_COLUMN_BITMASK |
-			GadgetModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_COMPANYID = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] { Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_C_UUID_2 =
+		"gadget.uuid = ? AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_UUID_3 =
+		"(gadget.uuid IS NULL OR gadget.uuid = '') AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_UUID_2_SQL =
+		"gadget.uuid_ = ? AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_UUID_3_SQL =
+		"(gadget.uuid_ IS NULL OR gadget.uuid_ = '') AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 =
+		"gadget.companyId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByCompanyId;
+	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
+	private FinderPath _finderPathCountByCompanyId;
 
 	/**
 	 * Returns all the gadgets where companyId = &#63;.
@@ -2067,15 +2084,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public List<Gadget> findByCompanyId(long companyId) {
-		return findByCompanyId(companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
+		return findByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the gadgets where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2092,7 +2109,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2102,8 +2119,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the ordered range of matching gadgets
 	 */
 	@Override
-	public List<Gadget> findByCompanyId(long companyId, int start, int end,
+	public List<Gadget> findByCompanyId(
+		long companyId, int start, int end,
 		OrderByComparator<Gadget> orderByComparator) {
+
 		return findByCompanyId(companyId, start, end, orderByComparator, true);
 	}
 
@@ -2111,39 +2130,47 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
 	 * @param start the lower bound of the range of gadgets
 	 * @param end the upper bound of the range of gadgets (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching gadgets
 	 */
 	@Override
-	public List<Gadget> findByCompanyId(long companyId, int start, int end,
-		OrderByComparator<Gadget> orderByComparator, boolean retrieveFromCache) {
+	public List<Gadget> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<Gadget> orderByComparator, boolean useFinderCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId };
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByCompanyId;
+				finderArgs = new Object[] {companyId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId, start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByCompanyId;
+			finderArgs = new Object[] {
+				companyId, start, end, orderByComparator
+			};
 		}
 
 		List<Gadget> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Gadget>)finderCache.getResult(finderPath, finderArgs,
-					this);
+		if (useFinderCache) {
+			list = (List<Gadget>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Gadget gadget : list) {
@@ -2160,8 +2187,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -2172,11 +2199,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(GadgetModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -2194,24 +2220,28 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 				qPos.add(companyId);
 
 				if (!pagination) {
-					list = (List<Gadget>)QueryUtil.list(q, getDialect(), start,
-							end, false);
+					list = (List<Gadget>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Gadget>)QueryUtil.list(q, getDialect(), start,
-							end);
+					list = (List<Gadget>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				if (useFinderCache) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
 				throw processException(e);
 			}
@@ -2232,9 +2262,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget findByCompanyId_First(long companyId,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget findByCompanyId_First(
+			long companyId, OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = fetchByCompanyId_First(companyId, orderByComparator);
 
 		if (gadget != null) {
@@ -2248,7 +2279,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		msg.append("companyId=");
 		msg.append(companyId);
 
-		msg.append(StringPool.CLOSE_CURLY_BRACE);
+		msg.append("}");
 
 		throw new NoSuchGadgetException(msg.toString());
 	}
@@ -2261,8 +2292,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the first matching gadget, or <code>null</code> if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget fetchByCompanyId_First(long companyId,
-		OrderByComparator<Gadget> orderByComparator) {
+	public Gadget fetchByCompanyId_First(
+		long companyId, OrderByComparator<Gadget> orderByComparator) {
+
 		List<Gadget> list = findByCompanyId(companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -2281,9 +2313,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget findByCompanyId_Last(long companyId,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget findByCompanyId_Last(
+			long companyId, OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = fetchByCompanyId_Last(companyId, orderByComparator);
 
 		if (gadget != null) {
@@ -2297,7 +2330,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		msg.append("companyId=");
 		msg.append(companyId);
 
-		msg.append(StringPool.CLOSE_CURLY_BRACE);
+		msg.append("}");
 
 		throw new NoSuchGadgetException(msg.toString());
 	}
@@ -2310,16 +2343,17 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the last matching gadget, or <code>null</code> if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget fetchByCompanyId_Last(long companyId,
-		OrderByComparator<Gadget> orderByComparator) {
+	public Gadget fetchByCompanyId_Last(
+		long companyId, OrderByComparator<Gadget> orderByComparator) {
+
 		int count = countByCompanyId(companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Gadget> list = findByCompanyId(companyId, count - 1, count,
-				orderByComparator);
+		List<Gadget> list = findByCompanyId(
+			companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -2338,9 +2372,11 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a gadget with the primary key could not be found
 	 */
 	@Override
-	public Gadget[] findByCompanyId_PrevAndNext(long gadgetId, long companyId,
-		OrderByComparator<Gadget> orderByComparator)
+	public Gadget[] findByCompanyId_PrevAndNext(
+			long gadgetId, long companyId,
+			OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = findByPrimaryKey(gadgetId);
 
 		Session session = null;
@@ -2350,13 +2386,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			Gadget[] array = new GadgetImpl[3];
 
-			array[0] = getByCompanyId_PrevAndNext(session, gadget, companyId,
-					orderByComparator, true);
+			array[0] = getByCompanyId_PrevAndNext(
+				session, gadget, companyId, orderByComparator, true);
 
 			array[1] = gadget;
 
-			array[2] = getByCompanyId_PrevAndNext(session, gadget, companyId,
-					orderByComparator, false);
+			array[2] = getByCompanyId_PrevAndNext(
+				session, gadget, companyId, orderByComparator, false);
 
 			return array;
 		}
@@ -2368,14 +2404,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	protected Gadget getByCompanyId_PrevAndNext(Session session, Gadget gadget,
-		long companyId, OrderByComparator<Gadget> orderByComparator,
-		boolean previous) {
+	protected Gadget getByCompanyId_PrevAndNext(
+		Session session, Gadget gadget, long companyId,
+		OrderByComparator<Gadget> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -2387,7 +2424,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -2457,10 +2495,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		qPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(gadget);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(gadget)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -2482,15 +2520,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public List<Gadget> filterFindByCompanyId(long companyId) {
-		return filterFindByCompanyId(companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return filterFindByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the gadgets that the user has permission to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2499,7 +2537,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the range of matching gadgets that the user has permission to view
 	 */
 	@Override
-	public List<Gadget> filterFindByCompanyId(long companyId, int start, int end) {
+	public List<Gadget> filterFindByCompanyId(
+		long companyId, int start, int end) {
+
 		return filterFindByCompanyId(companyId, start, end, null);
 	}
 
@@ -2507,7 +2547,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2517,8 +2557,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the ordered range of matching gadgets that the user has permission to view
 	 */
 	@Override
-	public List<Gadget> filterFindByCompanyId(long companyId, int start,
-		int end, OrderByComparator<Gadget> orderByComparator) {
+	public List<Gadget> filterFindByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<Gadget> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return findByCompanyId(companyId, start, end, orderByComparator);
 		}
@@ -2526,8 +2568,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(3 +
-					(orderByComparator.getOrderByFields().length * 2));
+			query = new StringBundler(
+				3 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
 			query = new StringBundler(4);
@@ -2548,12 +2590,12 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
@@ -2565,8 +2607,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
@@ -2606,12 +2649,14 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @throws NoSuchGadgetException if a gadget with the primary key could not be found
 	 */
 	@Override
-	public Gadget[] filterFindByCompanyId_PrevAndNext(long gadgetId,
-		long companyId, OrderByComparator<Gadget> orderByComparator)
+	public Gadget[] filterFindByCompanyId_PrevAndNext(
+			long gadgetId, long companyId,
+			OrderByComparator<Gadget> orderByComparator)
 		throws NoSuchGadgetException {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByCompanyId_PrevAndNext(gadgetId, companyId,
-				orderByComparator);
+			return findByCompanyId_PrevAndNext(
+				gadgetId, companyId, orderByComparator);
 		}
 
 		Gadget gadget = findByPrimaryKey(gadgetId);
@@ -2623,13 +2668,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			Gadget[] array = new GadgetImpl[3];
 
-			array[0] = filterGetByCompanyId_PrevAndNext(session, gadget,
-					companyId, orderByComparator, true);
+			array[0] = filterGetByCompanyId_PrevAndNext(
+				session, gadget, companyId, orderByComparator, true);
 
 			array[1] = gadget;
 
-			array[2] = filterGetByCompanyId_PrevAndNext(session, gadget,
-					companyId, orderByComparator, false);
+			array[2] = filterGetByCompanyId_PrevAndNext(
+				session, gadget, companyId, orderByComparator, false);
 
 			return array;
 		}
@@ -2641,14 +2686,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	protected Gadget filterGetByCompanyId_PrevAndNext(Session session,
-		Gadget gadget, long companyId,
+	protected Gadget filterGetByCompanyId_PrevAndNext(
+		Session session, Gadget gadget, long companyId,
 		OrderByComparator<Gadget> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -2669,7 +2715,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -2677,13 +2724,17 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
@@ -2709,13 +2760,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					query.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
@@ -2744,8 +2797,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
@@ -2764,10 +2818,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		qPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(gadget);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(gadget)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -2788,8 +2842,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public void removeByCompanyId(long companyId) {
-		for (Gadget gadget : findByCompanyId(companyId, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null)) {
+		for (Gadget gadget :
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(gadget);
 		}
 	}
@@ -2802,11 +2858,12 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_COMPANYID;
+		FinderPath finderPath = _finderPathCountByCompanyId;
 
-		Object[] finderArgs = new Object[] { companyId };
+		Object[] finderArgs = new Object[] {companyId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
 			StringBundler query = new StringBundler(2);
@@ -2830,10 +2887,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -2863,8 +2920,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Gadget.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
@@ -2873,8 +2931,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			q.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
 			QueryPos qPos = QueryPos.getInstance(q);
 
@@ -2892,20 +2950,14 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 	}
 
-	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 = "gadget.companyId = ?";
-	public static final FinderPath FINDER_PATH_FETCH_BY_C_U = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
-			FINDER_CLASS_NAME_ENTITY, "fetchByC_U",
-			new String[] { Long.class.getName(), String.class.getName() },
-			GadgetModelImpl.COMPANYID_COLUMN_BITMASK |
-			GadgetModelImpl.URL_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_C_U = new FinderPath(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_U",
-			new String[] { Long.class.getName(), String.class.getName() });
+	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
+		"gadget.companyId = ?";
+
+	private FinderPath _finderPathFetchByC_U;
+	private FinderPath _finderPathCountByC_U;
 
 	/**
-	 * Returns the gadget where companyId = &#63; and url = &#63; or throws a {@link NoSuchGadgetException} if it could not be found.
+	 * Returns the gadget where companyId = &#63; and url = &#63; or throws a <code>NoSuchGadgetException</code> if it could not be found.
 	 *
 	 * @param companyId the company ID
 	 * @param url the url
@@ -2915,6 +2967,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	@Override
 	public Gadget findByC_U(long companyId, String url)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = fetchByC_U(companyId, url);
 
 		if (gadget == null) {
@@ -2928,7 +2981,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			msg.append(", url=");
 			msg.append(url);
 
-			msg.append(StringPool.CLOSE_CURLY_BRACE);
+			msg.append("}");
 
 			if (_log.isDebugEnabled()) {
 				_log.debug(msg.toString());
@@ -2957,26 +3010,34 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 *
 	 * @param companyId the company ID
 	 * @param url the url
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching gadget, or <code>null</code> if a matching gadget could not be found
 	 */
 	@Override
-	public Gadget fetchByC_U(long companyId, String url,
-		boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { companyId, url };
+	public Gadget fetchByC_U(
+		long companyId, String url, boolean useFinderCache) {
+
+		url = Objects.toString(url, "");
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {companyId, url};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
-			result = finderCache.getResult(FINDER_PATH_FETCH_BY_C_U,
-					finderArgs, this);
+		if (useFinderCache) {
+			result = FinderCacheUtil.getResult(
+				_finderPathFetchByC_U, finderArgs, this);
 		}
 
 		if (result instanceof Gadget) {
 			Gadget gadget = (Gadget)result;
 
 			if ((companyId != gadget.getCompanyId()) ||
-					!Objects.equals(url, gadget.getUrl())) {
+				!Objects.equals(url, gadget.getUrl())) {
+
 				result = null;
 			}
 		}
@@ -2990,10 +3051,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			boolean bindUrl = false;
 
-			if (url == null) {
-				query.append(_FINDER_COLUMN_C_U_URL_1);
-			}
-			else if (url.equals(StringPool.BLANK)) {
+			if (url.isEmpty()) {
 				query.append(_FINDER_COLUMN_C_U_URL_3);
 			}
 			else {
@@ -3022,8 +3080,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 				List<Gadget> list = q.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(FINDER_PATH_FETCH_BY_C_U, finderArgs,
-						list);
+					if (useFinderCache) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_U, finderArgs, list);
+					}
 				}
 				else {
 					Gadget gadget = list.get(0);
@@ -3031,17 +3091,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 					result = gadget;
 
 					cacheResult(gadget);
-
-					if ((gadget.getCompanyId() != companyId) ||
-							(gadget.getUrl() == null) ||
-							!gadget.getUrl().equals(url)) {
-						finderCache.putResult(FINDER_PATH_FETCH_BY_C_U,
-							finderArgs, gadget);
-					}
 				}
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_FETCH_BY_C_U, finderArgs);
+				if (useFinderCache) {
+					FinderCacheUtil.removeResult(
+						_finderPathFetchByC_U, finderArgs);
+				}
 
 				throw processException(e);
 			}
@@ -3068,6 +3124,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	@Override
 	public Gadget removeByC_U(long companyId, String url)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = findByC_U(companyId, url);
 
 		return remove(gadget);
@@ -3082,11 +3139,14 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public int countByC_U(long companyId, String url) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_C_U;
+		url = Objects.toString(url, "");
 
-		Object[] finderArgs = new Object[] { companyId, url };
+		FinderPath finderPath = _finderPathCountByC_U;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Object[] finderArgs = new Object[] {companyId, url};
+
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
 			StringBundler query = new StringBundler(3);
@@ -3097,10 +3157,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 			boolean bindUrl = false;
 
-			if (url == null) {
-				query.append(_FINDER_COLUMN_C_U_URL_1);
-			}
-			else if (url.equals(StringPool.BLANK)) {
+			if (url.isEmpty()) {
 				query.append(_FINDER_COLUMN_C_U_URL_3);
 			}
 			else {
@@ -3128,10 +3185,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -3143,29 +3200,26 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_C_U_COMPANYID_2 = "gadget.companyId = ? AND ";
-	private static final String _FINDER_COLUMN_C_U_URL_1 = "gadget.url IS NULL";
+	private static final String _FINDER_COLUMN_C_U_COMPANYID_2 =
+		"gadget.companyId = ? AND ";
+
 	private static final String _FINDER_COLUMN_C_U_URL_2 = "gadget.url = ?";
-	private static final String _FINDER_COLUMN_C_U_URL_3 = "(gadget.url IS NULL OR gadget.url = '')";
+
+	private static final String _FINDER_COLUMN_C_U_URL_3 =
+		"(gadget.url IS NULL OR gadget.url = '')";
 
 	public GadgetPersistenceImpl() {
 		setModelClass(Gadget.class);
 
-		try {
-			Field field = ReflectionUtil.getDeclaredField(BasePersistenceImpl.class,
-					"_dbColumnNames");
+		setModelImplClass(GadgetImpl.class);
+		setModelPKClass(long.class);
+		setEntityCacheEnabled(GadgetModelImpl.ENTITY_CACHE_ENABLED);
 
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
-			dbColumnNames.put("uuid", "uuid_");
+		dbColumnNames.put("uuid", "uuid_");
 
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setDBColumnNames(dbColumnNames);
 	}
 
 	/**
@@ -3175,11 +3229,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public void cacheResult(Gadget gadget) {
-		entityCache.putResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetImpl.class, gadget.getPrimaryKey(), gadget);
+		EntityCacheUtil.putResult(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED, GadgetImpl.class,
+			gadget.getPrimaryKey(), gadget);
 
-		finderCache.putResult(FINDER_PATH_FETCH_BY_C_U,
-			new Object[] { gadget.getCompanyId(), gadget.getUrl() }, gadget);
+		FinderCacheUtil.putResult(
+			_finderPathFetchByC_U,
+			new Object[] {gadget.getCompanyId(), gadget.getUrl()}, gadget);
 
 		gadget.resetOriginalValues();
 	}
@@ -3192,8 +3248,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	@Override
 	public void cacheResult(List<Gadget> gadgets) {
 		for (Gadget gadget : gadgets) {
-			if (entityCache.getResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-						GadgetImpl.class, gadget.getPrimaryKey()) == null) {
+			if (EntityCacheUtil.getResult(
+					GadgetModelImpl.ENTITY_CACHE_ENABLED, GadgetImpl.class,
+					gadget.getPrimaryKey()) == null) {
+
 				cacheResult(gadget);
 			}
 			else {
@@ -3206,44 +3264,46 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Clears the cache for all gadgets.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
-		entityCache.clearCache(GadgetImpl.class);
+		EntityCacheUtil.clearCache(GadgetImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
 	/**
 	 * Clears the cache for the gadget.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(Gadget gadget) {
-		entityCache.removeResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetImpl.class, gadget.getPrimaryKey());
+		EntityCacheUtil.removeResult(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED, GadgetImpl.class,
+			gadget.getPrimaryKey());
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		clearUniqueFindersCache((GadgetModelImpl)gadget, true);
 	}
 
 	@Override
 	public void clearCache(List<Gadget> gadgets) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (Gadget gadget : gadgets) {
-			entityCache.removeResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-				GadgetImpl.class, gadget.getPrimaryKey());
+			EntityCacheUtil.removeResult(
+				GadgetModelImpl.ENTITY_CACHE_ENABLED, GadgetImpl.class,
+				gadget.getPrimaryKey());
 
 			clearUniqueFindersCache((GadgetModelImpl)gadget, true);
 		}
@@ -3251,35 +3311,37 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 	protected void cacheUniqueFindersCache(GadgetModelImpl gadgetModelImpl) {
 		Object[] args = new Object[] {
+			gadgetModelImpl.getCompanyId(), gadgetModelImpl.getUrl()
+		};
+
+		FinderCacheUtil.putResult(
+			_finderPathCountByC_U, args, Long.valueOf(1), false);
+		FinderCacheUtil.putResult(
+			_finderPathFetchByC_U, args, gadgetModelImpl, false);
+	}
+
+	protected void clearUniqueFindersCache(
+		GadgetModelImpl gadgetModelImpl, boolean clearCurrent) {
+
+		if (clearCurrent) {
+			Object[] args = new Object[] {
 				gadgetModelImpl.getCompanyId(), gadgetModelImpl.getUrl()
 			};
 
-		finderCache.putResult(FINDER_PATH_COUNT_BY_C_U, args, Long.valueOf(1),
-			false);
-		finderCache.putResult(FINDER_PATH_FETCH_BY_C_U, args, gadgetModelImpl,
-			false);
-	}
-
-	protected void clearUniqueFindersCache(GadgetModelImpl gadgetModelImpl,
-		boolean clearCurrent) {
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-					gadgetModelImpl.getCompanyId(), gadgetModelImpl.getUrl()
-				};
-
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_C_U, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_C_U, args);
+			FinderCacheUtil.removeResult(_finderPathCountByC_U, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByC_U, args);
 		}
 
 		if ((gadgetModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_C_U.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					gadgetModelImpl.getOriginalCompanyId(),
-					gadgetModelImpl.getOriginalUrl()
-				};
+			 _finderPathFetchByC_U.getColumnBitmask()) != 0) {
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_C_U, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_C_U, args);
+			Object[] args = new Object[] {
+				gadgetModelImpl.getOriginalCompanyId(),
+				gadgetModelImpl.getOriginalUrl()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByC_U, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByC_U, args);
 		}
 	}
 
@@ -3300,7 +3362,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 		gadget.setUuid(uuid);
 
-		gadget.setCompanyId(companyProvider.getCompanyId());
+		gadget.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return gadget;
 	}
@@ -3338,8 +3400,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchGadgetException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchGadgetException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(gadget);
@@ -3357,16 +3419,14 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 	@Override
 	protected Gadget removeImpl(Gadget gadget) {
-		gadget = toUnwrappedModel(gadget);
-
 		Session session = null;
 
 		try {
 			session = openSession();
 
 			if (!session.contains(gadget)) {
-				gadget = (Gadget)session.get(GadgetImpl.class,
-						gadget.getPrimaryKeyObj());
+				gadget = (Gadget)session.get(
+					GadgetImpl.class, gadget.getPrimaryKeyObj());
 			}
 
 			if (gadget != null) {
@@ -3389,9 +3449,23 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 	@Override
 	public Gadget updateImpl(Gadget gadget) {
-		gadget = toUnwrappedModel(gadget);
-
 		boolean isNew = gadget.isNew();
+
+		if (!(gadget instanceof GadgetModelImpl)) {
+			InvocationHandler invocationHandler = null;
+
+			if (ProxyUtil.isProxyClass(gadget.getClass())) {
+				invocationHandler = ProxyUtil.getInvocationHandler(gadget);
+
+				throw new IllegalArgumentException(
+					"Implement ModelWrapper in gadget proxy " +
+						invocationHandler.getClass());
+			}
+
+			throw new IllegalArgumentException(
+				"Implement ModelWrapper in custom Gadget implementation " +
+					gadget.getClass());
+		}
 
 		GadgetModelImpl gadgetModelImpl = (GadgetModelImpl)gadget;
 
@@ -3401,7 +3475,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			gadget.setUuid(uuid);
 		}
 
-		ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
 		Date now = new Date();
 
@@ -3444,95 +3519,103 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 
 		if (!GadgetModelImpl.COLUMN_BITMASK_ENABLED) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+			FinderCacheUtil.clearCache(
+				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
-			Object[] args = new Object[] { gadgetModelImpl.getUuid() };
+		else if (isNew) {
+			Object[] args = new Object[] {gadgetModelImpl.getUuid()};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-				args);
+			FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByUuid, args);
 
 			args = new Object[] {
+				gadgetModelImpl.getUuid(), gadgetModelImpl.getCompanyId()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByUuid_C, args);
+
+			args = new Object[] {gadgetModelImpl.getCompanyId()};
+
+			FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByCompanyId, args);
+
+			FinderCacheUtil.removeResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+		}
+		else {
+			if ((gadgetModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					gadgetModelImpl.getOriginalUuid()
+				};
+
+				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUuid, args);
+
+				args = new Object[] {gadgetModelImpl.getUuid()};
+
+				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUuid, args);
+			}
+
+			if ((gadgetModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					gadgetModelImpl.getOriginalUuid(),
+					gadgetModelImpl.getOriginalCompanyId()
+				};
+
+				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUuid_C, args);
+
+				args = new Object[] {
 					gadgetModelImpl.getUuid(), gadgetModelImpl.getCompanyId()
 				};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-				args);
-
-			args = new Object[] { gadgetModelImpl.getCompanyId() };
-
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-				args);
-
-			finderCache.removeResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
-		}
-
-		else {
-			if ((gadgetModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] { gadgetModelImpl.getOriginalUuid() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-					args);
-
-				args = new Object[] { gadgetModelImpl.getUuid() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-					args);
+				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUuid_C, args);
 			}
 
 			if ((gadgetModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C.getColumnBitmask()) != 0) {
+				 _finderPathWithoutPaginationFindByCompanyId.
+					 getColumnBitmask()) != 0) {
+
 				Object[] args = new Object[] {
-						gadgetModelImpl.getOriginalUuid(),
-						gadgetModelImpl.getOriginalCompanyId()
-					};
+					gadgetModelImpl.getOriginalCompanyId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-					args);
+				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 
-				args = new Object[] {
-						gadgetModelImpl.getUuid(),
-						gadgetModelImpl.getCompanyId()
-					};
+				args = new Object[] {gadgetModelImpl.getCompanyId()};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-					args);
-			}
-
-			if ((gadgetModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						gadgetModelImpl.getOriginalCompanyId()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
-
-				args = new Object[] { gadgetModelImpl.getCompanyId() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
+				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 			}
 		}
 
-		entityCache.putResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetImpl.class, gadget.getPrimaryKey(), gadget, false);
+		EntityCacheUtil.putResult(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED, GadgetImpl.class,
+			gadget.getPrimaryKey(), gadget, false);
 
 		clearUniqueFindersCache(gadgetModelImpl, false);
 		cacheUniqueFindersCache(gadgetModelImpl);
@@ -3542,31 +3625,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		return gadget;
 	}
 
-	protected Gadget toUnwrappedModel(Gadget gadget) {
-		if (gadget instanceof GadgetImpl) {
-			return gadget;
-		}
-
-		GadgetImpl gadgetImpl = new GadgetImpl();
-
-		gadgetImpl.setNew(gadget.isNew());
-		gadgetImpl.setPrimaryKey(gadget.getPrimaryKey());
-
-		gadgetImpl.setUuid(gadget.getUuid());
-		gadgetImpl.setGadgetId(gadget.getGadgetId());
-		gadgetImpl.setCompanyId(gadget.getCompanyId());
-		gadgetImpl.setCreateDate(gadget.getCreateDate());
-		gadgetImpl.setModifiedDate(gadget.getModifiedDate());
-		gadgetImpl.setName(gadget.getName());
-		gadgetImpl.setUrl(gadget.getUrl());
-		gadgetImpl.setPortletCategoryNames(gadget.getPortletCategoryNames());
-		gadgetImpl.setLastPublishDate(gadget.getLastPublishDate());
-
-		return gadgetImpl;
-	}
-
 	/**
-	 * Returns the gadget with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the gadget with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the gadget
 	 * @return the gadget
@@ -3575,6 +3635,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	@Override
 	public Gadget findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchGadgetException {
+
 		Gadget gadget = fetchByPrimaryKey(primaryKey);
 
 		if (gadget == null) {
@@ -3582,15 +3643,15 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchGadgetException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchGadgetException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return gadget;
 	}
 
 	/**
-	 * Returns the gadget with the primary key or throws a {@link NoSuchGadgetException} if it could not be found.
+	 * Returns the gadget with the primary key or throws a <code>NoSuchGadgetException</code> if it could not be found.
 	 *
 	 * @param gadgetId the primary key of the gadget
 	 * @return the gadget
@@ -3604,153 +3665,12 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	/**
 	 * Returns the gadget with the primary key or returns <code>null</code> if it could not be found.
 	 *
-	 * @param primaryKey the primary key of the gadget
-	 * @return the gadget, or <code>null</code> if a gadget with the primary key could not be found
-	 */
-	@Override
-	public Gadget fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-				GadgetImpl.class, primaryKey);
-
-		if (serializable == nullModel) {
-			return null;
-		}
-
-		Gadget gadget = (Gadget)serializable;
-
-		if (gadget == null) {
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				gadget = (Gadget)session.get(GadgetImpl.class, primaryKey);
-
-				if (gadget != null) {
-					cacheResult(gadget);
-				}
-				else {
-					entityCache.putResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-						GadgetImpl.class, primaryKey, nullModel);
-				}
-			}
-			catch (Exception e) {
-				entityCache.removeResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-					GadgetImpl.class, primaryKey);
-
-				throw processException(e);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return gadget;
-	}
-
-	/**
-	 * Returns the gadget with the primary key or returns <code>null</code> if it could not be found.
-	 *
 	 * @param gadgetId the primary key of the gadget
 	 * @return the gadget, or <code>null</code> if a gadget with the primary key could not be found
 	 */
 	@Override
 	public Gadget fetchByPrimaryKey(long gadgetId) {
 		return fetchByPrimaryKey((Serializable)gadgetId);
-	}
-
-	@Override
-	public Map<Serializable, Gadget> fetchByPrimaryKeys(
-		Set<Serializable> primaryKeys) {
-		if (primaryKeys.isEmpty()) {
-			return Collections.emptyMap();
-		}
-
-		Map<Serializable, Gadget> map = new HashMap<Serializable, Gadget>();
-
-		if (primaryKeys.size() == 1) {
-			Iterator<Serializable> iterator = primaryKeys.iterator();
-
-			Serializable primaryKey = iterator.next();
-
-			Gadget gadget = fetchByPrimaryKey(primaryKey);
-
-			if (gadget != null) {
-				map.put(primaryKey, gadget);
-			}
-
-			return map;
-		}
-
-		Set<Serializable> uncachedPrimaryKeys = null;
-
-		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-					GadgetImpl.class, primaryKey);
-
-			if (serializable != nullModel) {
-				if (serializable == null) {
-					if (uncachedPrimaryKeys == null) {
-						uncachedPrimaryKeys = new HashSet<Serializable>();
-					}
-
-					uncachedPrimaryKeys.add(primaryKey);
-				}
-				else {
-					map.put(primaryKey, (Gadget)serializable);
-				}
-			}
-		}
-
-		if (uncachedPrimaryKeys == null) {
-			return map;
-		}
-
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
-
-		query.append(_SQL_SELECT_GADGET_WHERE_PKS_IN);
-
-		for (Serializable primaryKey : uncachedPrimaryKeys) {
-			query.append((long)primaryKey);
-
-			query.append(StringPool.COMMA);
-		}
-
-		query.setIndex(query.index() - 1);
-
-		query.append(StringPool.CLOSE_PARENTHESIS);
-
-		String sql = query.toString();
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			Query q = session.createQuery(sql);
-
-			for (Gadget gadget : (List<Gadget>)q.list()) {
-				map.put(gadget.getPrimaryKeyObj(), gadget);
-
-				cacheResult(gadget);
-
-				uncachedPrimaryKeys.remove(gadget.getPrimaryKeyObj());
-			}
-
-			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-					GadgetImpl.class, primaryKey, nullModel);
-			}
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-
-		return map;
 	}
 
 	/**
@@ -3767,7 +3687,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns a range of all the gadgets.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of gadgets
@@ -3783,7 +3703,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of gadgets
@@ -3792,8 +3712,9 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * @return the ordered range of gadgets
 	 */
 	@Override
-	public List<Gadget> findAll(int start, int end,
-		OrderByComparator<Gadget> orderByComparator) {
+	public List<Gadget> findAll(
+		int start, int end, OrderByComparator<Gadget> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -3801,38 +3722,44 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Returns an ordered range of all the gadgets.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link GadgetModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>GadgetModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of gadgets
 	 * @param end the upper bound of the range of gadgets (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of gadgets
 	 */
 	@Override
-	public List<Gadget> findAll(int start, int end,
-		OrderByComparator<Gadget> orderByComparator, boolean retrieveFromCache) {
+	public List<Gadget> findAll(
+		int start, int end, OrderByComparator<Gadget> orderByComparator,
+		boolean useFinderCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
-			finderArgs = FINDER_ARGS_EMPTY;
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<Gadget> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Gadget>)finderCache.getResult(finderPath, finderArgs,
-					this);
+		if (useFinderCache) {
+			list = (List<Gadget>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
@@ -3840,13 +3767,13 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
 				query.append(_SQL_SELECT_GADGET);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
 				sql = query.toString();
 			}
@@ -3866,24 +3793,28 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 				Query q = session.createQuery(sql);
 
 				if (!pagination) {
-					list = (List<Gadget>)QueryUtil.list(q, getDialect(), start,
-							end, false);
+					list = (List<Gadget>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Gadget>)QueryUtil.list(q, getDialect(), start,
-							end);
+					list = (List<Gadget>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				if (useFinderCache) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
 				throw processException(e);
 			}
@@ -3913,8 +3844,8 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -3926,12 +3857,12 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY,
-					count);
+				FinderCacheUtil.putResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+				FinderCacheUtil.removeResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 				throw processException(e);
 			}
@@ -3949,6 +3880,21 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	}
 
 	@Override
+	protected EntityCache getEntityCache() {
+		return EntityCacheUtil.getEntityCache();
+	}
+
+	@Override
+	protected String getPKDBName() {
+		return "gadgetId";
+	}
+
+	@Override
+	protected String getSelectSQL() {
+		return _SQL_SELECT_GADGET;
+	}
+
+	@Override
 	protected Map<String, Integer> getTableColumnsMap() {
 		return GadgetModelImpl.TABLE_COLUMNS_MAP;
 	}
@@ -3957,39 +3903,163 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	 * Initializes the gadget persistence.
 	 */
 	public void afterPropertiesSet() {
+		_finderPathWithPaginationFindAll = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByUuid = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
+			new String[] {
+				String.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
+			new String[] {String.class.getName()},
+			GadgetModelImpl.UUID_COLUMN_BITMASK |
+			GadgetModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByUuid = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
+			new String[] {String.class.getName()});
+
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
+			new String[] {
+				String.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			GadgetModelImpl.UUID_COLUMN_BITMASK |
+			GadgetModelImpl.COMPANYID_COLUMN_BITMASK |
+			GadgetModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByUuid_C = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
+			new String[] {String.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()},
+			GadgetModelImpl.COMPANYID_COLUMN_BITMASK |
+			GadgetModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByCompanyId = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
+			new String[] {Long.class.getName()});
+
+		_finderPathFetchByC_U = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, GadgetImpl.class,
+			FINDER_CLASS_NAME_ENTITY, "fetchByC_U",
+			new String[] {Long.class.getName(), String.class.getName()},
+			GadgetModelImpl.COMPANYID_COLUMN_BITMASK |
+			GadgetModelImpl.URL_COLUMN_BITMASK);
+
+		_finderPathCountByC_U = new FinderPath(
+			GadgetModelImpl.ENTITY_CACHE_ENABLED,
+			GadgetModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_U",
+			new String[] {Long.class.getName(), String.class.getName()});
 	}
 
 	public void destroy() {
-		entityCache.removeCache(GadgetImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		EntityCacheUtil.removeCache(GadgetImpl.class.getName());
+		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
+		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
-	@BeanReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
-	protected EntityCache entityCache = EntityCacheUtil.getEntityCache();
-	protected FinderCache finderCache = FinderCacheUtil.getFinderCache();
-	private static final String _SQL_SELECT_GADGET = "SELECT gadget FROM Gadget gadget";
-	private static final String _SQL_SELECT_GADGET_WHERE_PKS_IN = "SELECT gadget FROM Gadget gadget WHERE gadgetId IN (";
-	private static final String _SQL_SELECT_GADGET_WHERE = "SELECT gadget FROM Gadget gadget WHERE ";
-	private static final String _SQL_COUNT_GADGET = "SELECT COUNT(gadget) FROM Gadget gadget";
-	private static final String _SQL_COUNT_GADGET_WHERE = "SELECT COUNT(gadget) FROM Gadget gadget WHERE ";
-	private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN = "gadget.gadgetId";
-	private static final String _FILTER_SQL_SELECT_GADGET_WHERE = "SELECT DISTINCT {gadget.*} FROM OpenSocial_Gadget gadget WHERE ";
-	private static final String _FILTER_SQL_SELECT_GADGET_NO_INLINE_DISTINCT_WHERE_1 =
-		"SELECT {OpenSocial_Gadget.*} FROM (SELECT DISTINCT gadget.gadgetId FROM OpenSocial_Gadget gadget WHERE ";
-	private static final String _FILTER_SQL_SELECT_GADGET_NO_INLINE_DISTINCT_WHERE_2 =
-		") TEMP_TABLE INNER JOIN OpenSocial_Gadget ON TEMP_TABLE.gadgetId = OpenSocial_Gadget.gadgetId";
-	private static final String _FILTER_SQL_COUNT_GADGET_WHERE = "SELECT COUNT(DISTINCT gadget.gadgetId) AS COUNT_VALUE FROM OpenSocial_Gadget gadget WHERE ";
+	private static final String _SQL_SELECT_GADGET =
+		"SELECT gadget FROM Gadget gadget";
+
+	private static final String _SQL_SELECT_GADGET_WHERE =
+		"SELECT gadget FROM Gadget gadget WHERE ";
+
+	private static final String _SQL_COUNT_GADGET =
+		"SELECT COUNT(gadget) FROM Gadget gadget";
+
+	private static final String _SQL_COUNT_GADGET_WHERE =
+		"SELECT COUNT(gadget) FROM Gadget gadget WHERE ";
+
+	private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN =
+		"gadget.gadgetId";
+
+	private static final String _FILTER_SQL_SELECT_GADGET_WHERE =
+		"SELECT DISTINCT {gadget.*} FROM OpenSocial_Gadget gadget WHERE ";
+
+	private static final String
+		_FILTER_SQL_SELECT_GADGET_NO_INLINE_DISTINCT_WHERE_1 =
+			"SELECT {OpenSocial_Gadget.*} FROM (SELECT DISTINCT gadget.gadgetId FROM OpenSocial_Gadget gadget WHERE ";
+
+	private static final String
+		_FILTER_SQL_SELECT_GADGET_NO_INLINE_DISTINCT_WHERE_2 =
+			") TEMP_TABLE INNER JOIN OpenSocial_Gadget ON TEMP_TABLE.gadgetId = OpenSocial_Gadget.gadgetId";
+
+	private static final String _FILTER_SQL_COUNT_GADGET_WHERE =
+		"SELECT COUNT(DISTINCT gadget.gadgetId) AS COUNT_VALUE FROM OpenSocial_Gadget gadget WHERE ";
+
 	private static final String _FILTER_ENTITY_ALIAS = "gadget";
+
 	private static final String _FILTER_ENTITY_TABLE = "OpenSocial_Gadget";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "gadget.";
+
 	private static final String _ORDER_BY_ENTITY_TABLE = "OpenSocial_Gadget.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No Gadget exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No Gadget exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(GadgetPersistenceImpl.class);
-	private static final Set<String> _badColumnNames = SetUtil.fromArray(new String[] {
-				"uuid"
-			});
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No Gadget exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No Gadget exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		GadgetPersistenceImpl.class);
+
+	private static final Set<String> _badColumnNames = SetUtil.fromArray(
+		new String[] {"uuid"});
+
 }

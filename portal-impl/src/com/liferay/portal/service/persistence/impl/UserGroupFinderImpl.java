@@ -14,6 +14,8 @@
 
 package com.liferay.portal.service.persistence.impl;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
@@ -27,8 +29,6 @@ import com.liferay.portal.kernel.service.persistence.UserGroupFinder;
 import com.liferay.portal.kernel.service.persistence.UserGroupUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.UserGroupImpl;
@@ -167,7 +167,7 @@ public class UserGroupFinderImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -239,9 +239,9 @@ public class UserGroupFinderImpl
 			String sql = CustomSQLUtil.get(COUNT_BY_C_N_D);
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(UserGroup.name)", StringPool.LIKE, false, names);
+				sql, "LOWER(UserGroup.name)", StringPool.LIKE, false, names);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(UserGroup.description)", StringPool.LIKE, true,
+				sql, "LOWER(UserGroup.description)", StringPool.LIKE, true,
 				descriptions);
 			sql = StringUtil.replace(sql, "[$JOIN$]", getJoin(params));
 			sql = StringUtil.replace(sql, "[$WHERE$]", getWhere(params));
@@ -325,9 +325,9 @@ public class UserGroupFinderImpl
 			String sql = CustomSQLUtil.get(FIND_BY_C_N_D);
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(UserGroup.name)", StringPool.LIKE, false, names);
+				sql, "LOWER(UserGroup.name)", StringPool.LIKE, false, names);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(UserGroup.description)", StringPool.LIKE, true,
+				sql, "LOWER(UserGroup.description)", StringPool.LIKE, true,
 				descriptions);
 
 			sql = StringUtil.replace(sql, "[$JOIN$]", getJoin(params));
@@ -379,9 +379,7 @@ public class UserGroupFinderImpl
 				continue;
 			}
 
-			Object value = entry.getValue();
-
-			if (Validator.isNotNull(value)) {
+			if (Validator.isNotNull(entry.getValue())) {
 				sb.append(getJoin(key));
 			}
 		}
@@ -513,7 +511,9 @@ public class UserGroupFinderImpl
 			int pos = join.indexOf("WHERE");
 
 			if (pos != -1) {
-				join = join.substring(pos + 5, join.length()).concat(" AND ");
+				join = join.substring(pos + 5);
+
+				join = join.concat(" AND ");
 			}
 			else {
 				join = StringPool.BLANK;
@@ -531,9 +531,7 @@ public class UserGroupFinderImpl
 		}
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			String key = entry.getKey();
-
-			if (!_isFinderParam(key)) {
+			if (!_isFinderParam(entry.getKey())) {
 				continue;
 			}
 
@@ -549,9 +547,9 @@ public class UserGroupFinderImpl
 			else if (value instanceof Long[]) {
 				Long[] valueArray = (Long[])value;
 
-				for (int i = 0; i < valueArray.length; i++) {
-					if (Validator.isNotNull(valueArray[i])) {
-						qPos.add(valueArray[i]);
+				for (Long curValue : valueArray) {
+					if (Validator.isNotNull(curValue)) {
+						qPos.add(curValue);
 					}
 				}
 			}

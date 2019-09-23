@@ -14,13 +14,13 @@
 
 package com.liferay.adaptive.media.document.library.web.internal.optimizer;
 
+import com.liferay.adaptive.media.constants.AMOptimizeImagesBackgroundTaskConstants;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
 import com.liferay.adaptive.media.image.counter.AMImageCounter;
 import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
 import com.liferay.adaptive.media.image.optimizer.AMImageOptimizer;
 import com.liferay.adaptive.media.image.processor.AMImageProcessor;
-import com.liferay.adaptive.media.web.constants.AMOptimizeImagesBackgroundTaskConstants;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
@@ -52,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sergio González
  */
 @Component(
-	immediate = true, property = {"adaptive.media.key=document-library"},
+	immediate = true, property = "adaptive.media.key=document-library",
 	service = AMImageOptimizer.class
 )
 public class DLAMImageOptimizer implements AMImageOptimizer {
@@ -95,85 +95,70 @@ public class DLAMImageOptimizer implements AMImageOptimizer {
 			_dlFileEntryLocalService.getActionableDynamicQuery();
 
 		actionableDynamicQuery.setAddCriteriaMethod(
-			new ActionableDynamicQuery.AddCriteriaMethod() {
+			dynamicQuery -> {
+				Property companyIdProperty = PropertyFactoryUtil.forName(
+					"companyId");
 
-				@Override
-				public void addCriteria(DynamicQuery dynamicQuery) {
-					Property companyIdProperty = PropertyFactoryUtil.forName(
-						"companyId");
+				dynamicQuery.add(companyIdProperty.eq(companyId));
 
-					dynamicQuery.add(companyIdProperty.eq(companyId));
+				Property groupIdProperty = PropertyFactoryUtil.forName(
+					"groupId");
+				Property repositoryIdProperty = PropertyFactoryUtil.forName(
+					"repositoryId");
 
-					Property groupIdProperty = PropertyFactoryUtil.forName(
-						"groupId");
-					Property repositoryIdProperty = PropertyFactoryUtil.forName(
-						"repositoryId");
+				dynamicQuery.add(
+					groupIdProperty.eqProperty(repositoryIdProperty));
 
-					dynamicQuery.add(
-						groupIdProperty.eqProperty(repositoryIdProperty));
+				Property mimeTypeProperty = PropertyFactoryUtil.forName(
+					"mimeType");
 
-					Property mimeTypeProperty = PropertyFactoryUtil.forName(
-						"mimeType");
+				dynamicQuery.add(
+					mimeTypeProperty.in(
+						_amImageMimeTypeProvider.getSupportedMimeTypes()));
 
-					dynamicQuery.add(
-						mimeTypeProperty.in(
-							_amImageMimeTypeProvider.getSupportedMimeTypes()));
+				DynamicQuery dlFileVersionDynamicQuery =
+					_dlFileVersionLocalService.dynamicQuery();
 
-					DynamicQuery dlFileVersionDynamicQuery =
-						_dlFileVersionLocalService.dynamicQuery();
+				dlFileVersionDynamicQuery.setProjection(
+					ProjectionFactoryUtil.distinct(
+						ProjectionFactoryUtil.property("fileEntryId")));
 
-					dlFileVersionDynamicQuery.setProjection(
-						ProjectionFactoryUtil.distinct(
-							ProjectionFactoryUtil.property("fileEntryId")));
+				dlFileVersionDynamicQuery.add(companyIdProperty.eq(companyId));
 
-					dlFileVersionDynamicQuery.add(
-						companyIdProperty.eq(companyId));
+				dlFileVersionDynamicQuery.add(
+					groupIdProperty.eqProperty(repositoryIdProperty));
 
-					dlFileVersionDynamicQuery.add(
-						groupIdProperty.eqProperty(repositoryIdProperty));
+				dlFileVersionDynamicQuery.add(
+					mimeTypeProperty.in(
+						_amImageMimeTypeProvider.getSupportedMimeTypes()));
 
-					dlFileVersionDynamicQuery.add(
-						mimeTypeProperty.in(
-							_amImageMimeTypeProvider.getSupportedMimeTypes()));
+				Property statusProperty = PropertyFactoryUtil.forName("status");
 
-					Property statusProperty = PropertyFactoryUtil.forName(
-						"status");
+				dlFileVersionDynamicQuery.add(
+					statusProperty.eq(WorkflowConstants.STATUS_IN_TRASH));
 
-					dlFileVersionDynamicQuery.add(
-						statusProperty.eq(WorkflowConstants.STATUS_IN_TRASH));
+				Property fileEntryIdProperty = PropertyFactoryUtil.forName(
+					"fileEntryId");
 
-					Property fileEntryIdProperty = PropertyFactoryUtil.forName(
-						"fileEntryId");
-
-					dynamicQuery.add(
-						fileEntryIdProperty.notIn(dlFileVersionDynamicQuery));
-				}
-
+				dynamicQuery.add(
+					fileEntryIdProperty.notIn(dlFileVersionDynamicQuery));
 			});
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod<DLFileEntry>() {
+			(DLFileEntry dlFileEntry) -> {
+				FileEntry fileEntry = new LiferayFileEntry(dlFileEntry);
 
-				@Override
-				public void performAction(DLFileEntry dlFileEntry)
-					throws PortalException {
+				try {
+					_amImageProcessor.process(
+						fileEntry.getFileVersion(), configurationEntryUuid);
 
-					FileEntry fileEntry = new LiferayFileEntry(dlFileEntry);
-
-					try {
-						_amImageProcessor.process(
-							fileEntry.getFileVersion(), configurationEntryUuid);
-
-						_sendStatusMessage(
-							atomicCounter.incrementAndGet(), total);
-					}
-					catch (PortalException pe) {
-						_log.error(
-							"Unable to process file entry id " +
-								fileEntry.getFileEntryId(),
-							pe);
-					}
+					_sendStatusMessage(atomicCounter.incrementAndGet(), total);
 				}
-
+				catch (PortalException pe) {
+					_log.error(
+						"Unable to process file entry " +
+							fileEntry.getFileEntryId(),
+						pe);
+				}
 			});
 
 		try {

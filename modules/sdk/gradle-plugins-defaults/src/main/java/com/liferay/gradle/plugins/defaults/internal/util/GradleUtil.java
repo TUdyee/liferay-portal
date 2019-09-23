@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import org.gradle.StartParameter;
@@ -36,30 +35,27 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactRepositoryContainer;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.artifacts.DependencySubstitutions;
-import org.gradle.api.artifacts.DependencySubstitutions.Substitution;
+import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ModuleVersionSelector;
 import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.dsl.RepositoryHandler;
 import org.gradle.api.artifacts.repositories.ArtifactRepository;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.BasePluginConvention;
 import org.gradle.api.plugins.PluginContainer;
-import org.gradle.util.GUtil;
+import org.gradle.api.tasks.TaskOutputs;
 
 /**
  * @author Andrea Di Giorgi
  */
 public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
-
-	public static final String PORTAL_TOOL_GROUP = "com.liferay";
-
-	public static final String SNAPSHOT_PROPERTY_NAME = "snapshot";
-
-	public static final String SNAPSHOT_VERSION_SUFFIX = "-SNAPSHOT";
 
 	public static MavenArtifactRepository addMavenArtifactRepository(
 		RepositoryHandler repositoryHandler, final Object url) {
@@ -77,6 +73,7 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 			});
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T extends Task> T addTask(
 		Project project, String name, Class<T> clazz, boolean overwrite) {
 
@@ -107,26 +104,20 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 		}
 	}
 
+	public static Configuration fetchConfiguration(
+		Project project, String name) {
+
+		ConfigurationContainer configurationContainer =
+			project.getConfigurations();
+
+		return configurationContainer.findByName(name);
+	}
+
 	public static String getArchivesBaseName(Project project) {
 		BasePluginConvention basePluginConvention = getConvention(
 			project, BasePluginConvention.class);
 
 		return basePluginConvention.getArchivesBaseName();
-	}
-
-	public static String getGradlePropertiesValue(
-		Project project, String key, String defaultValue) {
-
-		File dir = getRootDir(project, "gradle.properties");
-
-		if (dir == null) {
-			return defaultValue;
-		}
-
-		Properties properties = GUtil.loadProperties(
-			new File(dir, "gradle.properties"));
-
-		return properties.getProperty(key, defaultValue);
 	}
 
 	public static File getMavenLocalDir(Project project) {
@@ -168,6 +159,14 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 		sb.append(".jar");
 
 		return new File(dir, sb.toString());
+	}
+
+	public static File getOutputFile(Task task) {
+		TaskOutputs taskOutputs = task.getOutputs();
+
+		FileCollection fileCollection = taskOutputs.getFiles();
+
+		return fileCollection.getSingleFile();
 	}
 
 	public static Project getProject(Project rootProject, String name) {
@@ -246,32 +245,28 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 		return toString(value);
 	}
 
-	public static File getRootDir(File dir, String markerFileName) {
-		while (true) {
-			File markerFile = new File(dir, markerFileName);
-
-			if (markerFile.exists()) {
-				return dir;
-			}
-
-			dir = dir.getParentFile();
-
-			if (dir == null) {
-				return null;
-			}
-		}
-	}
-
-	public static File getRootDir(Project project, String markerFileName) {
-		return getRootDir(project.getProjectDir(), markerFileName);
-	}
-
 	public static File getSrcDir(SourceDirectorySet sourceDirectorySet) {
 		Set<File> srcDirs = sourceDirectorySet.getSrcDirs();
 
 		Iterator<File> iterator = srcDirs.iterator();
 
 		return iterator.next();
+	}
+
+	public static boolean hasDependency(
+		DependencySet dependencySet, String group, String name) {
+
+		for (ModuleDependency moduleDependency :
+				dependencySet.withType(ModuleDependency.class)) {
+
+			if (group.equals(moduleDependency.getGroup()) &&
+				name.equals(moduleDependency.getName())) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static boolean hasPlugin(
@@ -310,60 +305,6 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 		return false;
 	}
 
-	public static boolean isSnapshot(Project project) {
-		String version = String.valueOf(project.getVersion());
-
-		if (version.endsWith(SNAPSHOT_VERSION_SUFFIX)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public static boolean isSnapshot(Project project, String... propertyNames) {
-		boolean snapshot = false;
-
-		if (project.hasProperty(SNAPSHOT_PROPERTY_NAME)) {
-			snapshot = getProperty(project, SNAPSHOT_PROPERTY_NAME, true);
-		}
-
-		if (!snapshot) {
-			for (String propertyName : propertyNames) {
-				if (project.hasProperty(propertyName) &&
-					getProperty(project, propertyName, true)) {
-
-					snapshot = true;
-
-					break;
-				}
-			}
-		}
-
-		return snapshot;
-	}
-
-	public static boolean isTestProject(Project project) {
-		String projectName = project.getName();
-
-		if (projectName.endsWith("-test")) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public static void setProjectSnapshotVersion(
-		Project project, String... propertyNames) {
-
-		String version = String.valueOf(project.getVersion());
-
-		if (isSnapshot(project, propertyNames) &&
-			!version.endsWith(SNAPSHOT_VERSION_SUFFIX)) {
-
-			project.setVersion(version + SNAPSHOT_VERSION_SUFFIX);
-		}
-	}
-
 	public static void substituteModuleDependencyWithProject(
 		Configuration configuration,
 		ModuleVersionSelector moduleVersionSelector, Project project) {
@@ -378,8 +319,8 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 			dependencySubstitutions.module(
 				_getDependencyNotation(moduleVersionSelector));
 
-		Substitution substitution = dependencySubstitutions.substitute(
-			moduleComponentSelector);
+		DependencySubstitutions.Substitution substitution =
+			dependencySubstitutions.substitute(moduleComponentSelector);
 
 		ComponentSelector projectComponentSelector =
 			dependencySubstitutions.project(project.getPath());

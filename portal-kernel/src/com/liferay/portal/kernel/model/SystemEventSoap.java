@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,8 +26,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class SystemEventSoap implements Serializable {
+
 	public static SystemEventSoap toSoapModel(SystemEvent model) {
 		SystemEventSoap soapModel = new SystemEventSoap();
 
@@ -80,7 +78,8 @@ public class SystemEventSoap implements Serializable {
 	}
 
 	public static SystemEventSoap[] toSoapModels(List<SystemEvent> models) {
-		List<SystemEventSoap> soapModels = new ArrayList<SystemEventSoap>(models.size());
+		List<SystemEventSoap> soapModels = new ArrayList<SystemEventSoap>(
+			models.size());
 
 		for (SystemEvent model : models) {
 			soapModels.add(toSoapModel(model));
@@ -235,4 +234,5 @@ public class SystemEventSoap implements Serializable {
 	private long _systemEventSetKey;
 	private int _type;
 	private String _extraData;
+
 }

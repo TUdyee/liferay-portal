@@ -37,7 +37,7 @@ import java.util.Set;
 /**
  * @author     Shuyang Zhou
  * @author     Brian Wing Shun Chan
- * @deprecated As of 7.0.0, with no direct replacement
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
 @Deprecated
 public class RatingsStatsFinderImpl
@@ -62,8 +62,7 @@ public class RatingsStatsFinderImpl
 	@Override
 	public List<RatingsStats> findByC_C(long classNameId, List<Long> classPKs) {
 		Object[] finderArgs = {
-			classNameId,
-			StringUtil.merge(classPKs.toArray(new Long[classPKs.size()]))
+			classNameId, StringUtil.merge(classPKs.toArray(new Long[0]))
 		};
 
 		List<RatingsStats> list = (List<RatingsStats>)FinderCacheUtil.getResult(

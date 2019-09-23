@@ -14,12 +14,14 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.io.IOException;
 
 /**
  * @author Peter Shin
@@ -29,12 +31,12 @@ public class GradleIndentationCheck extends BaseFileCheck {
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws Exception {
+		throws IOException {
 
 		return _checkIndentation(content);
 	}
 
-	private String _checkIndentation(String content) throws Exception {
+	private String _checkIndentation(String content) throws IOException {
 		boolean insideQuotes = false;
 		int tabCount = 0;
 
@@ -128,6 +130,16 @@ public class GradleIndentationCheck extends BaseFileCheck {
 			text.matches("^\\s*Pattern\\s+.*")) {
 
 			return tabCount;
+		}
+
+		if (text.contains(" ==~ /")) {
+			int x = text.indexOf(" ==~ /");
+
+			int y = text.indexOf("/", x + 6);
+
+			if (y != -1) {
+				text = text.substring(0, x) + text.substring(y + 1);
+			}
 		}
 
 		tabCount += getLevel(text, "([{", "}])");

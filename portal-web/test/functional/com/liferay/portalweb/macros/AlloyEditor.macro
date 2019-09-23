@@ -1,118 +1,126 @@
-<definition>
-	<command name="addContent">
-		<execute function="Type#typeEditor" locator1="AlloyEditor#CONTENT_FIELD" value1="${content}" />
-	</command>
+definition {
 
-	<command name="addSourceContent">
-		<execute macro="AlloyEditor#clickContentField" />
+	macro addContent {
+		AlloyEditor.typeEditor(
+			content = "${content}",
+			editor = "content");
+	}
 
-		<execute function="Click" locator1="Button#EDITOR_SWITCH" />
+	macro addDescription {
+		AlloyEditor.typeEditor(
+			content = "${description}",
+			editor = "description");
+	}
 
-		<execute function="Type#sendKeysAceEditor" locator1="TextArea#ACE_EDITOR" value1="${content}" />
-	</command>
+	macro addEntryExternalURL {
+		SelectFieldText(
+			key_editor = "content",
+			locator1 = "AlloyEditor#EDITOR");
 
-	<command name="addTitle">
-		<execute function="Type#typeEditor" locator1="AlloyEditor#TITLE_FIELD" value1="${title}" />
-	</command>
+		Click(locator1 = "AlloyEditor#TEXT_FORMATTING_LINK");
 
-	<command name="addTitleAndContent">
-		<execute macro="AlloyEditor#addTitle">
-			<var name="title" value="${title}" />
-		</execute>
+		Type(
+			locator1 = "AlloyEditor#TEXT_FORMATTING_LINK_INPUT",
+			value1 = "${entryExternalURL}");
 
-		<execute macro="AlloyEditor#addContent">
-			<var name="content" value="${content}" />
-		</execute>
-	</command>
+		Click(locator1 = "AlloyEditor#TEXT_FORMATTING_LINK_INPUT_CONFIRM");
+	}
 
-	<command name="clickContentField">
-		<execute function="Click" locator1="AlloyEditor#CONTENT_FIELD" />
-	</command>
+	macro addSourceContent {
+		AlloyEditor.clickContentField();
 
-	<command name="toggleStylingInAlloyEditor">
-		<execute function="SelectFieldText" locator1="AlloyEditor#CONTENT_FIELD" />
+		Click(locator1 = "Button#EDITOR_SWITCH");
 
-		<if>
-			<isset var="boldContent" />
-			<then>
-				<execute function="Click" locator1="AlloyEditor#TEXT_FORMATTING_BOLD" />
-			</then>
-		</if>
+		Type.typeAceEditor(
+			locator1 = "TextArea#ACE_EDITOR",
+			value1 = "${content}");
+	}
 
-		<if>
-			<isset var="italicContent" />
-			<then>
-				<execute function="Click" locator1="AlloyEditor#TEXT_FORMATTING_ITALIC" />
-			</then>
-		</if>
+	macro addTitle {
+		AlloyEditor.typeEditor(
+			content = "${title}",
+			editor = "title");
+	}
 
-		<if>
-			<isset var="underlineContent" />
-			<then>
-				<execute function="Click" locator1="AlloyEditor#TEXT_FORMATTING_UNDERLINE" />
-			</then>
-		</if>
-	</command>
+	macro addTitleAndContent {
+		AlloyEditor.addTitle(title = "${title}");
 
-	<command name="viewNoStylingInAlloyEditor">
-		<execute macro="AlloyEditor#clickContentField" />
+		AlloyEditor.addContent(content = "${content}");
+	}
 
-		<if>
-			<isset var="boldContent" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="AlloyEditor#CONTENT_FIELD_BOLD">
-					<var name="key_boldContent" value="${boldContent}" />
-				</execute>
-			</then>
-		</if>
+	macro clickContentField {
+		Click(
+			key_editor = "content",
+			locator1 = "AlloyEditor#EDITOR");
+	}
 
-		<if>
-			<isset var="italicContent" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="AlloyEditor#CONTENT_FIELD_ITALIC">
-					<var name="key_italicContent" value="${italicContent}" />
-				</execute>
-			</then>
-		</if>
+	macro toggleStylingInAlloyEditor {
+		SelectFieldText(
+			key_editor = "content",
+			locator1 = "AlloyEditor#EDITOR");
 
-		<if>
-			<isset var="underlineContent" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="AlloyEditor#CONTENT_FIELD_UNDERLINE">
-					<var name="key_underlineContent" value="${underlineContent}" />
-				</execute>
-			</then>
-		</if>
-	</command>
+		if (isSet(boldContent)) {
+			Click(locator1 = "AlloyEditor#TEXT_FORMATTING_BOLD");
+		}
 
-	<command name="viewStylingInAlloyEditor">
-		<execute macro="AlloyEditor#clickContentField" />
+		if (isSet(italicContent)) {
+			Click(locator1 = "AlloyEditor#TEXT_FORMATTING_ITALIC");
+		}
 
-		<if>
-			<isset var="boldContent" />
-			<then>
-				<execute function="AssertElementPresent" locator1="AlloyEditor#CONTENT_FIELD_BOLD">
-					<var name="key_boldContent" value="${boldContent}" />
-				</execute>
-			</then>
-		</if>
+		if (isSet(underlineContent)) {
+			Click(locator1 = "AlloyEditor#TEXT_FORMATTING_UNDERLINE");
+		}
+	}
 
-		<if>
-			<isset var="italicContent" />
-			<then>
-				<execute function="AssertElementPresent" locator1="AlloyEditor#CONTENT_FIELD_ITALIC">
-					<var name="key_italicContent" value="${italicContent}" />
-				</execute>
-			</then>
-		</if>
+	macro typeEditor {
+		Type.typeEditor(
+			key_editor = "${editor}",
+			locator1 = "AlloyEditor#EDITOR",
+			value1 = "${content}");
+	}
 
-		<if>
-			<isset var="underlineContent" />
-			<then>
-				<execute function="AssertElementPresent" locator1="AlloyEditor#CONTENT_FIELD_UNDERLINE">
-					<var name="key_underlineContent" value="${underlineContent}" />
-				</execute>
-			</then>
-		</if>
-	</command>
-</definition>
+	macro viewNoStylingInAlloyEditor {
+		AlloyEditor.clickContentField();
+
+		if (isSet(boldContent)) {
+			AssertElementNotPresent(
+				key_boldContent = "${boldContent}",
+				locator1 = "AlloyEditor#CONTENT_FIELD_BOLD");
+		}
+
+		if (isSet(italicContent)) {
+			AssertElementNotPresent(
+				key_italicContent = "${italicContent}",
+				locator1 = "AlloyEditor#CONTENT_FIELD_ITALIC");
+		}
+
+		if (isSet(underlineContent)) {
+			AssertElementNotPresent(
+				key_underlineContent = "${underlineContent}",
+				locator1 = "AlloyEditor#CONTENT_FIELD_UNDERLINE");
+		}
+	}
+
+	macro viewStylingInAlloyEditor {
+		AlloyEditor.clickContentField();
+
+		if (isSet(boldContent)) {
+			AssertElementPresent(
+				key_boldContent = "${boldContent}",
+				locator1 = "AlloyEditor#CONTENT_FIELD_BOLD");
+		}
+
+		if (isSet(italicContent)) {
+			AssertElementPresent(
+				key_italicContent = "${italicContent}",
+				locator1 = "AlloyEditor#CONTENT_FIELD_ITALIC");
+		}
+
+		if (isSet(underlineContent)) {
+			AssertElementPresent(
+				key_underlineContent = "${underlineContent}",
+				locator1 = "AlloyEditor#CONTENT_FIELD_UNDERLINE");
+		}
+	}
+
+}

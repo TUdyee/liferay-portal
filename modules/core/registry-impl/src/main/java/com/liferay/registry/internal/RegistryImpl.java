@@ -42,6 +42,7 @@ import java.util.function.Function;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleReference;
 import org.osgi.framework.InvalidSyntaxException;
 
 /**
@@ -123,6 +124,22 @@ public class RegistryImpl implements Registry {
 	}
 
 	@Override
+	public <T> ServiceReference<T>[] getAllServiceReferences(
+			String className, String filterString)
+		throws Exception {
+
+		org.osgi.framework.ServiceReference<T>[] osgiServiceReferences =
+			(org.osgi.framework.ServiceReference<T>[])
+				_bundleContext.getAllServiceReferences(className, filterString);
+
+		if (osgiServiceReferences == null) {
+			return null;
+		}
+
+		return _toServiceReferences(osgiServiceReferences);
+	}
+
+	@Override
 	public Filter getFilter(String filterString) throws RuntimeException {
 		try {
 			return new FilterWrapper(_bundleContext.createFilter(filterString));
@@ -138,7 +155,7 @@ public class RegistryImpl implements Registry {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -167,7 +184,7 @@ public class RegistryImpl implements Registry {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -257,18 +274,7 @@ public class RegistryImpl implements Registry {
 			return null;
 		}
 
-		ServiceReference<T>[] serviceReferences =
-			new ServiceReference[osgiServiceReferences.length];
-
-		for (int i = 0; i < osgiServiceReferences.length; i++) {
-			org.osgi.framework.ServiceReference<T> osgiServiceReference =
-				osgiServiceReferences[i];
-
-			serviceReferences[i] = new ServiceReferenceWrapper<>(
-				osgiServiceReference);
-		}
-
-		return serviceReferences;
+		return _toServiceReferences(osgiServiceReferences);
 	}
 
 	@Override
@@ -336,6 +342,19 @@ public class RegistryImpl implements Registry {
 		}
 
 		return services;
+	}
+
+	@Override
+	public String getSymbolicName(ClassLoader classLoader) {
+		if (classLoader instanceof BundleReference) {
+			BundleReference bundleReference = (BundleReference)classLoader;
+
+			Bundle bundle = bundleReference.getBundle();
+
+			return bundle.getSymbolicName();
+		}
+
+		return null;
 	}
 
 	@Override
@@ -534,12 +553,34 @@ public class RegistryImpl implements Registry {
 
 		_serviceTrackerReferences.add(reference);
 
-		while ((reference =
-					(Reference<org.osgi.util.tracker.ServiceTracker<?, ?>>)
-						_referenceQueue.poll()) != null) {
+		while (true) {
+			reference =
+				(Reference<org.osgi.util.tracker.ServiceTracker<?, ?>>)
+					_referenceQueue.poll();
+
+			if (reference == null) {
+				return;
+			}
 
 			_serviceTrackerReferences.remove(reference);
 		}
+	}
+
+	private static <T> ServiceReference<T>[] _toServiceReferences(
+		org.osgi.framework.ServiceReference<T>[] osgiServiceReferences) {
+
+		ServiceReference<T>[] serviceReferences =
+			new ServiceReference[osgiServiceReferences.length];
+
+		for (int i = 0; i < osgiServiceReferences.length; i++) {
+			org.osgi.framework.ServiceReference<T> osgiServiceReference =
+				osgiServiceReferences[i];
+
+			serviceReferences[i] = new ServiceReferenceWrapper<>(
+				osgiServiceReference);
+		}
+
+		return serviceReferences;
 	}
 
 	private Map<String, Object> _addBundleContextProperties(
@@ -567,6 +608,6 @@ public class RegistryImpl implements Registry {
 		_serviceTrackerReferences = Collections.newSetFromMap(
 			new ConcurrentHashMap
 				<Reference<org.osgi.util.tracker.ServiceTracker<?, ?>>,
-					Boolean>());
+				 Boolean>());
 
 }

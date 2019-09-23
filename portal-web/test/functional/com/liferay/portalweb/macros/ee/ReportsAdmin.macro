@@ -1,468 +1,529 @@
-<definition>
-	<command name="addReportDefinition">
-		<execute macro="LexiconEntry#gotoAdd" />
+definition {
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${reportsDefinitionName}" />
-		</execute>
+	macro addReportDefinition {
+		LexiconEntry.gotoAddReport();
 
-		<execute macro="PortletEntry#inputDescription">
-			<var name="description" value="${reportsDefinitionDescription}" />
-		</execute>
+		PortletEntry.inputName(name = "${reportsDefinitionName}");
 
-		<execute function="Select" locator1="ReportsAdminEditReportDefinition#DATA_SOURCE_NAME_SELECT" value1="${dataSource}" />
+		PortletEntry.inputDescription(description = "${reportsDefinitionDescription}");
 
-		<execute function="UploadCommonFile" locator1="ReportsAdminEditReportDefinition#TEMPLATE_FILE_UPLOAD" value1="${templateFile}" />
+		Select(
+			locator1 = "ReportsAdminEditReportDefinition#DATA_SOURCE_NAME_SELECT",
+			value1 = "${dataSource}");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		UploadCommonFile(
+			locator1 = "ReportsAdminEditReportDefinition#TEMPLATE_FILE_UPLOAD",
+			value1 = "${templateFile}");
 
-	<command name="addReportEntry">
-		<var name="key_reportsDefinitionName" value="${reportsDefinitionName}" />
+		PortletEntry.save();
+	}
 
-		<execute function="Click" locator1="ReportsAdmin#DEFINITIONS_DEFINITION_TABLE_ACTIONS" />
+	macro addReportEntry {
+		var key_reportsDefinitionName = "${reportsDefinitionName}";
 
-		<execute function="AssertClick" locator1="ReportsAdmin#DEFINITIONS_DEFINITION_MENULIST_ADD_REPORT" value1="Add Report" />
+		LexiconEntry.openEntryMenu(rowEntry = "${reportsDefinitionName}");
 
-		<execute function="Select" locator1="ReportsAdminEditReportEntry#REPORT_FORMAT_SELECT" value1="${reportFormat}" />
+		MenuItem.click(menuItem = "Add Report");
 
-		<if>
-			<isset var="reportName" />
-			<then>
-				<execute function="Type" locator1="ReportsAdminEditReportEntry#REPORT_NAME_FIELD" value1="${reportName}" />
-			</then>
-		</if>
+		Select(
+			locator1 = "Select#REPORT_FORMAT",
+			value1 = "${reportFormat}");
 
-		<execute function="Type" locator1="ReportsAdminEditReportEntry#EMAIL_NOTIFICATIONS_FIELD" value1="${emailNotificationsAddress}" />
-		<execute function="Type" locator1="ReportsAdminEditReportEntry#EMAIL_RECIPIENT_FIELD" value1="${emailRecipientAddress}" />
+		if (isSet(reportName)) {
+			Type(
+				locator1 = "ReportsAdminEditReportEntry#REPORT_NAME_FIELD",
+				value1 = "${reportName}");
+		}
 
-		<execute function="AssertClick" locator1="ReportsAdminEditReportEntry#GENERATE_BUTTON" value1="Generate" />
+		Type(
+			locator1 = "TextInput#EMAIL_NOTIFICATIONS",
+			value1 = "${emailNotificationsAddress}");
 
-		<execute macro="Alert#viewSuccessMessage" />
+		Type(
+			locator1 = "TextInput#EMAIL_RECIPIENT",
+			value1 = "${emailRecipientAddress}");
 
-		<execute function="Pause" locator1="5000" />
-	</command>
+		AssertClick(
+			locator1 = "ReportsAdminEditReportEntry#GENERATE_BUTTON",
+			value1 = "Generate");
 
-	<command name="addScheduleEntry">
-		<var name="key_reportsDefinitionName" value="${reportsDefinitionName}" />
+		Alert.viewSuccessMessage();
 
-		<execute function="Click" locator1="ReportsAdmin#DEFINITIONS_DEFINITION_TABLE_ACTIONS" />
+		Pause(locator1 = "5000");
+	}
 
-		<execute function="AssertClick" locator1="ReportsAdmin#DEFINITIONS_DEFINITION_MENULIST_ADD_SCHEDULE" value1="Add Schedule" />
+	macro addScheduleEntry {
+		var key_reportsDefinitionName = "${reportsDefinitionName}";
 
-		<execute function="AssertElementPresent" locator1="ReportsAdminEditScheduleEntry#START_DATE_TIME_FIELD" />
+		LexiconEntry.openEntryMenu(rowEntry = "${reportsDefinitionName}");
 
-		<var method="selenium#getElementValue('//span[contains(@class,\'lfr-input-time\')]/input')" name="time" />
+		MenuItem.click(menuItem = "Add Schedule");
 
-		<var group="3" input="${time}" name="ampm" pattern="([0-9]*):([0-9]*) ([A-Z]*)" />
-		<var group="1" input="${time}" name="hours" pattern="([0-9]*):([0-9]*) ([A-Z]*)" />
-		<var group="2" input="${time}" name="minutes" pattern="([0-9]*):([0-9]*) ([A-Z]*)" />
+		AssertElementPresent(locator1 = "ReportsAdminEditScheduleEntry#START_DATE_TIME_FIELD");
 
-		<if>
-			<equals arg1="${minutes}" arg2="58" />
-			<then>
-				<var name="minutesIncremented2" value="00" />
-				<if>
-					<equals arg1="{hours}" arg2="12" />
-					<then>
-						<var name="hours" value="01" />
-					</then>
-				</if>
-			</then>
-			<elseif>
-				<equals arg1="${minutes}" arg2="59" />
-				<then>
-					<var name="minutesIncremented2" value="01" />
-					<if>
-						<equals arg1="{hours}" arg2="12" />
-						<then>
-							<var name="hours" value="01" />
-						</then>
-					</if>
-				</then>
-			</elseif>
-			<else>
-				<var method="MathUtil#sum('${minutes}', '2')" name="minutesIncremented2" />
-			</else>
-		</if>
+		var time = selenium.getElementValue("//span[contains(@class,'lfr-input-time')]/input");
+		var ampm = RegexUtil.replace("${time}", "([0-9]*):([0-9]*) ([A-Z]*)", "3");
+		var hours = RegexUtil.replace("${time}", "([0-9]*):([0-9]*) ([A-Z]*)", "1");
+		var minutes = RegexUtil.replace("${time}", "([0-9]*):([0-9]*) ([A-Z]*)", "2");
 
-		<execute function="Type" locator1="ReportsAdminEditScheduleEntry#START_DATE_TIME_FIELD" value1="${hours}:${minutesIncremented2} ${ampm}" />
+		if ("${minutes}" == "58") {
+			var minutesIncremented2 = "00";
 
-		<execute function="Select" locator1="ReportsAdminEditScheduleEntry#REPORT_FORMAT_SELECT" value1="${reportFormat}" />
+			if ("{hours}" == "12") {
+				var hours = "01";
+			}
+		}
+		else if ("${minutes}" == "59") {
+			var minutesIncremented2 = "01";
 
-		<execute function="Type" locator1="ReportsAdminEditScheduleEntry#EMAIL_NOTIFICATIONS_FIELD" value1="${emailNotificationsAddress}" />
-		<execute function="Type" locator1="ReportsAdminEditScheduleEntry#EMAIL_RECIPIENT_FIELD" value1="${emailRecipientAddress}" />
+			if ("{hours}" == "12") {
+				var hours = "01";
+			}
+		}
+		else {
+			var minutesIncremented2 = MathUtil.sum("${minutes}", "2");
+		}
 
-		<execute function="AssertClick" locator1="ReportsAdminEditScheduleEntry#SCHEDULE_BUTTON" value1="Schedule" />
+		Type(
+			locator1 = "ReportsAdminEditScheduleEntry#START_DATE_TIME_FIELD",
+			value1 = "${hours}:${minutesIncremented2} ${ampm}");
 
-		<execute macro="Alert#viewSuccessMessage" />
+		Select(
+			locator1 = "Select#REPORT_FORMAT",
+			value1 = "${reportFormat}");
 
-		<execute function="Pause" locator1="5000" />
-	</command>
+		Type(
+			locator1 = "TextInput#EMAIL_NOTIFICATIONS",
+			value1 = "${emailNotificationsAddress}");
 
-	<command name="addSource">
-		<execute macro="LexiconEntry#gotoAdd" />
+		Type(
+			locator1 = "TextInput#EMAIL_RECIPIENT",
+			value1 = "${emailRecipientAddress}");
 
-		<execute function="Type" locator1="ReportsAdminEditSource#DATA_SOURCE_NAME_FIELD" value1="${reportsDataSourceName}" />
-		<execute function="Type" locator1="ReportsAdminEditSource#JDBC_DRIVER_CLASS_NAME_FIELD" value1="${reportsDataSourceClass}" />
-		<execute function="Type" locator1="ReportsAdminEditSource#JDBC_URL_FIELD" value1="${reportsDataSourceURL}" />
-		<execute function="Type" locator1="ReportsAdminEditSource#JDBC_USER_NAME_FIELD" value1="${reportsDataSourceUser}" />
+		AssertClick(
+			locator1 = "ReportsAdminEditScheduleEntry#SCHEDULE_BUTTON",
+			value1 = "Schedule");
 
-		<if>
-			<isset var="reportsDataSourcePassword" />
-			<then>
-				<execute function="Type" locator1="ReportsAdminEditSource#JDBC_PASSWORD_FIELD" value1="${reportsDataSourcePassword}" />
-			</then>
-		</if>
-	</command>
+		Alert.viewSuccessMessage();
 
-	<command name="configureDeliveryEmail">
-		<execute function="AssertClick" locator1="ReportsAdminConfiguration#NAVIGATION_DELIVERY_EMAIL" value1="Delivery Email" />
+		Pause(locator1 = "5000");
+	}
 
-		<execute function="Type" locator1="TextInput#SUBJECT" value1="${deliverySubject}" />
+	macro addSource {
+		LexiconEntry.gotoAddReport();
 
-		<execute function="Click" locator1="CKEditor#TOOLBAR_SOURCE_BUTTON" />
+		Type(
+			locator1 = "ReportsAdminEditSource#DATA_SOURCE_NAME_FIELD",
+			value1 = "${reportsDataSourceName}");
 
-		<execute function="Type" locator1="CKEditor#BODY_FIELD_SOURCE_ON" value1="${deliveryBody}" />
+		Type(
+			locator1 = "ReportsAdminEditSource#JDBC_DRIVER_CLASS_NAME_FIELD",
+			value1 = "${reportsDataSourceClass}");
 
-		<execute function="Click" locator1="CKEditor#TOOLBAR_SOURCE_BUTTON" />
+		Type(
+			locator1 = "ReportsAdminEditSource#JDBC_URL_FIELD",
+			value1 = "${reportsDataSourceURL}");
 
-		<execute macro="Button#clickSave" />
+		Type(
+			locator1 = "ReportsAdminEditSource#JDBC_USER_NAME_FIELD",
+			value1 = "${reportsDataSourceUser}");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		if (isSet(reportsDataSourcePassword)) {
+			Type(
+				locator1 = "ReportsAdminEditSource#JDBC_PASSWORD_FIELD",
+				value1 = "${reportsDataSourcePassword}");
+		}
+	}
 
-	<command name="configureEmailFrom">
-		<execute function="AssertClick" locator1="ReportsAdminConfiguration#NAVIGATION_EMAIL_FROM" value1="Email From" />
+	macro configureDeliveryEmail {
+		AssertClick(
+			locator1 = "ReportsAdminConfiguration#NAVIGATION_DELIVERY_EMAIL",
+			value1 = "Delivery Email");
 
-		<execute function="Type" locator1="ReportsAdminConfiguration#EMAIL_FROM_NAME_FIELD" value1="${emailFromName}" />
-		<execute function="Type" locator1="ReportsAdminConfiguration#EMAIL_FROM_ADDRESS_FIELD" value1="${emailFromAddress}" />
+		Type(
+			locator1 = "TextInput#SUBJECT",
+			value1 = "${deliverySubject}");
 
-		<execute macro="Button#clickSave" />
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		Type(
+			locator1 = "CKEditor#BODY_FIELD_SOURCE_ON",
+			value1 = "${deliveryBody}");
 
-	<command name="configureNotificationsEmail">
-		<execute function="AssertClick" locator1="ReportsAdminConfiguration#NAVIGATION_NOTIFICATIONS_EMAIL" value1="Notifications Email" />
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
-		<execute function="Type" locator1="ReportsAdminConfiguration#NOTIFICATIONS_EMAIL_SUBJECT_FIELD" value1="${notificationSubject}" />
+		PortletEntry.save();
+	}
 
-		<execute function="Click" locator1="CKEditor#TOOLBAR_SOURCE_BUTTON_2" />
+	macro configureEmailFrom {
+		Navigator.gotoNavTab(navTab = "Email From");
 
-		<execute function="Type" locator1="CKEditor#BODY_FIELD_SOURCE_ON_2" value1="${notificationBody}" />
+		Type(
+			locator1 = "TextInput#EMAIL_FROM_NAME",
+			value1 = "${emailFromName}");
 
-		<execute function="Click" locator1="CKEditor#TOOLBAR_SOURCE_BUTTON_2" />
+		Type(
+			locator1 = "TextInput#EMAIL_FROM_ADDRESS",
+			value1 = "${emailFromAddress}");
 
-		<execute macro="Button#clickSave" />
+		PortletEntry.save();
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+	macro configureNotificationsEmail {
+		AssertClick(
+			locator1 = "ReportsAdminConfiguration#NAVIGATION_NOTIFICATIONS_EMAIL",
+			value1 = "Notifications Email");
 
-	<command name="deleteReportEntryFile">
-		<var name="key_reportsFileName" value="${reportsFileName}" />
+		Type(
+			locator1 = "ReportsAdminConfiguration#NOTIFICATIONS_EMAIL_SUBJECT_FIELD",
+			value1 = "${notificationSubject}");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" value1="${reportsFileName}" />
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON_2");
 
-		<execute function="Click" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_ACTIONS" />
+		Type(
+			locator1 = "CKEditor#BODY_FIELD_SOURCE_ON_2",
+			value1 = "${notificationBody}");
 
-		<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
-			<var name="key_menuItem" value="Delete" />
-		</execute>
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON_2");
 
-		<execute function="Confirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
+		PortletEntry.save();
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
-		<execute function="AssertElementNotPresent" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" />
-	</command>
+	macro deleteReportEntryFile {
+		var key_reportsFileName = "${reportsFileName}";
 
-	<command name="deliverReportEntryFile">
-		<var name="key_reportsFileName" value="${reportsFileName}" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
+			value1 = "${reportsFileName}");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" value1="${reportsFileName}" />
+		LexiconEntry.openEntryMenu(rowEntry = "${reportsFileName}");
 
-		<execute function="Click" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_ACTIONS" />
+		MenuItem.clickNoError(menuItem = "Delete");
 
-		<execute function="AssertClick" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DELIVER_REPORT" value1="Deliver Report" />
+		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminDeliverReport#REPORT_NAME" value1="Report Name ${reportsFileName}" />
-		<execute function="Type" locator1="ReportsAdminDeliverReport#EMAIL_RECIPIENT_FIELD" value1="${emailRecipientAddress}" />
+		Alert.viewSuccessMessage();
 
-		<execute function="AssertClick" locator1="ReportsAdminDeliverReport#DELIVER_BUTTON" value1="Deliver" />
+		AssertElementNotPresent(locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE");
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+	macro deliverReportEntryFile {
+		var key_reportsFileName = "${reportsFileName}";
 
-	<command name="downloadReportEntryFile">
-		<var name="key_reportsFileName" value="${reportsFileName}" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
+			value1 = "${reportsFileName}");
 
-		<execute function="AssertElementPresent" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" />
+		LexiconEntry.openEntryMenu(rowEntry = "${reportsFileName}");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" value1="${reportsFileName}" />
+		AssertClick(
+			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DELIVER_REPORT",
+			value1 = "Deliver Report");
 
-		<execute function="Click" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_ACTIONS" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminDeliverReport#REPORT_NAME",
+			value1 = "Report Name ${reportsFileName}");
 
-		<execute function="AssertClick" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DOWNLOAD" value1="Download" />
+		Type(
+			locator1 = "ReportsAdminDeliverReport#EMAIL_RECIPIENT_FIELD",
+			value1 = "${emailRecipientAddress}");
 
-		<execute function="Pause" locator1="2000" />
+		AssertClick(
+			locator1 = "ReportsAdminDeliverReport#DELIVER_BUTTON",
+			value1 = "Deliver");
 
-		<take-screenshot />
+		Alert.viewSuccessMessage();
+	}
 
-		<if>
-			<equals arg1="${reportFormat}" arg2="pdf" />
-			<then>
-				<if>
-					<equals arg1="${reportsFileName}" arg2="reports_admin_template_source_sample_list_type.pdf" />
-					<then>
-						<execute function="SikuliAssertElementPresent" locator1="ReportsAdmin#REPORT_PDF_LIST_TYPE_PNG" />
-					</then>
-					<else>
-						<execute function="SikuliAssertElementPresent" locator1="ReportsAdmin#REPORT_PDF_CLASS_NAME_PNG" />
-					</else>
-				</if>
-			</then>
-		</if>
-	</command>
+	macro downloadReportEntryFile {
+		var key_reportsFileName = "${reportsFileName}";
 
-	<command name="gotoConfiguration">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+		AssertElementPresent(locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Configuration">
-			<var name="key_menuItem" value="Configuration" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
+			value1 = "${reportsFileName}");
 
-		<execute function="SelectFrame" locator1="IFrame#CONFIGURATION" />
-	</command>
+		LexiconEntry.openEntryMenu(rowEntry = "${reportsFileName}");
 
-	<command name="gotoDefinitions">
-		<execute function="AssertClick" locator1="ReportsAdmin#NAVIGATION_DEFINITIONS" value1="Definitions" />
-	</command>
+		AssertClick(
+			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DOWNLOAD",
+			value1 = "Download");
 
-	<command name="gotoReports">
-		<execute function="AssertClick" locator1="ReportsAdmin#NAVIGATION_REPORTS" value1="Reports" />
-	</command>
+		Pause(locator1 = "2000");
 
-	<command name="gotoSources">
-		<execute function="AssertClick" locator1="ReportsAdmin#NAVIGATION_SOURCES" value1="Sources" />
-	</command>
+		takeScreenshot();
 
-	<command name="tearDownConfiguration">
-		<execute macro="ReportsAdmin#gotoConfiguration" />
+		if ("${reportFormat}" == "pdf") {
+			if ("${reportsFileName}" == "reports_admin_template_source_sample_list_type.pdf") {
+				SikuliAssertElementPresent(locator1 = "ReportsAdmin#REPORT_PDF_LIST_TYPE_PNG");
+			}
+			else {
+				SikuliAssertElementPresent(locator1 = "ReportsAdmin#REPORT_PDF_CLASS_NAME_PNG");
+			}
+		}
+	}
 
-		<execute function="AssertClick" locator1="ReportsAdminConfiguration#NAVIGATION_EMAIL_FROM" value1="Email From" />
+	macro gotoConfiguration {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configuration");
 
-		<execute function="Type" locator1="ReportsAdminConfiguration#EMAIL_FROM_NAME_FIELD" value1="Joe Bloggs" />
-		<execute function="Type" locator1="ReportsAdminConfiguration#EMAIL_FROM_ADDRESS_FIELD" value1="test@liferay.com" />
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+	}
 
-		<execute macro="Button#clickSave" />
+	macro gotoDefinitions {
+		AssertClick(
+			locator1 = "ReportsAdmin#NAVIGATION_DEFINITIONS",
+			value1 = "Definitions");
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
+	macro gotoSources {
+		AssertClick(
+			locator1 = "ReportsAdmin#NAVIGATION_SOURCES",
+			value1 = "Sources");
+	}
 
-		<execute macro="IFrame#closeFrame" />
+	macro tearDownConfiguration {
+		ReportsAdmin.gotoConfiguration();
 
-		<execute macro="ReportsAdmin#gotoConfiguration" />
+		Navigator.gotoNavTab(navTab = "Email From");
 
-		<execute function="AssertClick" locator1="ReportsAdminConfiguration#NAVIGATION_DELIVERY_EMAIL" value1="Delivery Email" />
+		Type(
+			locator1 = "TextInput#EMAIL_FROM_NAME",
+			value1 = "Joe Bloggs");
 
-		<var name="deliverySubject"><![CDATA[New Report: [$REPORT_NAME$]]]></var>
+		Type(
+			locator1 = "TextInput#EMAIL_FROM_ADDRESS",
+			value1 = "test@liferay.com");
 
-		<execute function="Type" locator1="TextInput#SUBJECT" value1="${deliverySubject}" />
+		PortletEntry.save();
 
-		<var name="deliveryBody"><![CDATA[
+		IFrame.closeFrame();
+
+		ReportsAdmin.gotoConfiguration();
+
+		AssertClick(
+			locator1 = "ReportsAdminConfiguration#NAVIGATION_DELIVERY_EMAIL",
+			value1 = "Delivery Email");
+
+		var deliverySubject = '''New Report: [$REPORT_NAME$]''';
+
+		Type(
+			locator1 = "TextInput#SUBJECT",
+			value1 = "${deliverySubject}");
+
+		var deliveryBody = '''
 Dear [$TO_NAME$],<br /><br />
 
 Please review the attached report.<br /><br />
 
 Sincerely,<br />
 [$FROM_NAME$]<br />
-[$FROM_ADDRESS$]		<br />]]>		</var>
+[$FROM_ADDRESS$]		<br />''';
 
-		<execute function="Click" locator1="CKEditor#TOOLBAR_SOURCE_BUTTON" />
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
-		<execute function="Type" locator1="CKEditor#BODY_FIELD_SOURCE_ON" value1="${deliveryBody}" />
+		Type(
+			locator1 = "CKEditor#BODY_FIELD_SOURCE_ON",
+			value1 = "${deliveryBody}");
 
-		<execute function="Click" locator1="CKEditor#TOOLBAR_SOURCE_BUTTON" />
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
-		<execute macro="Button#clickSave" />
+		PortletEntry.save();
 
-		<execute macro="Alert#viewSuccessMessage" />
+		IFrame.closeFrame();
 
-		<execute macro="IFrame#closeFrame" />
+		ReportsAdmin.gotoConfiguration();
 
-		<execute macro="ReportsAdmin#gotoConfiguration" />
+		AssertClick(
+			locator1 = "ReportsAdminConfiguration#NAVIGATION_NOTIFICATIONS_EMAIL",
+			value1 = "Notifications Email");
 
-		<execute function="AssertClick" locator1="ReportsAdminConfiguration#NAVIGATION_NOTIFICATIONS_EMAIL" value1="Notifications Email" />
+		var notificationSubject = '''New Report: [$REPORT_NAME$]''';
 
-		<var name="notificationSubject"><![CDATA[New Report: [$REPORT_NAME$]]]></var>
+		Type(
+			locator1 = "ReportsAdminConfiguration#NOTIFICATIONS_EMAIL_SUBJECT_FIELD",
+			value1 = "${notificationSubject}");
 
-		<execute function="Type" locator1="ReportsAdminConfiguration#NOTIFICATIONS_EMAIL_SUBJECT_FIELD" value1="${notificationSubject}" />
-
-		<var name="notificationBody"><![CDATA[
+		var notificationBody = '''
 Dear [$TO_NAME$],<br /><br />
 
 You have a new <a href="[$PAGE_URL$]">report</a>.<br /><br />
 
 Sincerely,<br />
 [$FROM_NAME$]<br />
-[$FROM_ADDRESS$]		<br />]]>		</var>
+[$FROM_ADDRESS$]		<br />''';
 
-		<execute function="Click" locator1="CKEditor#TOOLBAR_SOURCE_BUTTON_2" />
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON_2");
 
-		<execute function="Type" locator1="CKEditor#BODY_FIELD_SOURCE_ON_2" value1="${notificationBody}" />
+		Type(
+			locator1 = "CKEditor#BODY_FIELD_SOURCE_ON_2",
+			value1 = "${notificationBody}");
 
-		<execute function="Click" locator1="CKEditor#TOOLBAR_SOURCE_BUTTON_2" />
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON_2");
 
-		<execute macro="Button#clickSave" />
+		PortletEntry.save();
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+	macro tearDownDefinitions {
+		Navigator.openURL();
 
-	<command name="tearDownDefinitions">
-		<execute macro="Navigator#openURL" />
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Site Administration",
+			portlet = "Reports Admin");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Configuration" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Report Admin" />
-		</execute>
+		ReportsAdmin.gotoDefinitions();
 
-		<execute macro="ReportsAdmin#gotoDefinitions" />
+		while (IsElementPresent(locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_ACTIONS_1")) {
+			Click(locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_ACTIONS_1");
 
-		<while>
-			<condition function="IsElementPresent" locator1="ReportsAdmin#DEFINITIONS_DEFINITION_TABLE_ACTIONS_1" />
-			<then>
-				<execute function="Click" locator1="ReportsAdmin#DEFINITIONS_DEFINITION_TABLE_ACTIONS_1" />
+			MenuItem.clickNoError(menuItem = "Delete");
 
-				<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
-					<var name="key_menuItem" value="Delete" />
-				</execute>
+			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
-				<execute function="Confirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
+			Alert.viewSuccessMessage();
+		}
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</then>
-		</while>
+		AssertTextEquals(
+			locator1 = "Message#INFO",
+			value1 = "There are no definitions.");
+	}
 
-		<execute function="AssertTextEquals" locator1="Message#INFO" value1="There are no definitions." />
-	</command>
+	macro tearDownReports {
+		Navigator.openURL();
 
-	<command name="tearDownReports">
-		<execute macro="Navigator#openURL" />
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Site Administration",
+			portlet = "Reports Admin");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Configuration" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Report Admin" />
-		</execute>
+		while (IsElementPresent(locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_ACTIONS_1")) {
+			Click(locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_ACTIONS_1");
 
-		<while>
-			<condition function="IsElementPresent" locator1="ReportsAdmin#REPORTS_ENTRY_TABLE_ACTIONS_1" />
-			<then>
-				<execute function="Click" locator1="ReportsAdmin#REPORTS_ENTRY_TABLE_ACTIONS_1" />
+			AssertClickNoError(
+				key_menuItem = "Delete",
+				locator1 = "MenuItem#ANY_MENU_ITEM",
+				value1 = "Delete");
 
-				<execute function="AssertClickNoError" locator1="ReportsAdmin#REPORTS_ENTRY_MENULIST_DELETE" value1="Delete" />
+			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
-				<execute function="Confirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
+			Alert.viewSuccessMessage();
+		}
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</then>
-		</while>
+		AssertTextEquals(
+			locator1 = "Message#INFO",
+			value1 = "There are no entries.");
+	}
 
-		<execute function="AssertTextEquals" locator1="Message#INFO" value1="There are no entries." />
-	</command>
+	macro tearDownSources {
+		Navigator.openURL();
 
-	<command name="tearDownSources">
-		<execute macro="Navigator#openURL" />
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Site Administration",
+			portlet = "Reports Admin");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Configuration" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Report Admin" />
-		</execute>
+		ReportsAdmin.gotoSources();
 
-		<execute macro="ReportsAdmin#gotoSources" />
+		while (IsElementPresent(locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_ACTIONS_1")) {
+			Click(locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_ACTIONS_1");
 
-		<while>
-			<condition function="IsElementPresent" locator1="ReportsAdmin#SOURCES_SOURCE_TABLE_ACTIONS_1" />
-			<then>
-				<execute function="Click" locator1="ReportsAdmin#SOURCES_SOURCE_TABLE_ACTIONS_1" />
+			MenuItem.clickNoError(menuItem = "Delete");
 
-				<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
-					<var name="key_menuItem" value="Delete" />
-				</execute>
+			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
-				<execute function="Confirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
+			Alert.viewSuccessMessage();
+		}
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</then>
-		</while>
+		AssertTextEquals(
+			locator1 = "Message#INFO",
+			value1 = "There are no sources.");
+	}
 
-		<execute function="AssertTextEquals" locator1="Message#INFO" value1="There are no sources." />
-	</command>
+	macro testDatabaseConnection {
+		AssertClick(
+			locator1 = "ReportsAdminEditSource#TEST_DATABASE_CONNECTION_BUTTON",
+			value1 = "Test Database Connection");
 
-	<command name="testDatabaseConnection">
-		<execute function="AssertClick" locator1="ReportsAdminEditSource#TEST_DATABASE_CONNECTION_BUTTON" value1="Test Database Connection" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminEditSource#TEST_DATABASE_CONNECTION_SUCCESS_MESSAGE",
+			value1 = "You have successfully connected to the database.");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminEditSource#TEST_DATABASE_CONNECTION_SUCCESS_MESSAGE" value1="You have successfully connected to the database." />
+		AssertClick(
+			locator1 = "Button#CLOSE",
+			value1 = "Close");
+	}
 
-		<execute function="AssertClick" locator1="Button#CLOSE" value1="Close" />
-	</command>
+	macro viewDefinitionParameterFields {
+		AssertElementPresent(locator1 = "ReportsAdminEditReportDefinition#REPORT_DEFINITION_PARAMETERS_KEY");
 
-	<command name="viewDefinitionParameterFields">
-		<execute function="AssertElementPresent" locator1="ReportsAdminEditReportDefinition#REPORT_DEFINITION_PARAMETERS_KEY" />
-		<execute function="AssertElementPresent" locator1="ReportsAdminEditReportDefinition#REPORT_DEFINITION_PARAMETERS_VALUE" />
-		<execute function="AssertElementPresent" locator1="ReportsAdminEditReportDefinition#REPORT_DEFINITION_PARAMETERS_TYPE" />
-	</command>
+		AssertElementPresent(locator1 = "ReportsAdminEditReportDefinition#REPORT_DEFINITION_PARAMETERS_VALUE");
 
-	<command name="viewNoReportEntryFile">
-		<var name="key_reportsFileName" value="${reportsFileName}" />
+		AssertElementPresent(locator1 = "ReportsAdminEditReportDefinition#REPORT_DEFINITION_PARAMETERS_TYPE");
+	}
 
-		<execute function="AssertElementNotPresent" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" />
-	</command>
+	macro viewNoReportEntryFile {
+		var key_reportsFileName = "${reportsFileName}";
 
-	<command name="viewReportEntry">
-		<var name="key_reportsDefinitionName" value="${reportsDefinitionName}" />
+		AssertElementNotPresent(locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE");
+	}
 
-		<execute function="AssertClick" locator1="ReportsAdmin#REPORTS_ENTRY_TABLE_DEFINITION_NAME" value1="${reportsDefinitionName}" />
-	</command>
+	macro viewReportEntry {
+		var key_reportsDefinitionName = "${reportsDefinitionName}";
 
-	<command name="viewReportEntryFields">
-		<var name="key_reportsDefinitionName" value="${reportsDefinitionName}" />
+		AssertClick(
+			locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_DEFINITION_NAME",
+			value1 = "${reportsDefinitionName}");
+	}
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#DEFINITION_NAME_FIELD" value1="Definition Name ${reportsDefinitionName}" />
+	macro viewReportEntryFields {
+		var key_reportsDefinitionName = "${reportsDefinitionName}";
 
-		<var name="key_reportsDefinitionDescription" value="${reportsDefinitionDescription}" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#DEFINITION_NAME_FIELD",
+			value1 = "Definition Name ${reportsDefinitionName}");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#DESCRIPTION_FIELD" value1="Description ${reportsDefinitionDescription}" />
+		var key_reportsDefinitionDescription = "${reportsDefinitionDescription}";
 
-		<var name="key_dataSource" value="${dataSource}" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#DESCRIPTION_FIELD",
+			value1 = "Description ${reportsDefinitionDescription}");
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#DATA_SOURCE_NAME_FIELD" value1="Data Source Name ${dataSource}" />
+		var key_dataSource = "${dataSource}";
 
-		<if>
-			<isset var="reportParameters" />
-			<then>
-				<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#REPORT_PARAMETERS_FIELD" value1="Report Parameters [${reportParameterse}]" />
-			</then>
-			<else>
-				<execute function="AssertTextEquals" locator1="Panel#ENTRY_REPORT_PARAMETERS" value1="Report Parameters" />
-			</else>
-		</if>
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#DATA_SOURCE_NAME_FIELD",
+			value1 = "Data Source Name ${dataSource}");
 
-		<var name="key_userName" value="${userName}" />
+		if (isSet(reportParameters)) {
+			AssertTextEquals(
+				locator1 = "ReportsAdminViewReportEntry#REPORT_PARAMETERS_FIELD",
+				value1 = "Report Parameters [${reportParameterse}]");
+		}
+		else {
+			AssertTextEquals(
+				locator1 = "Panel#ENTRY_REPORT_PARAMETERS",
+				value1 = "Report Parameters");
+		}
 
-		<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#REQUESTED_BY_FIELD" value1="Requested By ${userName}" />
+		var key_userName = "${userName}";
 
-		<var name="key_reportsFileName" value="${reportsFileName}" />
+		AssertTextEquals(
+			locator1 = "ReportsAdminViewReportEntry#REQUESTED_BY_FIELD",
+			value1 = "Requested By ${userName}");
 
-		<if>
-			<equals arg1="${scheduled}" arg2="true" />
-			<then>
-				<execute function="AssertTextEquals#assertPartialText" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_SCHEDULED_FILE" value1="${reportsFileName}" />
-			</then>
-			<else>
-				<execute function="AssertTextEquals" locator1="ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE" value1="${reportsFileName}" />
-			</else>
-		</if>
-	</command>
-</definition>
+		var key_reportsFileName = "${reportsFileName}";
+
+		if ("${scheduled}" == "true") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
+				value1 = "${reportsFileName}");
+		}
+		else {
+			AssertTextEquals(
+				locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
+				value1 = "${reportsFileName}");
+		}
+	}
+
+}

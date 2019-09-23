@@ -14,10 +14,7 @@
 
 package com.liferay.portlet.announcements.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.announcements.kernel.service.AnnouncementsEntryServiceUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
@@ -25,19 +22,20 @@ import java.rmi.RemoteException;
 
 /**
  * Provides the SOAP utility for the
- * {@link AnnouncementsEntryServiceUtil} service utility. The
- * static methods of this class calls the same methods of the service utility.
- * However, the signatures are different because it is difficult for SOAP to
- * support certain types.
+ * <code>AnnouncementsEntryServiceUtil</code> service
+ * utility. The static methods of this class call the same methods of the
+ * service utility. However, the signatures are different because it is
+ * difficult for SOAP to support certain types.
  *
  * <p>
  * ServiceBuilder follows certain rules in translating the methods. For example,
- * if the method in the service utility returns a {@link java.util.List}, that
- * is translated to an array of {@link com.liferay.announcements.kernel.model.AnnouncementsEntrySoap}.
- * If the method in the service utility returns a
- * {@link com.liferay.announcements.kernel.model.AnnouncementsEntry}, that is translated to a
- * {@link com.liferay.announcements.kernel.model.AnnouncementsEntrySoap}. Methods that SOAP cannot
- * safely wire are skipped.
+ * if the method in the service utility returns a <code>java.util.List</code>,
+ * that is translated to an array of
+ * <code>com.liferay.announcements.kernel.model.AnnouncementsEntrySoap</code>. If the method in the
+ * service utility returns a
+ * <code>com.liferay.announcements.kernel.model.AnnouncementsEntry</code>, that is translated to a
+ * <code>com.liferay.announcements.kernel.model.AnnouncementsEntrySoap</code>. Methods that SOAP
+ * cannot safely wire are skipped.
  * </p>
  *
  * <p>
@@ -59,35 +57,38 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see AnnouncementsEntryServiceHttp
- * @see com.liferay.announcements.kernel.model.AnnouncementsEntrySoap
- * @see AnnouncementsEntryServiceUtil
  * @generated
  */
-@ProviderType
 public class AnnouncementsEntryServiceSoap {
-	/**
-	* @deprecated As of 7.0.0, replaced by {@link #addEntry(long, long, String,
-	String, String, String, Date, Date, int, boolean)}
-	*/
-	@Deprecated
-	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap addEntry(
-		long plid, long classNameId, long classPK, java.lang.String title,
-		java.lang.String content, java.lang.String url, java.lang.String type,
-		int displayDateMonth, int displayDateDay, int displayDateYear,
-		int displayDateHour, int displayDateMinute, boolean displayImmediately,
-		int expirationDateMonth, int expirationDateDay, int expirationDateYear,
-		int expirationDateHour, int expirationDateMinute, int priority,
-		boolean alert) throws RemoteException {
-		try {
-			com.liferay.announcements.kernel.model.AnnouncementsEntry returnValue =
-				AnnouncementsEntryServiceUtil.addEntry(plid, classNameId,
-					classPK, title, content, url, type, displayDateMonth,
-					displayDateDay, displayDateYear, displayDateHour,
-					displayDateMinute, displayImmediately, expirationDateMonth,
-					expirationDateDay, expirationDateYear, expirationDateHour,
-					expirationDateMinute, priority, alert);
 
-			return com.liferay.announcements.kernel.model.AnnouncementsEntrySoap.toSoapModel(returnValue);
+	/**
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #addEntry(long,
+	 long, String, String, String, String, Date, Date, int,
+	 boolean)}
+	 */
+	@Deprecated
+	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap
+			addEntry(
+				long plid, long classNameId, long classPK, String title,
+				String content, String url, String type, int displayDateMonth,
+				int displayDateDay, int displayDateYear, int displayDateHour,
+				int displayDateMinute, boolean displayImmediately,
+				int expirationDateMonth, int expirationDateDay,
+				int expirationDateYear, int expirationDateHour,
+				int expirationDateMinute, int priority, boolean alert)
+		throws RemoteException {
+
+		try {
+			com.liferay.announcements.kernel.model.AnnouncementsEntry
+				returnValue = AnnouncementsEntryServiceUtil.addEntry(
+					plid, classNameId, classPK, title, content, url, type,
+					displayDateMonth, displayDateDay, displayDateYear,
+					displayDateHour, displayDateMinute, displayImmediately,
+					expirationDateMonth, expirationDateDay, expirationDateYear,
+					expirationDateHour, expirationDateMinute, priority, alert);
+
+			return com.liferay.announcements.kernel.model.
+				AnnouncementsEntrySoap.toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -96,18 +97,21 @@ public class AnnouncementsEntryServiceSoap {
 		}
 	}
 
-	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap addEntry(
-		long classNameId, long classPK, java.lang.String title,
-		java.lang.String content, java.lang.String url, java.lang.String type,
-		java.util.Date displayDate, java.util.Date expirationDate,
-		int priority, boolean alert) throws RemoteException {
-		try {
-			com.liferay.announcements.kernel.model.AnnouncementsEntry returnValue =
-				AnnouncementsEntryServiceUtil.addEntry(classNameId, classPK,
-					title, content, url, type, displayDate, expirationDate,
-					priority, alert);
+	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap
+			addEntry(
+				long classNameId, long classPK, String title, String content,
+				String url, String type, java.util.Date displayDate,
+				java.util.Date expirationDate, int priority, boolean alert)
+		throws RemoteException {
 
-			return com.liferay.announcements.kernel.model.AnnouncementsEntrySoap.toSoapModel(returnValue);
+		try {
+			com.liferay.announcements.kernel.model.AnnouncementsEntry
+				returnValue = AnnouncementsEntryServiceUtil.addEntry(
+					classNameId, classPK, title, content, url, type,
+					displayDate, expirationDate, priority, alert);
+
+			return com.liferay.announcements.kernel.model.
+				AnnouncementsEntrySoap.toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -127,13 +131,16 @@ public class AnnouncementsEntryServiceSoap {
 		}
 	}
 
-	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap getEntry(
-		long entryId) throws RemoteException {
-		try {
-			com.liferay.announcements.kernel.model.AnnouncementsEntry returnValue =
-				AnnouncementsEntryServiceUtil.getEntry(entryId);
+	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap
+			getEntry(long entryId)
+		throws RemoteException {
 
-			return com.liferay.announcements.kernel.model.AnnouncementsEntrySoap.toSoapModel(returnValue);
+		try {
+			com.liferay.announcements.kernel.model.AnnouncementsEntry
+				returnValue = AnnouncementsEntryServiceUtil.getEntry(entryId);
+
+			return com.liferay.announcements.kernel.model.
+				AnnouncementsEntrySoap.toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -142,17 +149,21 @@ public class AnnouncementsEntryServiceSoap {
 		}
 	}
 
-	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap updateEntry(
-		long entryId, java.lang.String title, java.lang.String content,
-		java.lang.String url, java.lang.String type,
-		java.util.Date displayDate, java.util.Date expirationDate, int priority)
+	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap
+			updateEntry(
+				long entryId, String title, String content, String url,
+				String type, java.util.Date displayDate,
+				java.util.Date expirationDate, int priority)
 		throws RemoteException {
-		try {
-			com.liferay.announcements.kernel.model.AnnouncementsEntry returnValue =
-				AnnouncementsEntryServiceUtil.updateEntry(entryId, title,
-					content, url, type, displayDate, expirationDate, priority);
 
-			return com.liferay.announcements.kernel.model.AnnouncementsEntrySoap.toSoapModel(returnValue);
+		try {
+			com.liferay.announcements.kernel.model.AnnouncementsEntry
+				returnValue = AnnouncementsEntryServiceUtil.updateEntry(
+					entryId, title, content, url, type, displayDate,
+					expirationDate, priority);
+
+			return com.liferay.announcements.kernel.model.
+				AnnouncementsEntrySoap.toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -162,28 +173,31 @@ public class AnnouncementsEntryServiceSoap {
 	}
 
 	/**
-	* @deprecated As of 7.0.0, replaced by {@link #updateEntry(long, String,
-	String, String, String, Date, Date, int)}
-	*/
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateEntry(long,
+	 String, String, String, String, Date, Date, int)}
+	 */
 	@Deprecated
-	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap updateEntry(
-		long entryId, java.lang.String title, java.lang.String content,
-		java.lang.String url, java.lang.String type, int displayDateMonth,
-		int displayDateDay, int displayDateYear, int displayDateHour,
-		int displayDateMinute, boolean displayImmediately,
-		int expirationDateMonth, int expirationDateDay, int expirationDateYear,
-		int expirationDateHour, int expirationDateMinute, int priority)
+	public static com.liferay.announcements.kernel.model.AnnouncementsEntrySoap
+			updateEntry(
+				long entryId, String title, String content, String url,
+				String type, int displayDateMonth, int displayDateDay,
+				int displayDateYear, int displayDateHour, int displayDateMinute,
+				boolean displayImmediately, int expirationDateMonth,
+				int expirationDateDay, int expirationDateYear,
+				int expirationDateHour, int expirationDateMinute, int priority)
 		throws RemoteException {
+
 		try {
-			com.liferay.announcements.kernel.model.AnnouncementsEntry returnValue =
-				AnnouncementsEntryServiceUtil.updateEntry(entryId, title,
-					content, url, type, displayDateMonth, displayDateDay,
-					displayDateYear, displayDateHour, displayDateMinute,
-					displayImmediately, expirationDateMonth, expirationDateDay,
-					expirationDateYear, expirationDateHour,
+			com.liferay.announcements.kernel.model.AnnouncementsEntry
+				returnValue = AnnouncementsEntryServiceUtil.updateEntry(
+					entryId, title, content, url, type, displayDateMonth,
+					displayDateDay, displayDateYear, displayDateHour,
+					displayDateMinute, displayImmediately, expirationDateMonth,
+					expirationDateDay, expirationDateYear, expirationDateHour,
 					expirationDateMinute, priority);
 
-			return com.liferay.announcements.kernel.model.AnnouncementsEntrySoap.toSoapModel(returnValue);
+			return com.liferay.announcements.kernel.model.
+				AnnouncementsEntrySoap.toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -192,5 +206,7 @@ public class AnnouncementsEntryServiceSoap {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(AnnouncementsEntryServiceSoap.class);
+	private static Log _log = LogFactoryUtil.getLog(
+		AnnouncementsEntryServiceSoap.class);
+
 }

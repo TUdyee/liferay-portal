@@ -17,7 +17,6 @@ package com.liferay.portal.service.impl;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.interval.IntervalActionProcessor;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.model.User;
@@ -113,23 +112,6 @@ public class UserNotificationEventLocalServiceImpl
 			archived, serviceContext);
 	}
 
-	/**
-	 * @deprecated As of 7.0.0, {@link #addUserNotificationEvent(long, String,
-	 *             long, int, long, String, boolean, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public UserNotificationEvent addUserNotificationEvent(
-			long userId, String type, long timestamp, long deliverBy,
-			String payload, boolean archived, ServiceContext serviceContext)
-		throws PortalException {
-
-		return addUserNotificationEvent(
-			userId, type, timestamp,
-			UserNotificationDeliveryConstants.TYPE_WEBSITE, deliverBy, payload,
-			archived, serviceContext);
-	}
-
 	@Override
 	public List<UserNotificationEvent> addUserNotificationEvents(
 			long userId, Collection<NotificationEvent> notificationEvents)
@@ -193,6 +175,11 @@ public class UserNotificationEventLocalServiceImpl
 		for (String uuid : uuids) {
 			deleteUserNotificationEvent(uuid, companyId);
 		}
+	}
+
+	@Override
+	public void deleteUserNotificationEvents(long userId) {
+		userNotificationEventPersistence.removeByUserId(userId);
 	}
 
 	@Override
@@ -544,13 +531,15 @@ public class UserNotificationEventLocalServiceImpl
 
 					message.setPayload(notificationEvent.getPayload());
 
-					MessageBusUtil.sendMessage(
-						DestinationNames.PUSH_NOTIFICATION, message);
+					MessageBusUtil.sendMessage(_PUSH_NOTIFICATION, message);
 
 					return null;
 				}
 
 			});
 	}
+
+	private static final String _PUSH_NOTIFICATION =
+		"liferay/push_notification";
 
 }

@@ -17,18 +17,13 @@ package com.liferay.poshi.runner.logger;
 import com.liferay.poshi.runner.util.StringUtil;
 import com.liferay.poshi.runner.util.Validator;
 
-import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
+import java.util.regex.Matcher;
 
 /**
  * @author Michael Hashimoto
@@ -36,41 +31,14 @@ import java.util.Set;
 public class LoggerElement {
 
 	public LoggerElement() {
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HHmmssSSS");
-
-		long time = System.currentTimeMillis();
-
-		while (true) {
-			String id = "id" + simpleDateFormat.format(new Date(time++));
-
-			if (!_usedIds.contains(id)) {
-				_usedIds.add(id);
-
-				_id = id;
-
-				break;
-			}
-		}
 	}
 
 	public LoggerElement(String id) {
 		_id = id;
-
-		if (Validator.isNotNull(id) && LoggerUtil.isWrittenToLogger(this)) {
-			_writtenToLogger = true;
-		}
 	}
 
 	public void addChildLoggerElement(LoggerElement childLoggerElement) {
 		_childLoggerElements.add(childLoggerElement);
-
-		if (_writtenToLogger) {
-			LoggerUtil.addChildLoggerElement(this, childLoggerElement);
-
-			childLoggerElement.setWrittenToLogger(true);
-
-			childLoggerElement.writeChildLoggerElements();
-		}
 	}
 
 	public void addClassName(String className) {
@@ -173,10 +141,6 @@ public class LoggerElement {
 		return childLoggerElements;
 	}
 
-	public void removeChildLoggerElement(LoggerElement childLoggerElement) {
-		_childLoggerElements.remove(childLoggerElement);
-	}
-
 	public void removeChildLoggerElements(String name) {
 		List<LoggerElement> childLoggerElements = new ArrayList<>();
 
@@ -192,70 +156,31 @@ public class LoggerElement {
 	}
 
 	public void removeClassName(String className) {
-		String[] classNames = StringUtil.split(_className, " ");
+		String cleanedClassName = _className.replaceFirst(
+			"(.*?)\\s*" + Matcher.quoteReplacement(className) + "\\s*(.*)",
+			"$1 $2");
 
-		StringBuilder sb = new StringBuilder();
-
-		for (int i = 0; i < classNames.length; i++) {
-			if (Validator.isNull(classNames[i])) {
-				continue;
-			}
-
-			if (Objects.equals(classNames[i], className)) {
-				continue;
-			}
-
-			sb.append(classNames[i]);
-			sb.append(" ");
-		}
-
-		setClassName(sb.toString());
+		setClassName(cleanedClassName.trim());
 	}
 
 	public void setAttribute(String attributeName, String attributeValue) {
 		_attributes.put(attributeName, attributeValue);
-
-		if (_writtenToLogger) {
-			LoggerUtil.setAttribute(this, attributeName, attributeValue);
-		}
 	}
 
 	public void setClassName(String className) {
 		_className = _fixClassName(className);
-
-		if (_writtenToLogger) {
-			LoggerUtil.setClassName(this);
-		}
 	}
 
 	public void setID(String id) {
-		String oldID = _id;
-
 		_id = id;
-
-		if (_writtenToLogger) {
-			LoggerUtil.setID(oldID, id);
-		}
 	}
 
 	public void setName(String name) {
 		_name = name;
-
-		if (_writtenToLogger) {
-			LoggerUtil.setName(this);
-		}
 	}
 
 	public void setText(String text) {
 		_text = text;
-
-		if (_writtenToLogger) {
-			LoggerUtil.setText(this);
-		}
-	}
-
-	public void setWrittenToLogger(boolean writtenToLogger) {
-		_writtenToLogger = writtenToLogger;
 	}
 
 	@Override
@@ -265,7 +190,7 @@ public class LoggerElement {
 		sb.append("<");
 		sb.append(_name);
 
-		for (Entry<String, String> entry : _attributes.entrySet()) {
+		for (Map.Entry<String, String> entry : _attributes.entrySet()) {
 			sb.append(" ");
 			sb.append(entry.getKey());
 			sb.append("=\"");
@@ -314,40 +239,13 @@ public class LoggerElement {
 		return sb.toString();
 	}
 
-	public void writeChildLoggerElements() {
-		if (_writtenToLogger) {
-			for (LoggerElement childLoggerElement : _childLoggerElements) {
-				LoggerUtil.addChildLoggerElement(this, childLoggerElement);
-
-				childLoggerElement.setWrittenToLogger(true);
-
-				childLoggerElement.writeChildLoggerElements();
-			}
-		}
-	}
-
 	private String _fixClassName(String className) {
 		String[] classNames = StringUtil.split(className, " ");
 
 		Arrays.sort(classNames);
 
-		StringBuilder sb = new StringBuilder();
-
-		for (int i = 0; i < classNames.length; i++) {
-			if (Validator.isNull(classNames[i])) {
-				continue;
-			}
-
-			sb.append(classNames[i]);
-			sb.append(" ");
-		}
-
-		className = sb.toString();
-
-		return className.trim();
+		return StringUtil.join(classNames, " ");
 	}
-
-	private static final Set<String> _usedIds = new HashSet<>();
 
 	private final Map<String, String> _attributes = new HashMap<>();
 	private final List<LoggerElement> _childLoggerElements = new ArrayList<>();
@@ -355,6 +253,5 @@ public class LoggerElement {
 	private String _id;
 	private String _name = "div";
 	private String _text = "";
-	private boolean _writtenToLogger;
 
 }

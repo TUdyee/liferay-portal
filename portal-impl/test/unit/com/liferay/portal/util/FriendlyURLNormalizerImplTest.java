@@ -14,8 +14,9 @@
 
 package com.liferay.portal.util;
 
-import com.liferay.portal.kernel.nio.charset.CharsetEncoderUtil;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.nio.CharsetEncoderUtil;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.HttpUtil;
 
 import java.io.UnsupportedEncodingException;
 
@@ -24,12 +25,20 @@ import java.net.URLEncoder;
 import java.nio.charset.CharsetEncoder;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
  * @author Julio Camarero
  */
 public class FriendlyURLNormalizerImplTest {
+
+	@BeforeClass
+	public static void setUpClass() {
+		HttpUtil httpUtil = new HttpUtil();
+
+		httpUtil.setHttp(new HttpImpl());
+	}
 
 	@Test
 	public void testNormalizeBlank() {
@@ -158,7 +167,7 @@ public class FriendlyURLNormalizerImplTest {
 	}
 
 	@Test
-	public void testNormalizeWordWithNonASCIICharacters() {
+	public void testNormalizeWordWithNonasciiCharacters() {
 		Assert.assertEquals(
 			"wordnc", _friendlyURLNormalizerImpl.normalize("word\u00F1\u00C7"));
 	}

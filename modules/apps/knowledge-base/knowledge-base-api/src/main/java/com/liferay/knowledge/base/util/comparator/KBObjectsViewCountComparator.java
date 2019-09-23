@@ -49,7 +49,7 @@ public class KBObjectsViewCountComparator<T> extends OrderByComparator<T> {
 		String title1 = getName(t1);
 		String title2 = getName(t1);
 
-		if (t1 instanceof KBFolder && t2 instanceof KBFolder) {
+		if ((t1 instanceof KBFolder) && (t2 instanceof KBFolder)) {
 			value = title1.compareToIgnoreCase(title2);
 		}
 		else if (t1 instanceof KBFolder) {
@@ -73,9 +73,8 @@ public class KBObjectsViewCountComparator<T> extends OrderByComparator<T> {
 		if (_ascending) {
 			return value;
 		}
-		else {
-			return -value;
-		}
+
+		return -value;
 	}
 
 	@Override
@@ -83,9 +82,8 @@ public class KBObjectsViewCountComparator<T> extends OrderByComparator<T> {
 		if (_ascending) {
 			return ORDER_BY_ASC;
 		}
-		else {
-			return ORDER_BY_DESC;
-		}
+
+		return ORDER_BY_DESC;
 	}
 
 	@Override
@@ -104,11 +102,10 @@ public class KBObjectsViewCountComparator<T> extends OrderByComparator<T> {
 
 			return kbArticle.getTitle();
 		}
-		else {
-			KBFolder kbFolder = (KBFolder)obj;
 
-			return kbFolder.getName();
-		}
+		KBFolder kbFolder = (KBFolder)obj;
+
+		return kbFolder.getName();
 	}
 
 	protected int getViewCount(Object obj) {
@@ -117,9 +114,8 @@ public class KBObjectsViewCountComparator<T> extends OrderByComparator<T> {
 
 			return kbArticle.getViewCount();
 		}
-		else {
-			return 0;
-		}
+
+		return 0;
 	}
 
 	private final boolean _ascending;

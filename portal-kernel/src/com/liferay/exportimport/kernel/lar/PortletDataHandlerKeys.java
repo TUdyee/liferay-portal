@@ -14,16 +14,13 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Raymond Augé
  */
-@ProviderType
 public class PortletDataHandlerKeys {
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String CATEGORIES = "CATEGORIES";
@@ -39,6 +36,8 @@ public class PortletDataHandlerKeys {
 
 	public static final String DATA_STRATEGY_MIRROR_OVERWRITE =
 		"DATA_STRATEGY_MIRROR_OVERWRITE";
+
+	public static final String DELETE_LAYOUTS = "DELETE_LAYOUTS";
 
 	public static final String DELETE_MISSING_LAYOUTS =
 		"DELETE_MISSING_LAYOUTS";
@@ -70,6 +69,8 @@ public class PortletDataHandlerKeys {
 
 	public static final String LAYOUTS_IMPORT_MODE_MERGE_BY_LAYOUT_UUID =
 		"MERGE_BY_LAYOUT_UUID";
+
+	public static final String LOCKS = "LOCKS";
 
 	public static final String LOGO = "LOGO";
 
@@ -112,7 +113,7 @@ public class PortletDataHandlerKeys {
 		"ADD_TO_BOTTOM";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTLETS_MERGE_MODE_ADD_TO_TOP = "ADD_TO_TOP";
@@ -120,14 +121,14 @@ public class PortletDataHandlerKeys {
 	public static final String PORTLETS_MERGE_MODE_REPLACE = "REPLACE";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PUBLIC_LAYOUT_PERMISSIONS =
 		"PUBLIC_LAYOUT_PERMISSIONS";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PUBLISH_TO_REMOTE = "PUBLISH_TO_REMOTE";

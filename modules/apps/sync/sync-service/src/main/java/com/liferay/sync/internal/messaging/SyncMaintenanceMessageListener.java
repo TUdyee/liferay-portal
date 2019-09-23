@@ -14,13 +14,11 @@
 
 package com.liferay.sync.internal.messaging;
 
-import com.liferay.document.library.kernel.model.DLSyncEvent;
-import com.liferay.document.library.kernel.service.DLSyncEventLocalService;
+import com.liferay.document.library.sync.model.DLSyncEvent;
+import com.liferay.document.library.sync.service.DLSyncEventLocalService;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
@@ -33,9 +31,9 @@ import com.liferay.portal.kernel.scheduler.TimeUnit;
 import com.liferay.portal.kernel.scheduler.Trigger;
 import com.liferay.portal.kernel.scheduler.TriggerFactory;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.sync.internal.configuration.SyncServiceConfigurationValues;
 import com.liferay.sync.service.SyncDLFileVersionDiffLocalService;
 import com.liferay.sync.service.SyncDLObjectLocalService;
-import com.liferay.sync.service.configuration.SyncServiceConfigurationValues;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -91,32 +89,19 @@ public class SyncMaintenanceMessageListener extends BaseMessageListener {
 				_dlSyncEventLocalService.getActionableDynamicQuery();
 
 			actionableDynamicQuery.setAddCriteriaMethod(
-				new ActionableDynamicQuery.AddCriteriaMethod() {
+				dynamicQuery -> {
+					Property modifiedTime = PropertyFactoryUtil.forName(
+						"modifiedTime");
 
-					@Override
-					public void addCriteria(DynamicQuery dynamicQuery) {
-						Property modifiedTime = PropertyFactoryUtil.forName(
-							"modifiedTime");
+					long latestModifiedTime =
+						_syncDLObjectLocalService.getLatestModifiedTime();
 
-						long latestModifiedTime =
-							_syncDLObjectLocalService.getLatestModifiedTime();
-
-						dynamicQuery.add(
-							modifiedTime.le(latestModifiedTime - Time.HOUR));
-					}
-
+					dynamicQuery.add(
+						modifiedTime.le(latestModifiedTime - Time.HOUR));
 				});
 			actionableDynamicQuery.setPerformActionMethod(
-				new ActionableDynamicQuery.PerformActionMethod<DLSyncEvent>() {
-
-					@Override
-					public void performAction(DLSyncEvent dlSyncEvent)
-						throws PortalException {
-
-						_dlSyncEventLocalService.deleteDLSyncEvent(dlSyncEvent);
-					}
-
-				});
+				(DLSyncEvent dlSyncEvent) ->
+					_dlSyncEventLocalService.deleteDLSyncEvent(dlSyncEvent));
 
 			actionableDynamicQuery.performActions();
 		}

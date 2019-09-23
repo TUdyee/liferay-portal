@@ -14,8 +14,6 @@
 
 package com.liferay.portal.util;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.openid.OpenId;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -24,7 +22,6 @@ import com.liferay.registry.ServiceTracker;
 /**
  * @author Jorge Ferrer
  */
-@ProviderType
 public class OpenIdUtil {
 
 	public static boolean isEnabled(long companyId) {

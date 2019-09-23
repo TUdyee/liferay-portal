@@ -14,6 +14,7 @@
 
 package com.liferay.util.transport;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.net.DatagramPacket;
@@ -56,9 +57,10 @@ public class MulticastServerTool {
 
 			transport.connect();
 
-			String msg =
-				InetAddress.getLocalHost().getHostName() + ":" + port +
-					" heartbeat ";
+			InetAddress inetAddress = InetAddress.getLocalHost();
+
+			String msg = StringBundler.concat(
+				inetAddress.getHostName(), ":", port, " heartbeat ");
 
 			int i = 0;
 

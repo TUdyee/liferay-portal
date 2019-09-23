@@ -14,6 +14,8 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.randomizerbumpers.RandomizerBumper;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -296,6 +298,8 @@ public class StringUtilTest {
 		Assert.assertEquals("1", StringUtil.merge(new int[] {1}));
 		Assert.assertEquals("1,2,3", StringUtil.merge(new long[] {1, 2, 3}));
 		Assert.assertEquals("1", StringUtil.merge(new long[] {1}));
+		Assert.assertEquals(
+			"123", StringUtil.merge(Arrays.asList("1", "2", "3"), ""));
 	}
 
 	@Test
@@ -600,14 +604,18 @@ public class StringUtilTest {
 			StringUtil.shorten(
 				"HelloWorldHelloWorldHelloWorldHelloWorldHelloWorldHello", 20,
 				"... etc."));
+		Assert.assertEquals(
+			"abcdef\u00C1...",
+			StringUtil.shorten("abcdef\u0041\u0301vwxyz", 10));
 	}
 
 	@Test
 	public void testShortenStringWith4ByteChars() {
 		int space = CharPool.SPACE;
 
-		int[] codePoints =
-			{128515, 128516, space, 128517, 128518, 128519, 128520, 128521};
+		int[] codePoints = {
+			128515, 128516, space, 128517, 128518, 128519, 128520, 128521
+		};
 
 		String string = new String(codePoints, 0, codePoints.length);
 
@@ -713,19 +721,6 @@ public class StringUtilTest {
 	}
 
 	@Test
-	public void testStripChar() {
-		Assert.assertEquals("abcd", StringUtil.strip(" a b  c   d", ' '));
-	}
-
-	@Test
-	public void testStripCharArray() {
-		Assert.assertEquals(
-			"HeoWor",
-			StringUtil.strip(
-				"Hello World", new char[] {CharPool.SPACE, 'l', 'd'}));
-	}
-
-	@Test
 	public void testStripParentheticalSuffixInteger() {
 		Assert.assertEquals(
 			"Hello World",
@@ -770,7 +765,7 @@ public class StringUtilTest {
 	}
 
 	@Test
-	public void testToLowerCaseWithNonASCIICharacters() {
+	public void testToLowerCaseWithNonasciiCharacters() {
 		Assert.assertEquals("\u00F1", StringUtil.toLowerCase("\u00D1"));
 		Assert.assertEquals(
 			"hello world \u00F1", StringUtil.toLowerCase("hello world \u00D1"));
@@ -791,7 +786,7 @@ public class StringUtilTest {
 	}
 
 	@Test
-	public void testToUpperCaseWithNonASCIICharacters() {
+	public void testToUpperCaseWithNonasciiCharacters() {
 		Assert.assertEquals("\u00D1", StringUtil.toUpperCase("\u00F1"));
 		Assert.assertEquals(
 			"HELLO WORLD \u00D1", StringUtil.toUpperCase("hello world \u00F1"));
@@ -1083,6 +1078,16 @@ public class StringUtilTest {
 		Assert.assertEquals(
 			"\t\r\n" + testString + " \t\r",
 			StringUtil.trim(surroundingSpacesString, exceptions));
+	}
+
+	@Test
+	public void testUnquote() {
+		Assert.assertEquals("", StringUtil.unquote(""));
+		Assert.assertEquals("Hello World", StringUtil.unquote("'Hello World'"));
+		Assert.assertEquals("'Hello World", StringUtil.unquote("'Hello World"));
+		Assert.assertEquals(
+			"Hello World", StringUtil.unquote("\"Hello World\""));
+		Assert.assertEquals("Hello World", StringUtil.unquote("Hello World"));
 	}
 
 	@Test

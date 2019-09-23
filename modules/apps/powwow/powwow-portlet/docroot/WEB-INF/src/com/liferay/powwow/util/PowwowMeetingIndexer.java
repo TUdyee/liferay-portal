@@ -16,9 +16,8 @@ package com.liferay.powwow.util;
 
 import com.liferay.calendar.model.CalendarBooking;
 import com.liferay.calendar.service.CalendarBookingLocalServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -32,7 +31,6 @@ import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.TermQueryFactoryUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.powwow.model.PowwowMeeting;
 import com.liferay.powwow.model.PowwowParticipant;
 import com.liferay.powwow.provider.PowwowServiceProviderUtil;
@@ -61,16 +59,6 @@ public class PowwowMeetingIndexer extends BaseIndexer {
 	@Override
 	public String getClassName() {
 		return PowwowMeeting.class.getName();
-	}
-
-	@Override
-	public String[] getClassNames() {
-		return CLASS_NAMES;
-	}
-
-	@Override
-	public String getPortletId() {
-		return PORTLET_ID;
 	}
 
 	@Override
@@ -216,18 +204,14 @@ public class PowwowMeetingIndexer extends BaseIndexer {
 	protected void doReindex(Object obj) throws Exception {
 		PowwowMeeting powwowMeeting = (PowwowMeeting)obj;
 
-		Document document = getDocument(powwowMeeting);
-
 		SearchEngineUtil.updateDocument(
-			getSearchEngineId(), powwowMeeting.getCompanyId(), document);
+			getSearchEngineId(), powwowMeeting.getCompanyId(),
+			getDocument(powwowMeeting));
 	}
 
 	@Override
 	protected void doReindex(String className, long classPK) throws Exception {
-		PowwowMeeting powwowMeeting =
-			PowwowMeetingLocalServiceUtil.getPowwowMeeting(classPK);
-
-		doReindex(powwowMeeting);
+		doReindex(PowwowMeetingLocalServiceUtil.getPowwowMeeting(classPK));
 	}
 
 	@Override
@@ -235,11 +219,6 @@ public class PowwowMeetingIndexer extends BaseIndexer {
 		long companyId = GetterUtil.getLong(ids[0]);
 
 		reindexPowwowMeetings(companyId);
-	}
-
-	@Override
-	protected String getPortletId(SearchContext searchContext) {
-		return PORTLET_ID;
 	}
 
 	protected void reindexPowwowMeetings(long companyId)
@@ -250,8 +229,5 @@ public class PowwowMeetingIndexer extends BaseIndexer {
 		SearchEngineUtil.updateDocuments(
 			getSearchEngineId(), companyId, documents);
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		PowwowMeetingIndexer.class);
 
 }

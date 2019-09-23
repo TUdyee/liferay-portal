@@ -14,11 +14,11 @@
 
 package com.liferay.taglib.aui;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.servlet.taglib.aui.ValidatorTag;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
@@ -29,16 +29,17 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.BodyTag;
 
 /**
  * @author Julio Camarero
  * @author Jorge Ferrer
  * @author Brian Wing Shun Chan
  */
-public class SelectTag extends BaseSelectTag {
+public class SelectTag extends BaseSelectTag implements BodyTag {
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -47,7 +48,7 @@ public class SelectTag extends BaseSelectTag {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -58,7 +59,7 @@ public class SelectTag extends BaseSelectTag {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -74,7 +75,9 @@ public class SelectTag extends BaseSelectTag {
 			addRequiredValidatorTag();
 		}
 
-		return super.doStartTag();
+		super.doStartTag();
+
+		return EVAL_BODY_BUFFERED;
 	}
 
 	@Override
@@ -139,8 +142,8 @@ public class SelectTag extends BaseSelectTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		super.setAttributes(request);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		super.setAttributes(httpServletRequest);
 
 		Object bean = getBean();
 
@@ -199,18 +202,25 @@ public class SelectTag extends BaseSelectTag {
 			}
 
 			if (!getIgnoreRequestValue()) {
-				value = ParamUtil.getString(request, name, value);
+				value = ParamUtil.getString(httpServletRequest, name, value);
 			}
 		}
 
-		setNamespacedAttribute(request, "bean", bean);
-		setNamespacedAttribute(request, "field", field);
-		setNamespacedAttribute(request, "id", id);
-		setNamespacedAttribute(request, "label", label);
-		setNamespacedAttribute(request, "listTypeFieldName", listTypeFieldName);
-		setNamespacedAttribute(request, "model", model);
-		setNamespacedAttribute(request, "title", String.valueOf(title));
-		setNamespacedAttribute(request, "value", value);
+		setNamespacedAttribute(httpServletRequest, "bean", bean);
+		setNamespacedAttribute(httpServletRequest, "field", field);
+		setNamespacedAttribute(httpServletRequest, "id", id);
+		setNamespacedAttribute(httpServletRequest, "label", label);
+		setNamespacedAttribute(
+			httpServletRequest, "listTypeFieldName", listTypeFieldName);
+		setNamespacedAttribute(httpServletRequest, "model", model);
+		setNamespacedAttribute(
+			httpServletRequest, "title", String.valueOf(title));
+		setNamespacedAttribute(httpServletRequest, "value", value);
+
+		if (Validator.isNotNull(bodyContent)) {
+			setNamespacedAttribute(
+				httpServletRequest, "bodyContent", bodyContent.getString());
+		}
 
 		Map<String, ValidatorTag> validatorTags = getValidatorTags();
 
@@ -218,12 +228,12 @@ public class SelectTag extends BaseSelectTag {
 			(validatorTags.get("required") != null)) {
 
 			setNamespacedAttribute(
-				request, "required", Boolean.TRUE.toString());
+				httpServletRequest, "required", Boolean.TRUE.toString());
 		}
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void updateFormValidators() {

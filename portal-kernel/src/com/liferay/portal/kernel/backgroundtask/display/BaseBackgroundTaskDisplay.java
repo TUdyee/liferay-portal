@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.backgroundtask.display;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatus;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusRegistryUtil;
@@ -32,7 +33,7 @@ import com.liferay.portal.kernel.template.TemplateManager;
 import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Writer;
@@ -58,9 +59,9 @@ public abstract class BaseBackgroundTaskDisplay
 	}
 
 	@Override
-	public String getDisplayName(HttpServletRequest request) {
+	public String getDisplayName(HttpServletRequest httpServletRequest) {
 		if (Validator.isNull(backgroundTask.getName())) {
-			return LanguageUtil.get(request, "untitled");
+			return LanguageUtil.get(httpServletRequest, "untitled");
 		}
 
 		return backgroundTask.getName();
@@ -76,7 +77,7 @@ public abstract class BaseBackgroundTaskDisplay
 
 	@Override
 	public String getStatusLabel() {
-		return getStatusLabel(Locale.getDefault());
+		return getStatusLabel(LocaleUtil.getDefault());
 	}
 
 	@Override
@@ -95,7 +96,7 @@ public abstract class BaseBackgroundTaskDisplay
 
 	@Override
 	public String renderDisplayTemplate() {
-		return renderDisplayTemplate(Locale.getDefault());
+		return renderDisplayTemplate(LocaleUtil.getDefault());
 	}
 
 	@Override

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncFilterInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncFilterOutputStream;
 import com.liferay.portal.kernel.log.Log;
@@ -74,6 +75,10 @@ public class StreamUtil {
 		}
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void cleanUp(Closeable... closeables) {
 		cleanUp(true, closeables);
 	}

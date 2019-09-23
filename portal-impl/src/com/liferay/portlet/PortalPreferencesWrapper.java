@@ -14,8 +14,6 @@
 
 package com.liferay.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.IOException;
@@ -31,7 +29,6 @@ import javax.portlet.ValidatorException;
 /**
  * @author Alexander Chow
  */
-@ProviderType
 public class PortalPreferencesWrapper
 	implements Cloneable, MVCCModel, PortletPreferences, Serializable {
 

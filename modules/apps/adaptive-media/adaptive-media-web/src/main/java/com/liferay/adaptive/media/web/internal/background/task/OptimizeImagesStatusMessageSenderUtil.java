@@ -14,7 +14,7 @@
 
 package com.liferay.adaptive.media.web.internal.background.task;
 
-import com.liferay.adaptive.media.web.constants.AMOptimizeImagesBackgroundTaskConstants;
+import com.liferay.adaptive.media.constants.AMOptimizeImagesBackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusMessageSender;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Sergio González
  */
-@Component(immediate = true)
+@Component(immediate = true, service = {})
 public class OptimizeImagesStatusMessageSenderUtil {
 
 	public static void sendStatusMessage(
@@ -51,11 +51,11 @@ public class OptimizeImagesStatusMessageSenderUtil {
 			BackgroundTaskThreadLocal.getBackgroundTaskId());
 		message.put(
 			AMOptimizeImagesBackgroundTaskConstants.COMPANY_ID, companyId);
-		message.put(AMOptimizeImagesBackgroundTaskConstants.PHASE, phase);
-		message.put("status", BackgroundTaskConstants.STATUS_IN_PROGRESS);
 		message.put(
 			AMOptimizeImagesBackgroundTaskConstants.CONFIGURATION_ENTRY_UUID,
 			configurationEntryUuid);
+		message.put(AMOptimizeImagesBackgroundTaskConstants.PHASE, phase);
+		message.put("status", BackgroundTaskConstants.STATUS_IN_PROGRESS);
 
 		_backgroundTaskStatusMessageSender.sendBackgroundTaskStatusMessage(
 			message);

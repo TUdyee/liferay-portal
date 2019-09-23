@@ -35,7 +35,7 @@ import javax.servlet.http.HttpSessionListener;
  * </p>
  *
  * @author     Michael C. Han
- * @deprecated As of 7.0.0, with no direct replacement
+ * @deprecated As of Wilberforce (7.0.x), with no direct replacement
  */
 @Deprecated
 public class SharedSessionAttributeListener
@@ -57,9 +57,6 @@ public class SharedSessionAttributeListener
 			return;
 		}
 
-		SharedSessionAttributeCache sharedSessionAttributeCache =
-			SharedSessionAttributeCache.getInstance(session);
-
 		String name = event.getName();
 
 		if (ArrayUtil.contains(
@@ -67,6 +64,9 @@ public class SharedSessionAttributeListener
 
 			return;
 		}
+
+		SharedSessionAttributeCache sharedSessionAttributeCache =
+			SharedSessionAttributeCache.getInstance(session);
 
 		for (String sharedName : PropsValues.SESSION_SHARED_ATTRIBUTES) {
 			if (!name.startsWith(sharedName)) {

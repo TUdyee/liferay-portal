@@ -177,6 +177,7 @@ public class ReinvokeRule {
 			int x = configuration.indexOf("=");
 
 			String name = configuration.substring(0, x);
+
 			String value = configuration.substring(x + 1);
 
 			value = value.trim();
@@ -213,8 +214,6 @@ public class ReinvokeRule {
 
 			if (name.equals("topLevelJobName")) {
 				topLevelBuildJobNamePattern = pattern;
-
-				continue;
 			}
 		}
 	}

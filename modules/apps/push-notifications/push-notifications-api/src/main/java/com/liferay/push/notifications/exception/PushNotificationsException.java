@@ -14,14 +14,11 @@
 
 package com.liferay.push.notifications.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Bruno Farache
  */
-@ProviderType
 public class PushNotificationsException extends PortalException {
 
 	public PushNotificationsException() {

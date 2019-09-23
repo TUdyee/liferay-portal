@@ -14,14 +14,15 @@
 
 package com.liferay.source.formatter.checks.util;
 
-import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.util.FileUtil;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,7 +40,7 @@ public class JSPSourceUtil {
 
 	public static List<String> addIncludedAndReferencedFileNames(
 		List<String> fileNames, Set<String> checkedFileNames,
-		Map<String, String> contentsMap) {
+		Map<String, String> contentsMap, String referencedFileNameRegex) {
 
 		Set<String> includedAndReferencedFileNames = new HashSet<>();
 
@@ -52,9 +53,10 @@ public class JSPSourceUtil {
 				fileName, CharPool.BACK_SLASH, CharPool.SLASH);
 
 			includedAndReferencedFileNames.addAll(
-				getJSPIncludeFileNames(fileName, fileNames, contentsMap));
+				getJSPIncludeFileNames(fileName, fileNames, contentsMap, true));
 			includedAndReferencedFileNames.addAll(
-				getJSPReferenceFileNames(fileName, fileNames, contentsMap));
+				getJSPReferenceFileNames(
+					fileName, fileNames, contentsMap, referencedFileNameRegex));
 		}
 
 		if (includedAndReferencedFileNames.isEmpty()) {
@@ -71,7 +73,7 @@ public class JSPSourceUtil {
 		}
 
 		return addIncludedAndReferencedFileNames(
-			fileNames, checkedFileNames, contentsMap);
+			fileNames, checkedFileNames, contentsMap, referencedFileNameRegex);
 	}
 
 	public static String buildFullPathIncludeFileName(
@@ -124,7 +126,7 @@ public class JSPSourceUtil {
 	}
 
 	public static Map<String, String> getContentsMap(List<String> fileNames)
-		throws Exception {
+		throws IOException {
 
 		Map<String, String> contentsMap = new ConcurrentHashMap<>();
 
@@ -161,7 +163,7 @@ public class JSPSourceUtil {
 
 	public static Set<String> getJSPIncludeFileNames(
 		String fileName, Collection<String> fileNames,
-		Map<String, String> contentsMap) {
+		Map<String, String> contentsMap, boolean forceIncludeAllFiles) {
 
 		Set<String> includeFileNames = new HashSet<>();
 
@@ -178,10 +180,12 @@ public class JSPSourceUtil {
 				break;
 			}
 
-			Matcher matcher = _javaCodeTagPattern.matcher(content);
+			if (!forceIncludeAllFiles) {
+				Matcher matcher = _javaCodeTagPattern.matcher(content);
 
-			if (matcher.find() && (matcher.start() == x)) {
-				continue;
+				if (matcher.find() && (matcher.start() == x)) {
+					continue;
+				}
 			}
 
 			x = content.indexOf(CharPool.QUOTE, x);
@@ -202,7 +206,7 @@ public class JSPSourceUtil {
 				includeFileName = StringPool.SLASH + includeFileName;
 			}
 
-			matcher = _jspIncludeFilePattern.matcher(includeFileName);
+			Matcher matcher = _jspIncludeFilePattern.matcher(includeFileName);
 
 			if (!matcher.find()) {
 				throw new RuntimeException(
@@ -232,14 +236,11 @@ public class JSPSourceUtil {
 
 	public static Set<String> getJSPReferenceFileNames(
 		String fileName, Collection<String> fileNames,
-		Map<String, String> contentsMap) {
+		Map<String, String> contentsMap, String referencedFileNameRegex) {
 
 		Set<String> referenceFileNames = new HashSet<>();
 
-		if (!fileName.endsWith("init.jsp") && !fileName.endsWith("init.jspf") &&
-			!fileName.endsWith("init.tag") &&
-			!fileName.contains("init-ext.jsp")) {
-
+		if (!fileName.matches(referencedFileNameRegex)) {
 			return referenceFileNames;
 		}
 
@@ -340,6 +341,46 @@ public class JSPSourceUtil {
 		return false;
 	}
 
+	public static boolean isJSSource(String content, int pos) {
+		if (isJavaSource(content, pos)) {
+			return false;
+		}
+
+		String s = content.substring(pos);
+
+		Matcher matcher = _auiScriptEndTagPattern.matcher(s);
+
+		if (matcher.find()) {
+			s = s.substring(0, matcher.start());
+
+			matcher = _auiScriptStartTagPattern.matcher(s);
+
+			if (!matcher.find()) {
+				return true;
+			}
+		}
+
+		s = content.substring(pos);
+
+		matcher = _scriptEndTagPattern.matcher(s);
+
+		if (matcher.find()) {
+			s = s.substring(0, matcher.start());
+
+			matcher = _scriptStartTagPattern.matcher(s);
+
+			if (!matcher.find()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static final Pattern _auiScriptEndTagPattern = Pattern.compile(
+		"[\n\t]</aui:script>(\n|\\Z)");
+	private static final Pattern _auiScriptStartTagPattern = Pattern.compile(
+		"[\n\t]<aui:script[\\s>]");
 	private static final Pattern _includeFilePattern = Pattern.compile(
 		"\\s*@\\s*include\\s*file=['\"](.*)['\"]");
 	private static final Pattern _javaCodeTagPattern = Pattern.compile(
@@ -347,8 +388,12 @@ public class JSPSourceUtil {
 	private static final Pattern _javaEndTagPattern = Pattern.compile(
 		"[\n\t]%>(\n|\\Z)");
 	private static final Pattern _javaStartTagPattern = Pattern.compile(
-		"[\n\t]<%\\!?\n");
+		"[\n\t]<%\\!?(\n|\\Z)");
 	private static final Pattern _jspIncludeFilePattern = Pattern.compile(
 		"/.*\\.(jsp[f]?|svg|tag)");
+	private static final Pattern _scriptEndTagPattern = Pattern.compile(
+		"[\n\t]</script>(\n|\\Z)");
+	private static final Pattern _scriptStartTagPattern = Pattern.compile(
+		"[\n\t]<script[\\s>]");
 
 }

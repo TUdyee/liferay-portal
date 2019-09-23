@@ -6,18 +6,28 @@ apply plugin: "de.undercouch.download"
 apply plugin: "org.ysb33r.gradletest"
 
 task copyDistBundleZipPluginsSdk(type: Copy)
-task downloadPluginsSdk(type: Download)
 task copyGradleTestDependencies(type: Copy)
+task copyRepo(type: Copy)
+task downloadPluginsSdk(type: Download)
 
-String bundleUrl = "https://cdn.lfrs.sl/releases.liferay.com/portal/7.0.3-ga4/liferay-ce-portal-tomcat-7.0-ga4-20170613175008905.zip"
-String pluginsSdkUrl = "https://cdn.lfrs.sl/releases.liferay.com/portal/7.0.3-ga4/com.liferay.portal.plugins.sdk-1.0.11-20170613175008905.zip"
+String bundleUrl = "https://releases-cdn.liferay.com/portal/7.1.2-ga3/liferay-ce-portal-tomcat-7.1.2-ga3-20190107144105508.tar.gz"
+String gradleVersion = "4.10.2"
+String pluginsSdkUrl = "https://repository-cdn.liferay.com/nexus/service/local/repositories/liferay-public-releases/content/com/liferay/portal/com.liferay.portal.plugins.sdk/1.0.22/com.liferay.portal.plugins.sdk-1.0.22-withdependencies.zip"
 
 if (System.properties["http.proxyHost"] == "squid.lax.liferay.com") {
-	bundleUrl = "http://mirrors.liferay.com/releases.liferay.com/portal/7.0.3-ga4/liferay-ce-portal-tomcat-7.0-ga4-20170613175008905.zip"
-	pluginsSdkUrl = "http://mirrors.liferay.com/releases.liferay.com/portal/7.0.3-ga4/com.liferay.portal.plugins.sdk-1.0.11-20170613175008905.zip"
+	bundleUrl = "http://mirrors.liferay.com/releases.liferay.com/portal/7.1.2-ga3/liferay-ce-portal-tomcat-7.1.2-ga3-20190107144105508.tar.gz"
+	pluginsSdkUrl = "https://repository-cdn.liferay.com/nexus/service/local/repositories/liferay-public-releases/content/com/liferay/portal/com.liferay.portal.plugins.sdk/1.0.22/com.liferay.portal.plugins.sdk-1.0.22-withdependencies.zip"
+}
+
+tasks.eclipse {
+	ext.gradleVersion = gradleVersion
 }
 
 copyDistBundleZipPluginsSdk {
+	ext {
+		autoClean = false
+	}
+
 	dependsOn downloadPluginsSdk
 	eachFile new StripPathSegmentsAction(1)
 
@@ -29,32 +39,57 @@ copyDistBundleZipPluginsSdk {
 	into "src/gradleTest/distBundleZip/plugins-sdk"
 }
 
-downloadPluginsSdk {
-	dest new File(buildDir, "plugins-sdk.zip")
-	src pluginsSdkUrl
-}
-
 copyGradleTestDependencies {
 	from configurations.compile
 	into jar.destinationDir
 }
 
+copyRepo {
+	from "src/gradleTest/repo"
+	into new File(buildDir, "gradleTest/repo")
+}
+
 dependencies {
-	compile group: "com.liferay", name: "com.liferay.gradle.plugins", version: "3.4.72"
-	compile group: "com.liferay", name: "com.liferay.gradle.plugins.poshi.runner", version: "1.0.11"
-	compile group: "com.liferay", name: "com.liferay.portal.tools.bundle.support", version: "3.2.0"
+	compile group: "com.bmuschko", name: "gradle-docker-plugin", version: "3.6.2"
+	compile group: "com.liferay", name: "com.liferay.ant.bnd", version: "3.2.1"
+	compile(group: "com.liferay", name: "com.liferay.gradle.plugins", version: "4.4.27") {
+		exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
+	}
+	compile(group: "com.liferay", name: "com.liferay.gradle.plugins.poshi.runner", version: "2.2.14") {
+		exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
+	}
+	compile group: "com.liferay", name: "com.liferay.gradle.plugins.target.platform", version: "2.0.2"
+	compile(group: "com.liferay", name: "com.liferay.gradle.plugins.theme.builder", version: "2.0.7") {
+		exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
+	}
+	compile(group: "com.liferay", name: "com.liferay.portal.tools.bundle.support", version: "3.4.3") {
+		exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
+	}
 	compile group: "de.undercouch", name: "gradle-download-task", version: "3.2.0"
 
-	compileOnly fileTree(builtBy: [rootProject.tasks.extractGradleApi214], dir: new File(rootProject.buildDir, "gradle-2.14"))
+	compileOnly fileTree(builtBy: [rootProject.tasks.getByName("extractGradleApi" + gradleVersion.replace(".", ""))], dir: new File(rootProject.buildDir, "gradle-${gradleVersion}"))
+}
+
+downloadPluginsSdk {
+	dest new File(buildDir, "plugins-sdk.zip")
+	src pluginsSdkUrl
 }
 
 gradleTest {
 	dependsOn copyDistBundleZipPluginsSdk
 	dependsOn copyGradleTestDependencies
+	dependsOn copyRepo
 	dependsOn jar
+
+	deprecationMessagesAreFailures = false
+
+	if (System.getenv("JENKINS_HOME")) {
+		expectFailure "buildDockerImage"
+		expectFailure "createDockerContainer"
+	}
 
 	gradleArguments "--project-prop", "liferay.workspace.bundle.url=${bundleUrl}"
 	gradleArguments "--project-prop", "pluginClasspathDir=${uri(jar.destinationDir)}"
 
-	versions "2.14.1", "3.0", "3.1", "3.2.1", "3.3"
+	versions gradleVersion
 }

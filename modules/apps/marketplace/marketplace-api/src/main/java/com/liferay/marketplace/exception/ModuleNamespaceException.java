@@ -14,14 +14,11 @@
 
 package com.liferay.marketplace.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Ryan Park
  */
-@ProviderType
 public class ModuleNamespaceException extends PortalException {
 
 	public ModuleNamespaceException() {

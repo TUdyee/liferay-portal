@@ -17,12 +17,18 @@ package com.liferay.portal.app.license.resolver.hook;
 import com.liferay.portal.app.license.AppLicenseVerifier;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringBundler;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import java.net.URL;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedMap;
 
 import org.osgi.framework.Bundle;
@@ -41,9 +47,13 @@ import org.osgi.util.tracker.ServiceTracker;
 public class AppResolverHook implements ResolverHook {
 
 	public AppResolverHook(
-		ServiceTracker<AppLicenseVerifier, AppLicenseVerifier> serviceTracker) {
+		ServiceTracker<AppLicenseVerifier, AppLicenseVerifier> serviceTracker,
+		Set<String> filteredBundleSymbolicNames,
+		Set<String> filteredProductIds) {
 
 		_serviceTracker = serviceTracker;
+		_filteredBundleSymbolicNames = filteredBundleSymbolicNames;
+		_filteredProductIds = filteredProductIds;
 	}
 
 	@Override
@@ -63,12 +73,49 @@ public class AppResolverHook implements ResolverHook {
 		while (iterator.hasNext()) {
 			BundleRevision bundleRevision = iterator.next();
 
+			Bundle bundle = bundleRevision.getBundle();
+
+			Properties properties = null;
+
 			try {
-				_filterResolvable(bundleRevision);
+				properties = _getAppLicenseProperties(bundle);
+			}
+			catch (IllegalStateException ise) {
+				iterator.remove();
+
+				continue;
+			}
+
+			String productId = (String)properties.get("product-id");
+
+			if (productId == null) {
+				continue;
+			}
+
+			try {
+				_filterResolvable(bundle, properties);
+
+				_filteredBundleSymbolicNames.remove(
+					bundleRevision.getSymbolicName());
+				_filteredProductIds.remove(productId);
 			}
 			catch (Exception e) {
-				_log.error(
-					"Unable to resolve " + bundleRevision.getSymbolicName(), e);
+				if (_filteredProductIds.add(productId)) {
+					_log.error("Unable to resolve application " + productId, e);
+				}
+
+				if (_filteredBundleSymbolicNames.add(
+						bundleRevision.getSymbolicName())) {
+
+					StringBundler sb = new StringBundler(4);
+
+					sb.append("Unable to resolve ");
+					sb.append(bundleRevision.getSymbolicName());
+					sb.append(": ");
+					sb.append(e.getMessage());
+
+					_log.error(sb.toString());
+				}
 
 				iterator.remove();
 			}
@@ -81,21 +128,11 @@ public class AppResolverHook implements ResolverHook {
 		Collection<BundleCapability> collisionCandidates) {
 	}
 
-	private void _filterResolvable(BundleRevision bundleRevision)
+	private void _filterResolvable(Bundle bundle, Properties properties)
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Resolving bundle " + bundleRevision.getSymbolicName());
-		}
-
-		Bundle bundle = bundleRevision.getBundle();
-
-		Properties properties = _getAppLicenseProperties(bundle);
-
-		String productId = (String)properties.get("product-id");
-
-		if (productId == null) {
-			return;
+			_log.debug("Resolving bundle " + bundle.getSymbolicName());
 		}
 
 		boolean verified = false;
@@ -108,16 +145,19 @@ public class AppResolverHook implements ResolverHook {
 		SortedMap<ServiceReference<AppLicenseVerifier>, AppLicenseVerifier>
 			serviceReferences = _serviceTracker.getTracked();
 
-		for (ServiceReference<AppLicenseVerifier> serviceReference :
-				serviceReferences.keySet()) {
+		for (Map.Entry<ServiceReference<AppLicenseVerifier>, AppLicenseVerifier>
+				entry : serviceReferences.entrySet()) {
+
+			ServiceReference<AppLicenseVerifier> serviceReference =
+				entry.getKey();
 
 			if (!filter.match(serviceReference)) {
 				continue;
 			}
 
-			AppLicenseVerifier appLicenseVerifier = serviceReferences.get(
-				serviceReference);
+			AppLicenseVerifier appLicenseVerifier = entry.getValue();
 
+			String productId = (String)properties.get("product-id");
 			String productType = (String)properties.get("product-type");
 			String productVersionId = (String)properties.get(
 				"product-version-id");
@@ -139,16 +179,16 @@ public class AppResolverHook implements ResolverHook {
 	private Properties _getAppLicenseProperties(Bundle bundle) {
 		Properties properties = new Properties();
 
-		try {
-			URL url = bundle.getEntry("/META-INF/marketplace.properties");
+		URL url = bundle.getEntry("/META-INF/marketplace.properties");
 
-			if (url != null) {
-				properties.load(url.openStream());
+		if (url != null) {
+			try (InputStream inputStream = url.openStream()) {
+				properties.load(inputStream);
 			}
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to read bundle properties", e);
+			catch (IOException ioe) {
+				if (_log.isWarnEnabled()) {
+					_log.warn("Unable to read bundle properties", ioe);
+				}
 			}
 		}
 
@@ -158,6 +198,8 @@ public class AppResolverHook implements ResolverHook {
 	private static final Log _log = LogFactoryUtil.getLog(
 		AppResolverHook.class);
 
+	private final Set<String> _filteredBundleSymbolicNames;
+	private final Set<String> _filteredProductIds;
 	private final ServiceTracker<AppLicenseVerifier, AppLicenseVerifier>
 		_serviceTracker;
 

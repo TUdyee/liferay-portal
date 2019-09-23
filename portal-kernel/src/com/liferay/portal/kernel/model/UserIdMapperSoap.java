@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,8 +25,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class UserIdMapperSoap implements Serializable {
+
 	public static UserIdMapperSoap toSoapModel(UserIdMapper model) {
 		UserIdMapperSoap soapModel = new UserIdMapperSoap();
 
@@ -71,7 +69,8 @@ public class UserIdMapperSoap implements Serializable {
 	}
 
 	public static UserIdMapperSoap[] toSoapModels(List<UserIdMapper> models) {
-		List<UserIdMapperSoap> soapModels = new ArrayList<UserIdMapperSoap>(models.size());
+		List<UserIdMapperSoap> soapModels = new ArrayList<UserIdMapperSoap>(
+			models.size());
 
 		for (UserIdMapper model : models) {
 			soapModels.add(toSoapModel(model));
@@ -154,4 +153,5 @@ public class UserIdMapperSoap implements Serializable {
 	private String _type;
 	private String _description;
 	private String _externalUserId;
+
 }

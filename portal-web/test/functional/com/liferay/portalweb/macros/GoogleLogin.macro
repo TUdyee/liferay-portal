@@ -1,54 +1,52 @@
-<definition>
-	<command name="acceptConditions">
-		<if>
-			<condition function="IsElementPresent#pauseIsElementPresent" locator1="GoogleLogin#ALLOW" value1="Allow" />
-			<then>
-				<execute function="Click" locator1="GoogleLogin#ALLOW" />
-			</then>
-		</if>
+definition {
 
-		<if>
-			<condition function="IsElementPresent#pauseIsElementPresent" locator1="Button#I_AGREE" value1="I Agree" />
-			<then>
-				<execute function="Click" locator1="Button#I_AGREE" />
-			</then>
-		</if>
+	macro acceptConditions {
+		if (IsElementPresent.pauseIsElementPresent(locator1 = "GoogleLogin#ALLOW", value1 = "Allow")) {
+			Click(locator1 = "GoogleLogin#ALLOW");
+		}
 
-		<if>
-			<condition function="IsElementPresent#pauseIsElementPresent" locator1="TextInput#ANSWER" />
-			<then>
-				<execute function="Type" locator1="TextInput#ANSWER" value1="test" />
+		if (IsElementPresent.pauseIsElementPresent(locator1 = "Button#I_AGREE", value1 = "I Agree")) {
+			Click(locator1 = "Button#I_AGREE");
+		}
 
-				<execute function="KeyPress" locator1="TextInput#ANSWER" value1="\RETURN" />
-			</then>
-		</if>
+		if (IsElementPresent.pauseIsElementPresent(locator1 = "TextInput#ANSWER")) {
+			Type(
+				locator1 = "TextInput#ANSWER",
+				value1 = "test");
 
-		<execute function="SelectWindow#selectWindowTopNoSPARefresh" />
-	</command>
+			Button.clickSave();
+		}
 
-	<command name="accountSignIn">
-		<execute macro="Navigator#openURL" />
+		SelectWindow.selectWindowTopNoSPARefresh();
+	}
 
-		<execute function="AssertClick" locator1="UserBar#USER_SIGN_IN" value1="Sign In" />
+	macro accountSignIn {
+		Navigator.openURL();
 
-		<execute function="Click" locator1="Icon#GOOGLE_PLUS" />
+		AssertClick(
+			locator1 = "UserBar#USER_SIGN_IN",
+			value1 = "Sign In");
 
-		<execute function="SelectWindow" locator1="GoogleLogin#PAGE_TITLE" />
+		Click(locator1 = "Link#GOOGLE");
 
-		<execute function="Type" locator1="GoogleLogin#LOGIN_EMAIL_FIELD" value1="${userEmailAddress}" />
+		SelectWindow(locator1 = "GoogleLogin#PAGE_TITLE");
 
-		<execute function="Click" locator1="GoogleLogin#LOGIN_NEXT_BUTTON" />
+		Type(
+			locator1 = "GoogleLogin#LOGIN_EMAIL_FIELD",
+			value1 = "${userEmailAddress}");
 
-		<execute function="Type" locator1="GoogleLogin#LOGIN_PASSWORD_FIELD" value1="${userPassword}" />
+		Click(locator1 = "GoogleLogin#LOGIN_NEXT_BUTTON");
 
-		<if>
-			<condition function="IsElementPresent" locator1="GoogleLogin#LOGIN_SIGN_IN_BUTTON" />
-			<then>
-				<execute function="Click" locator1="GoogleLogin#LOGIN_SIGN_IN_BUTTON" />
-			</then>
-			<else>
-				<execute function="Click" locator1="GoogleLogin#LOGIN_NEXT_BUTTON" />
-			</else>
-		</if>
-	</command>
-</definition>
+		Type(
+			locator1 = "GoogleLogin#LOGIN_PASSWORD_FIELD",
+			value1 = "${userPassword}");
+
+		if (IsElementPresent(locator1 = "GoogleLogin#LOGIN_SIGN_IN_BUTTON")) {
+			Click(locator1 = "GoogleLogin#LOGIN_SIGN_IN_BUTTON");
+		}
+		else {
+			Click(locator1 = "GoogleLogin#LOGIN_NEXT_BUTTON");
+		}
+	}
+
+}

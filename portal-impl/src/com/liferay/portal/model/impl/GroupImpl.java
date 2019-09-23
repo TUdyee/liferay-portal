@@ -17,6 +17,8 @@ package com.liferay.portal.model.impl;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.staging.StagingConstants;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -34,10 +36,10 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.UserPersonalSite;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -59,8 +61,6 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -146,19 +146,6 @@ public class GroupImpl extends GroupBaseImpl {
 			getCompanyId(), getGroupId(), site);
 	}
 
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
-	 *             #getChildrenWithLayouts(boolean, int, int,
-	 *             OrderByComparator)}
-	 */
-	@Deprecated
-	@Override
-	public List<Group> getChildrenWithLayouts(
-		boolean site, int start, int end) {
-
-		return getChildrenWithLayouts(site, start, end, null);
-	}
-
 	@Override
 	public List<Group> getChildrenWithLayouts(
 		boolean site, int start, int end, OrderByComparator<Group> obc) {
@@ -242,10 +229,9 @@ public class GroupImpl extends GroupBaseImpl {
 			name = layoutSetPrototype.getName(locale);
 		}
 		else if (isOrganization()) {
-			long organizationId = getOrganizationId();
-
 			Organization organization =
-				OrganizationLocalServiceUtil.getOrganization(organizationId);
+				OrganizationLocalServiceUtil.getOrganization(
+					getOrganizationId());
 
 			name = organization.getName();
 
@@ -472,9 +458,8 @@ public class GroupImpl extends GroupBaseImpl {
 
 				return liveGroup.getClassPK();
 			}
-			else {
-				return getClassPK();
-			}
+
+			return getClassPK();
 		}
 
 		return 0;
@@ -521,13 +506,11 @@ public class GroupImpl extends GroupBaseImpl {
 			if (isUser()) {
 				return themeDisplay.getPathFriendlyURLPrivateUser();
 			}
-			else {
-				return themeDisplay.getPathFriendlyURLPrivateGroup();
-			}
+
+			return themeDisplay.getPathFriendlyURLPrivateGroup();
 		}
-		else {
-			return themeDisplay.getPathFriendlyURLPublic();
-		}
+
+		return themeDisplay.getPathFriendlyURLPublic();
 	}
 
 	@Override
@@ -610,10 +593,8 @@ public class GroupImpl extends GroupBaseImpl {
 		else if (isLayoutPrototype()) {
 			return themeDisplay.translate("default");
 		}
-		else {
-			return HtmlUtil.escape(
-				getDescriptiveName(themeDisplay.getLocale()));
-		}
+
+		return HtmlUtil.escape(getDescriptiveName(themeDisplay.getLocale()));
 	}
 
 	@Override
@@ -695,9 +676,8 @@ public class GroupImpl extends GroupBaseImpl {
 		if (_typeSettingsProperties == null) {
 			return super.getTypeSettings();
 		}
-		else {
-			return _typeSettingsProperties.toString();
-		}
+
+		return _typeSettingsProperties.toString();
 	}
 
 	@Override
@@ -770,9 +750,8 @@ public class GroupImpl extends GroupBaseImpl {
 		if (getPrivateLayoutsPageCount() > 0) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -780,9 +759,8 @@ public class GroupImpl extends GroupBaseImpl {
 		if (getPublicLayoutsPageCount() > 0) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -818,15 +796,6 @@ public class GroupImpl extends GroupBaseImpl {
 		return true;
 	}
 
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #hasAncestor}
-	 */
-	@Deprecated
-	@Override
-	public boolean isChild(long groupId) {
-		return hasAncestor(groupId);
-	}
-
 	@Override
 	public boolean isCompany() {
 		if ((getClassNameId() == ClassNameIds._COMPANY_CLASS_NAME_ID) ||
@@ -856,9 +825,8 @@ public class GroupImpl extends GroupBaseImpl {
 		if (groupKey.equals(GroupConstants.CONTROL_PANEL)) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -868,9 +836,8 @@ public class GroupImpl extends GroupBaseImpl {
 		if (groupKey.equals(GroupConstants.GUEST)) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -963,8 +930,6 @@ public class GroupImpl extends GroupBaseImpl {
 
 		boolean showSite = true;
 
-		Layout defaultLayout = null;
-
 		int siteLayoutsCount = LayoutLocalServiceUtil.getLayoutsCount(
 			this, privateSite);
 
@@ -1015,7 +980,7 @@ public class GroupImpl extends GroupBaseImpl {
 			}
 		}
 		else {
-			defaultLayout = LayoutLocalServiceUtil.fetchFirstLayout(
+			Layout defaultLayout = LayoutLocalServiceUtil.fetchFirstLayout(
 				getGroupId(), privateSite,
 				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
 
@@ -1084,12 +1049,27 @@ public class GroupImpl extends GroupBaseImpl {
 					continue;
 				}
 
-				if (portletDataHandler.equals(
-						stagedPortlet.getPortletDataHandlerInstance())) {
+				PortletDataHandler stagedPortletDataHandler =
+					stagedPortlet.getPortletDataHandlerInstance();
+
+				if (stagedPortletDataHandler == null) {
+					continue;
+				}
+
+				String serviceName = portletDataHandler.getServiceName();
+
+				if (serviceName == null) {
+					continue;
+				}
+
+				if (serviceName.equals(
+						stagedPortletDataHandler.getServiceName())) {
 
 					return GetterUtil.getBoolean(entry.getValue());
 				}
 			}
+
+			return portletDataHandler.isStaged();
 		}
 		catch (Exception e) {
 			if (_log.isDebugEnabled()) {
@@ -1111,9 +1091,8 @@ public class GroupImpl extends GroupBaseImpl {
 		if (getLiveGroupId() == GroupConstants.DEFAULT_LIVE_GROUP_ID) {
 			return false;
 		}
-		else {
-			return true;
-		}
+
+		return true;
 	}
 
 	@Override

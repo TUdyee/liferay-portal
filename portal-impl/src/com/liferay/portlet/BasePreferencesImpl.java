@@ -14,9 +14,9 @@
 
 package com.liferay.portlet;
 
+import com.liferay.petra.xml.XMLUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.xml.simple.Element;
-import com.liferay.util.xml.XMLUtil;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -57,6 +57,7 @@ public abstract class BasePreferencesImpl implements Serializable {
 
 		for (Map.Entry<String, Preference> entry : preferences.entrySet()) {
 			String key = entry.getKey();
+
 			Preference preference = entry.getValue();
 
 			String[] actualValues = getActualValues(preference.getValues());
@@ -137,9 +138,8 @@ public abstract class BasePreferencesImpl implements Serializable {
 		if ((preference != null) && preference.isReadOnly()) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	public void reset() {
@@ -170,13 +170,12 @@ public abstract class BasePreferencesImpl implements Serializable {
 		if (preference.isReadOnly()) {
 			throw new ReadOnlyException(key);
 		}
-		else {
-			preference = (Preference)preference.clone();
 
-			modifiedPreferences.put(key, preference);
+		preference = (Preference)preference.clone();
 
-			preference.setValues(new String[] {value});
-		}
+		modifiedPreferences.put(key, preference);
+
+		preference.setValues(new String[] {value});
 	}
 
 	public void setValues(String key, String[] values)
@@ -203,13 +202,12 @@ public abstract class BasePreferencesImpl implements Serializable {
 		if (preference.isReadOnly()) {
 			throw new ReadOnlyException(key);
 		}
-		else {
-			preference = (Preference)preference.clone();
 
-			modifiedPreferences.put(key, preference);
+		preference = (Preference)preference.clone();
 
-			preference.setValues(values);
-		}
+		modifiedPreferences.put(key, preference);
+
+		preference.setValues(values);
 	}
 
 	public int size() {
@@ -224,9 +222,8 @@ public abstract class BasePreferencesImpl implements Serializable {
 		if ((value == null) || value.equals(_NULL_VALUE)) {
 			return null;
 		}
-		else {
-			return XMLUtil.fromCompactSafe(value);
-		}
+
+		return XMLUtil.fromCompactSafe(value);
 	}
 
 	protected String[] getActualValues(String[] values) {
@@ -239,6 +236,9 @@ public abstract class BasePreferencesImpl implements Serializable {
 
 			if (actualValue == null) {
 				return null;
+			}
+			else if (actualValue.equals(_NULL_ELEMENT)) {
+				return new String[] {null};
 			}
 			else {
 				return new String[] {actualValue};
@@ -283,14 +283,17 @@ public abstract class BasePreferencesImpl implements Serializable {
 		if (value == null) {
 			return _NULL_VALUE;
 		}
-		else {
-			return XMLUtil.toCompactSafe(value);
-		}
+
+		return XMLUtil.toCompactSafe(value);
 	}
 
 	protected String[] getXMLSafeValues(String[] values) {
 		if (values == null) {
 			return new String[] {_NULL_VALUE};
+		}
+
+		if ((values.length == 1) && (values[0] == null)) {
+			return new String[] {_NULL_ELEMENT};
 		}
 
 		String[] xmlSafeValues = new String[values.length];
@@ -351,6 +354,8 @@ public abstract class BasePreferencesImpl implements Serializable {
 
 		return portletPreferencesElement.toXMLString();
 	}
+
+	private static final String _NULL_ELEMENT = "NULL_ELEMENT";
 
 	private static final String _NULL_VALUE = "NULL_VALUE";
 

@@ -14,8 +14,6 @@
 
 package com.liferay.push.notifications.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,16 +24,18 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.push.notifications.service.http.PushNotificationsDeviceServiceSoap}.
  *
  * @author Bruno Farache
- * @see com.liferay.push.notifications.service.http.PushNotificationsDeviceServiceSoap
  * @generated
  */
-@ProviderType
 public class PushNotificationsDeviceSoap implements Serializable {
+
 	public static PushNotificationsDeviceSoap toSoapModel(
 		PushNotificationsDevice model) {
-		PushNotificationsDeviceSoap soapModel = new PushNotificationsDeviceSoap();
 
-		soapModel.setPushNotificationsDeviceId(model.getPushNotificationsDeviceId());
+		PushNotificationsDeviceSoap soapModel =
+			new PushNotificationsDeviceSoap();
+
+		soapModel.setPushNotificationsDeviceId(
+			model.getPushNotificationsDeviceId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
 		soapModel.setCreateDate(model.getCreateDate());
@@ -47,7 +47,9 @@ public class PushNotificationsDeviceSoap implements Serializable {
 
 	public static PushNotificationsDeviceSoap[] toSoapModels(
 		PushNotificationsDevice[] models) {
-		PushNotificationsDeviceSoap[] soapModels = new PushNotificationsDeviceSoap[models.length];
+
+		PushNotificationsDeviceSoap[] soapModels =
+			new PushNotificationsDeviceSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -58,10 +60,13 @@ public class PushNotificationsDeviceSoap implements Serializable {
 
 	public static PushNotificationsDeviceSoap[][] toSoapModels(
 		PushNotificationsDevice[][] models) {
+
 		PushNotificationsDeviceSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new PushNotificationsDeviceSoap[models.length][models[0].length];
+			soapModels =
+				new PushNotificationsDeviceSoap
+					[models.length][models[0].length];
 		}
 		else {
 			soapModels = new PushNotificationsDeviceSoap[0][0];
@@ -76,13 +81,16 @@ public class PushNotificationsDeviceSoap implements Serializable {
 
 	public static PushNotificationsDeviceSoap[] toSoapModels(
 		List<PushNotificationsDevice> models) {
-		List<PushNotificationsDeviceSoap> soapModels = new ArrayList<PushNotificationsDeviceSoap>(models.size());
+
+		List<PushNotificationsDeviceSoap> soapModels =
+			new ArrayList<PushNotificationsDeviceSoap>(models.size());
 
 		for (PushNotificationsDevice model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new PushNotificationsDeviceSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new PushNotificationsDeviceSoap[soapModels.size()]);
 	}
 
 	public PushNotificationsDeviceSoap() {
@@ -150,4 +158,5 @@ public class PushNotificationsDeviceSoap implements Serializable {
 	private Date _createDate;
 	private String _platform;
 	private String _token;
+
 }

@@ -1,141 +1,125 @@
-<definition component-name="portal-calendar">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="custom.properties" value="default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles" />
-	<property name="testray.main.component.name" value="Calendar" />
+@component-name = "portal-calendar"
+definition {
 
-	<var name="pageName" value="Calendar Page" />
-	<var name="portletName" value="Calendar" />
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property testray.main.component.name = "Calendar";
+	var pageName = "Calendar Page";
+	var portletName = "Calendar";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			panel = "Site Administration",
+			portlet = "Pages");
 
-		<execute macro="Portlet#addPG">
-			<var name="pageName" value="Calendar Page" />
-			<var name="portletName" value="Calendar" />
-		</execute>
-	</set-up>
+		SitePages.addPublicPage(
+			pageName = "Calendar Page",
+			sitePageType = "Widget Page");
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		SitePages.configurePage(
+			columnName = "1 Column",
+			pageName = "Calendar Page",
+			privacy = "Public Pages",
+			sitePageType = "Widget Page");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="Navigator#gotoPage">
-					<var name="pageName" value="Calendar Page" />
-				</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-				<if>
-					<condition function="IsElementPresent" locator1="Calendar#SCHEDULER_EVENT_GENERIC" />
-					<then>
-						<execute macro="CalendarEvent#tearDown" />
-					</then>
-				</if>
+		Portlet.addPG(
+			pageName = "Calendar Page",
+			portletName = "Calendar");
+	}
 
-				<execute macro="Calendar#tearDown" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-				<execute macro="CalendarConfiguration#tearDown" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			Navigator.gotoPage(pageName = "Calendar Page");
 
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
+			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
+				CalendarEvent.tearDown();
+			}
 
-	<command name="EditLanguageSelectorAndViewEvent" priority="3">
-		<description message="This is a use case for LPS-58649." />
+			Calendar.tearDown();
 
-		<property name="test.name.skip.portal.instance" value="CalendarLocalization#EditLanguageSelectorAndViewEvent" />
+			CalendarConfiguration.tearDown();
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+			Page.tearDownCP();
+		}
+	}
 
-		<execute macro="Portlet#addPG">
-			<var name="pageName" value="Calendar Page" />
-			<var name="portletName" value="Language" />
-		</execute>
+	@description = "This is a use case for LPS-58649."
+	@priority = "3"
+	test EditLanguageSelectorAndViewEvent {
+		property test.name.skip.portal.instance = "CalendarLocalization#EditLanguageSelectorAndViewEvent";
 
-		<execute macro="LanguagePortlet#selectLanguagePG">
-			<var name="language" value="Spanish (Spain)" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="CalendarScheduler#addLocalizedEvent">
-			<var name="eventTitle" value="Calendar Event Title" />
-			<var name="saveButton" value="Guardar" />
-			<var name="viewType" value="Week" />
-		</execute>
+		Portlet.addPG(
+			pageName = "Calendar Page",
+			portletName = "Language");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		LanguagePortlet.selectLanguagePG(
+			locale = "es_ES",
+			textIcon = "español-España");
 
-		<execute macro="Alert#viewSuccessMessage" />
+		CalendarScheduler.addLocalizedEvent(
+			eventTitle = "Calendar Event Title",
+			saveButton = "Guardar",
+			viewType = "Week");
 
-		<execute macro="CalendarScheduler#viewLocalizedEvent">
-			<var name="eventTitle" value="Calendar Event Title" />
-			<var name="viewTypeLocalized" value="Semana" />
-		</execute>
+		CalendarScheduler.viewLocalizedEvent(
+			eventTitle = "Calendar Event Title",
+			viewTypeLocalized = "Semana");
 
-		<execute macro="LanguagePortlet#selectLanguagePG">
-			<var name="language" value="English (United States)" />
-		</execute>
+		LanguagePortlet.selectLanguagePG(
+			locale = "en_US",
+			textIcon = "english-United States");
 
-		<execute macro="CalendarScheduler#viewDay">
-			<var name="eventTitle" value="Calendar Event Title" />
-		</execute>
-	</command>
+		CalendarScheduler.viewDay(eventTitle = "Calendar Event Title");
+	}
 
-	<command name="ViewShowMoreLocalization" priority="3">
-		<description message="This is a use case for LPS-54786." />
+	@description = "This is a use case for LPS-54786."
+	@priority = "3"
+	test ViewShowMoreLocalization {
+		for (var eventNumber : list "1,2,3,4,5,6") {
+			CalendarNavigator.gotoAddEvent();
 
-		<for list="1,2,3,4,5,6" param="eventNumber">
-			<execute macro="CalendarNavigator#gotoAddEvent" />
+			CalendarEvent.add(
+				eventTitle = "Calendar Event ${eventNumber}",
+				eventType = "All Day",
+				pageName = "Calendar Page");
+		}
 
-			<execute macro="CalendarEvent#add">
-				<var name="eventTitle" value="Calendar Event ${eventNumber}" />
-				<var name="eventType" value="All Day" />
-				<var name="pageName" value="Calendar Page" />
-			</execute>
-		</for>
+		MyAccount.configureDisplaySettingsLanguage(languageName = "español (España)");
 
-		<execute macro="MyAccount#configureDisplaySettingsLanguage">
-			<var name="languageName" value="español (España)" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		CalendarScheduler.viewShowMoreLocalizedViaDayView(
+			messageLocalized = "Mostrar 1 más",
+			viewTypeLocalized = "Día");
 
-		<execute macro="CalendarScheduler#viewShowMoreLocalizedViaDayView">
-			<var name="messageLocalized" value="Mostrar 1 más" />
-			<var name="viewTypeLocalized" value="Día" />
-		</execute>
+		CalendarScheduler.viewShowMoreLocalizedViaWeekView(
+			messageLocalized = "Mostrar 1 más",
+			viewTypeLocalized = "Semana");
 
-		<execute macro="CalendarScheduler#viewShowMoreLocalizedViaWeekView">
-			<var name="messageLocalized" value="Mostrar 1 más" />
-			<var name="viewTypeLocalized" value="Semana" />
-		</execute>
+		CalendarScheduler.viewShowMoreLocalizedViaMonthView(
+			messageLocalized = "Mostrar 4 más",
+			viewTypeLocalized = "Mes");
 
-		<execute macro="CalendarScheduler#viewShowMoreLocalizedViaMonthView">
-			<var name="messageLocalized" value="Mostrar 4 más" />
-			<var name="viewTypeLocalized" value="Mes" />
-		</execute>
+		MyAccount.configureDisplaySettingsLanguageLocalized(
+			category = "Mi cuenta",
+			languageName = "English (United States)",
+			portlet = "Mi cuenta",
+			saveButton = "Guardar");
+	}
 
-		<execute macro="MyAccount#configureDisplaySettingsLanguageLocalized">
-			<var name="category" value="Mi cuenta" />
-			<var name="languageName" value="English (United States)" />
-			<var name="portlet" value="Mi cuenta" />
-			<var name="saveButton" value="Guardar" />
-		</execute>
-	</command>
-</definition>
+}

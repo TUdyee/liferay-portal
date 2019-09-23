@@ -17,7 +17,8 @@ package com.liferay.adaptive.media.web.internal.servlet;
 import com.liferay.adaptive.media.exception.AMException;
 import com.liferay.adaptive.media.handler.AMRequestHandler;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 
 import java.util.Optional;
 
@@ -37,15 +38,16 @@ public class AMServletTest {
 
 	@Before
 	public void setUp() {
-		_amServlet.setAMRequestHandlerLocator(_amRequestHandlerLocator);
+		ReflectionTestUtil.setFieldValue(
+			_amServlet, "_amRequestHandlerLocator", _amRequestHandlerLocator);
 	}
 
 	@Test
 	public void testMiscellaneousError() throws Exception {
 		Mockito.when(
-			_request.getPathInfo()
+			_httpServletRequest.getPathInfo()
 		).thenReturn(
-			StringUtil.randomString()
+			RandomTestUtil.randomString()
 		);
 
 		Mockito.when(
@@ -55,15 +57,15 @@ public class AMServletTest {
 		);
 
 		Mockito.when(
-			_amRequestHandler.handleRequest(_request)
+			_amRequestHandler.handleRequest(_httpServletRequest)
 		).thenThrow(
 			new IllegalArgumentException()
 		);
 
-		_amServlet.doGet(_request, _response);
+		_amServlet.doGet(_httpServletRequest, _httpServletResponse);
 
 		Mockito.verify(
-			_response
+			_httpServletResponse
 		).sendError(
 			Mockito.eq(HttpServletResponse.SC_BAD_REQUEST), Mockito.anyString()
 		);
@@ -72,9 +74,9 @@ public class AMServletTest {
 	@Test
 	public void testNoMediaFound() throws Exception {
 		Mockito.when(
-			_request.getPathInfo()
+			_httpServletRequest.getPathInfo()
 		).thenReturn(
-			StringUtil.randomString()
+			RandomTestUtil.randomString()
 		);
 
 		Mockito.when(
@@ -84,15 +86,15 @@ public class AMServletTest {
 		);
 
 		Mockito.when(
-			_amRequestHandler.handleRequest(_request)
+			_amRequestHandler.handleRequest(_httpServletRequest)
 		).thenReturn(
 			Optional.empty()
 		);
 
-		_amServlet.doGet(_request, _response);
+		_amServlet.doGet(_httpServletRequest, _httpServletResponse);
 
 		Mockito.verify(
-			_response
+			_httpServletResponse
 		).sendError(
 			Mockito.eq(HttpServletResponse.SC_NOT_FOUND), Mockito.anyString()
 		);
@@ -101,9 +103,9 @@ public class AMServletTest {
 	@Test
 	public void testNoMediaFoundWithException() throws Exception {
 		Mockito.when(
-			_request.getPathInfo()
+			_httpServletRequest.getPathInfo()
 		).thenReturn(
-			StringUtil.randomString()
+			RandomTestUtil.randomString()
 		);
 
 		Mockito.when(
@@ -113,15 +115,15 @@ public class AMServletTest {
 		);
 
 		Mockito.when(
-			_amRequestHandler.handleRequest(_request)
+			_amRequestHandler.handleRequest(_httpServletRequest)
 		).thenThrow(
 			AMException.AMNotFound.class
 		);
 
-		_amServlet.doGet(_request, _response);
+		_amServlet.doGet(_httpServletRequest, _httpServletResponse);
 
 		Mockito.verify(
-			_response
+			_httpServletResponse
 		).sendError(
 			Mockito.eq(HttpServletResponse.SC_NOT_FOUND), Mockito.anyString()
 		);
@@ -130,9 +132,9 @@ public class AMServletTest {
 	@Test
 	public void testNoPermissionError() throws Exception {
 		Mockito.when(
-			_request.getPathInfo()
+			_httpServletRequest.getPathInfo()
 		).thenReturn(
-			StringUtil.randomString()
+			RandomTestUtil.randomString()
 		);
 
 		Mockito.when(
@@ -142,15 +144,15 @@ public class AMServletTest {
 		);
 
 		Mockito.when(
-			_amRequestHandler.handleRequest(_request)
+			_amRequestHandler.handleRequest(_httpServletRequest)
 		).thenThrow(
 			new ServletException(new PrincipalException())
 		);
 
-		_amServlet.doGet(_request, _response);
+		_amServlet.doGet(_httpServletRequest, _httpServletResponse);
 
 		Mockito.verify(
-			_response
+			_httpServletResponse
 		).sendError(
 			Mockito.eq(HttpServletResponse.SC_FORBIDDEN), Mockito.anyString()
 		);
@@ -159,9 +161,9 @@ public class AMServletTest {
 	@Test
 	public void testNoRequestHandlerFound() throws Exception {
 		Mockito.when(
-			_request.getPathInfo()
+			_httpServletRequest.getPathInfo()
 		).thenReturn(
-			StringUtil.randomString()
+			RandomTestUtil.randomString()
 		);
 
 		Mockito.when(
@@ -170,10 +172,10 @@ public class AMServletTest {
 			null
 		);
 
-		_amServlet.doGet(_request, _response);
+		_amServlet.doGet(_httpServletRequest, _httpServletResponse);
 
 		Mockito.verify(
-			_response
+			_httpServletResponse
 		).sendError(
 			Mockito.eq(HttpServletResponse.SC_NOT_FOUND), Mockito.anyString()
 		);
@@ -184,9 +186,9 @@ public class AMServletTest {
 	private final AMRequestHandlerLocator _amRequestHandlerLocator =
 		Mockito.mock(AMRequestHandlerLocator.class);
 	private final AMServlet _amServlet = new AMServlet();
-	private final HttpServletRequest _request = Mockito.mock(
+	private final HttpServletRequest _httpServletRequest = Mockito.mock(
 		HttpServletRequest.class);
-	private final HttpServletResponse _response = Mockito.mock(
+	private final HttpServletResponse _httpServletResponse = Mockito.mock(
 		HttpServletResponse.class);
 
 }

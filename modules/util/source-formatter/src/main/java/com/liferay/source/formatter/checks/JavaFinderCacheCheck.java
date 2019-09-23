@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.regex.Matcher;
@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public class JavaFinderCacheCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -73,7 +73,7 @@ public class JavaFinderCacheCheck extends BaseFileCheck {
 		return content;
 	}
 
-	private final Pattern _fetchByPrimaryKeysMethodPattern = Pattern.compile(
-		"@Override\n\tpublic Map<(.+)> fetchByPrimaryKeys\\(");
+	private static final Pattern _fetchByPrimaryKeysMethodPattern =
+		Pattern.compile("@Override\n\tpublic Map<(.+)> fetchByPrimaryKeys\\(");
 
 }

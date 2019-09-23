@@ -14,11 +14,11 @@
 
 package com.liferay.opensocial.shindig.servlet;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.IOException;
 
@@ -35,13 +35,14 @@ public class JsServlet extends org.apache.shindig.gadgets.servlet.JsServlet {
 
 	@Override
 	protected void doGet(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		String requestURI = request.getRequestURI();
+		String requestURI = httpServletRequest.getRequestURI();
 
 		if (!requestURI.equals("/combo")) {
-			super.doGet(request, response);
+			super.doGet(httpServletRequest, httpServletResponse);
 
 			return;
 		}
@@ -49,20 +50,22 @@ public class JsServlet extends org.apache.shindig.gadgets.servlet.JsServlet {
 		StringBundler sb = new StringBundler(3);
 
 		sb.append(
-			request.getAttribute(
+			httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_SERVLET_INCLUDE_REQUEST_URI));
 		sb.append(CharPool.QUESTION);
 		sb.append(
-			request.getAttribute(
+			httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_SERVLET_INCLUDE_QUERY_STRING));
 
-		String urlString = PortalUtil.getAbsoluteURL(request, sb.toString());
+		String urlString = PortalUtil.getAbsoluteURL(
+			httpServletRequest, sb.toString());
 
 		URL url = new URL(urlString);
 
 		URLConnection urlConnection = url.openConnection();
 
-		ServletResponseUtil.write(response, urlConnection.getInputStream());
+		ServletResponseUtil.write(
+			httpServletResponse, urlConnection.getInputStream());
 	}
 
 }

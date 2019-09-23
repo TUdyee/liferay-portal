@@ -22,6 +22,7 @@ import com.liferay.document.library.kernel.model.DLFileShortcut;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
@@ -35,6 +36,8 @@ import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.lock.LockManagerUtil;
@@ -45,8 +48,6 @@ import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.RepositoryLocalServiceUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -56,6 +57,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Brian Wing Shun Chan
@@ -81,7 +83,7 @@ public class DLFileEntryImpl extends DLFileEntryBaseImpl {
 
 	@Override
 	public InputStream getContentStream(String version) throws PortalException {
-		return DLFileEntryServiceUtil.getFileAsStream(
+		return DLFileEntryLocalServiceUtil.getFileAsStream(
 			getFileEntryId(), version);
 	}
 
@@ -141,9 +143,9 @@ public class DLFileEntryImpl extends DLFileEntryBaseImpl {
 
 			return dlFileVersion.getExpandoBridge();
 		}
-		catch (Exception e) {
+		catch (PortalException pe) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(pe, pe);
 			}
 		}
 
@@ -155,9 +157,8 @@ public class DLFileEntryImpl extends DLFileEntryBaseImpl {
 		if (_extraSettingsProperties == null) {
 			return super.getExtraSettings();
 		}
-		else {
-			return _extraSettingsProperties.toString();
-		}
+
+		return _extraSettingsProperties.toString();
 	}
 
 	@Override
@@ -232,33 +233,23 @@ public class DLFileEntryImpl extends DLFileEntryBaseImpl {
 			return DLFileVersionLocalServiceUtil.getLatestFileVersion(
 				getFileEntryId(), false);
 		}
-		else {
-			return DLFileVersionServiceUtil.getLatestFileVersion(
-				getFileEntryId());
-		}
+
+		return DLFileVersionServiceUtil.getLatestFileVersion(getFileEntryId());
 	}
 
 	@Override
 	public Lock getLock() {
-		try {
-			return LockManagerUtil.getLock(
-				DLFileEntry.class.getName(), getFileEntryId());
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
-			}
-		}
-
-		return null;
+		return LockManagerUtil.fetchLock(
+			DLFileEntry.class.getName(), getFileEntryId());
 	}
 
 	@Override
 	public String getLuceneProperties() {
 		UnicodeProperties extraSettingsProps = getExtraSettingsProperties();
 
-		StringBundler sb = new StringBundler(
-			extraSettingsProps.entrySet().size() + 4);
+		Set<Map.Entry<String, String>> entrySet = extraSettingsProps.entrySet();
+
+		StringBundler sb = new StringBundler(entrySet.size() + 4);
 
 		sb.append(FileUtil.stripExtension(getTitle()));
 		sb.append(StringPool.SPACE);
@@ -293,28 +284,8 @@ public class DLFileEntryImpl extends DLFileEntryBaseImpl {
 
 	@Override
 	public boolean hasLock() {
-		try {
-			long folderId = getFolderId();
-
-			boolean hasLock = LockManagerUtil.hasLock(
-				PrincipalThreadLocal.getUserId(), DLFileEntry.class.getName(),
-				getFileEntryId());
-
-			if (!hasLock &&
-				(folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID)) {
-
-				hasLock = DLFolderLocalServiceUtil.hasInheritableLock(folderId);
-			}
-
-			return hasLock;
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
-			}
-		}
-
-		return false;
+		return DLFileEntryLocalServiceUtil.hasFileEntryLock(
+			PrincipalThreadLocal.getUserId(), getFileEntryId(), getFolderId());
 	}
 
 	@Override
@@ -323,9 +294,9 @@ public class DLFileEntryImpl extends DLFileEntryBaseImpl {
 			return DLFileEntryServiceUtil.isFileEntryCheckedOut(
 				getFileEntryId());
 		}
-		catch (Exception e) {
+		catch (PortalException pe) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(pe, pe);
 			}
 		}
 
@@ -337,18 +308,21 @@ public class DLFileEntryImpl extends DLFileEntryBaseImpl {
 		try {
 			long repositoryId = getRepositoryId();
 
+			if (getGroupId() == repositoryId) {
+				return false;
+			}
+
 			Repository repository = RepositoryLocalServiceUtil.getRepository(
 				repositoryId);
 
-			long dlFolderId = repository.getDlFolderId();
-
-			DLFolder dlFolder = DLFolderLocalServiceUtil.getFolder(dlFolderId);
+			DLFolder dlFolder = DLFolderLocalServiceUtil.getFolder(
+				repository.getDlFolderId());
 
 			return dlFolder.isHidden();
 		}
-		catch (Exception e) {
+		catch (PortalException pe) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(pe, pe);
 			}
 		}
 
@@ -360,9 +334,8 @@ public class DLFileEntryImpl extends DLFileEntryBaseImpl {
 		if (getStatus() == WorkflowConstants.STATUS_IN_TRASH) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override

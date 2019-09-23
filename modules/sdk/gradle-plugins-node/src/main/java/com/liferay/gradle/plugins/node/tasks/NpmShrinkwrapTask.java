@@ -38,7 +38,7 @@ import org.gradle.util.GUtil;
 /**
  * @author Andrea Di Giorgi
  */
-public class NpmShrinkwrapTask extends ExecuteNpmTask {
+public class NpmShrinkwrapTask extends ExecutePackageManagerTask {
 
 	public NpmShrinkwrapTask() {
 		onlyIf(
@@ -138,7 +138,6 @@ public class NpmShrinkwrapTask extends ExecuteNpmTask {
 		Map<String, Object> map, Iterable<String> excludedDependencies) {
 
 		for (Map.Entry<String, Object> entry : map.entrySet()) {
-			String key = entry.getKey();
 			Object value = entry.getValue();
 
 			if (!(value instanceof Map<?, ?>)) {
@@ -146,6 +145,8 @@ public class NpmShrinkwrapTask extends ExecuteNpmTask {
 			}
 
 			Map<String, Object> valueMap = (Map<String, Object>)value;
+
+			String key = entry.getKey();
 
 			if (key.equals("dependencies")) {
 				for (String excludedDependency : excludedDependencies) {

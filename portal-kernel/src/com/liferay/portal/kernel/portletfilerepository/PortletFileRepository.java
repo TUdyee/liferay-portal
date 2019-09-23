@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.portletfilerepository;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -31,6 +29,8 @@ import java.io.File;
 import java.io.InputStream;
 
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Eudaldo Alonso
@@ -76,12 +76,6 @@ public interface PortletFileRepository {
 	public Repository addPortletRepository(
 			long groupId, String portletId, ServiceContext serviceContext)
 		throws PortalException;
-
-	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #deletePortletFolder}
-	 */
-	@Deprecated
-	public void deleteFolder(long folderId) throws PortalException;
 
 	public void deletePortletFileEntries(long groupId, long folderId)
 		throws PortalException;

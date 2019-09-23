@@ -14,12 +14,9 @@
 
 package com.liferay.portal.security.wedeploy.auth.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Supritha Sundaram
  */
-@ProviderType
 public class WeDeployAuthAppImpl extends WeDeployAuthAppBaseImpl {
 
 	public WeDeployAuthAppImpl() {

@@ -14,35 +14,34 @@
 
 package com.liferay.ratings.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
-import com.liferay.portal.kernel.util.ReferenceRegistry;
 
 /**
  * @author Brian Wing Shun Chan
- * @deprecated As of 7.0.0, with no direct replacement
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  * @generated
  */
 @Deprecated
-@ProviderType
 public class RatingsStatsFinderUtil {
-	public static java.util.Map<java.io.Serializable, com.liferay.ratings.kernel.model.RatingsStats> fetchByPrimaryKeys(
-		java.util.Set<java.io.Serializable> primaryKeys) {
+
+	public static java.util.Map
+		<java.io.Serializable, com.liferay.ratings.kernel.model.RatingsStats>
+			fetchByPrimaryKeys(
+				java.util.Set<java.io.Serializable> primaryKeys) {
+
 		return getFinder().fetchByPrimaryKeys(primaryKeys);
 	}
 
-	public static java.util.List<com.liferay.ratings.kernel.model.RatingsStats> findByC_C(
-		long classNameId, java.util.List<java.lang.Long> classPKs) {
+	public static java.util.List<com.liferay.ratings.kernel.model.RatingsStats>
+		findByC_C(long classNameId, java.util.List<Long> classPKs) {
+
 		return getFinder().findByC_C(classNameId, classPKs);
 	}
 
 	public static RatingsStatsFinder getFinder() {
 		if (_finder == null) {
-			_finder = (RatingsStatsFinder)PortalBeanLocatorUtil.locate(RatingsStatsFinder.class.getName());
-
-			ReferenceRegistry.registerReference(RatingsStatsFinderUtil.class,
-				"_finder");
+			_finder = (RatingsStatsFinder)PortalBeanLocatorUtil.locate(
+				RatingsStatsFinder.class.getName());
 		}
 
 		return _finder;
@@ -50,10 +49,8 @@ public class RatingsStatsFinderUtil {
 
 	public void setFinder(RatingsStatsFinder finder) {
 		_finder = finder;
-
-		ReferenceRegistry.registerReference(RatingsStatsFinderUtil.class,
-			"_finder");
 	}
 
 	private static RatingsStatsFinder _finder;
+
 }

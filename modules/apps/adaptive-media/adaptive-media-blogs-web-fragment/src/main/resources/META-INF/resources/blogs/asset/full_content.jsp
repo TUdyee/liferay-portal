@@ -14,13 +14,11 @@
  */
 --%>
 
-<%@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
+<%@ include file="/blogs/asset/init.jsp" %>
 
-<%@ page import="com.liferay.adaptive.media.blogs.web.fragment.internal.content.transformer.ContentTransformerUtil" %><%@
-page import="com.liferay.adaptive.media.content.transformer.ContentTransformerHandler" %><%@
-page import="com.liferay.adaptive.media.content.transformer.constants.ContentTransformerContentTypes" %>
-
-<liferay-util:buffer var="html">
+<liferay-util:buffer
+	var="html"
+>
 	<liferay-util:include page="/blogs/asset/full_content.portal.jsp" servletContext="<%= application %>" />
 </liferay-util:buffer>
 

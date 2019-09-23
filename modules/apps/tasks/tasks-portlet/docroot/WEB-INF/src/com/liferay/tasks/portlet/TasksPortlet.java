@@ -19,8 +19,8 @@ package com.liferay.tasks.portlet;
 
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -50,8 +50,6 @@ import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * @author Ryan Park
  */
@@ -71,14 +69,11 @@ public class TasksPortlet extends MVCPortlet {
 			actionResponse.sendRedirect(redirect);
 		}
 		else {
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+			JSONObject jsonObject = JSONUtil.put("success", Boolean.TRUE);
 
-			jsonObject.put("success", Boolean.TRUE);
-
-			HttpServletResponse response = PortalUtil.getHttpServletResponse(
-				actionResponse);
-
-			ServletResponseUtil.write(response, jsonObject.toString());
+			ServletResponseUtil.write(
+				PortalUtil.getHttpServletResponse(actionResponse),
+				jsonObject.toString());
 		}
 	}
 
@@ -86,10 +81,6 @@ public class TasksPortlet extends MVCPortlet {
 	public void processAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws IOException, PortletException {
-
-		if (!isProcessActionRequest(actionRequest)) {
-			return;
-		}
 
 		if (!callActionMethod(actionRequest, actionResponse)) {
 			return;
@@ -144,17 +135,17 @@ public class TasksPortlet extends MVCPortlet {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			TasksEntry.class.getName(), actionRequest);
 
-		TasksEntry taskEntry = null;
+		TasksEntry tasksEntry = null;
 
 		try {
 			if (tasksEntryId <= 0) {
-				taskEntry = TasksEntryServiceUtil.addTasksEntry(
+				tasksEntry = TasksEntryServiceUtil.addTasksEntry(
 					title, priority, assigneeUserId, dueDateMonth, dueDateDay,
 					dueDateYear, dueDateHour, dueDateMinute, addDueDate,
 					serviceContext);
 			}
 			else {
-				taskEntry = TasksEntryServiceUtil.updateTasksEntry(
+				tasksEntry = TasksEntryServiceUtil.updateTasksEntry(
 					tasksEntryId, title, priority, assigneeUserId,
 					resolverUserId, dueDateMonth, dueDateDay, dueDateYear,
 					dueDateHour, dueDateMinute, addDueDate, status,
@@ -169,7 +160,7 @@ public class TasksPortlet extends MVCPortlet {
 
 			portletURL.setParameter("mvcPath", "/tasks/view_task.jsp");
 			portletURL.setParameter(
-				"tasksEntryId", String.valueOf(taskEntry.getTasksEntryId()));
+				"tasksEntryId", String.valueOf(tasksEntry.getTasksEntryId()));
 			portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 			actionResponse.sendRedirect(portletURL.toString());

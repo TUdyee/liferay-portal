@@ -14,21 +14,28 @@
 
 package com.liferay.source.formatter.checkstyle.util;
 
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
-import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.json.JSONArrayImpl;
+import com.liferay.portal.json.JSONObjectImpl;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.SourceFormatterArgs;
-import com.liferay.source.formatter.checkstyle.Checker;
+import com.liferay.source.formatter.util.CheckType;
+import com.liferay.source.formatter.util.DebugUtil;
+import com.liferay.source.formatter.util.SourceFormatterCheckUtil;
+import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.PropertiesExpander;
+import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
-import com.puppycrawl.tools.checkstyle.filters.SuppressionsLoader;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.xml.sax.InputSource;
 
@@ -37,119 +44,206 @@ import org.xml.sax.InputSource;
  */
 public class CheckstyleUtil {
 
-	public static Configuration addAttribute(
-		Configuration configuration, String key, String value,
-		String... regexChecks) {
+	public static final String BASE_DIR_NAME_KEY = "baseDirName";
+
+	public static final int BATCH_SIZE = 1000;
+
+	public static final String MAX_LINE_LENGTH_KEY = "maxLineLength";
+
+	public static final String SHOW_DEBUG_INFORMATION_KEY =
+		"showDebugInformation";
+
+	public static Configuration getConfiguration(
+			String configurationFileName, Map<String, Properties> propertiesMap,
+			SourceFormatterArgs sourceFormatterArgs)
+		throws CheckstyleException {
+
+		ClassLoader classLoader = CheckstyleUtil.class.getClassLoader();
+
+		Configuration configuration = ConfigurationLoader.loadConfiguration(
+			new InputSource(
+				classLoader.getResourceAsStream(configurationFileName)),
+			new PropertiesExpander(System.getProperties()),
+			ConfigurationLoader.IgnoredModulesOptions.EXECUTE);
+
+		DefaultConfiguration treeWalkerConfiguration = _getChildConfiguration(
+			configuration, "TreeWalker");
+
+		Configuration[] checkConfigurations =
+			treeWalkerConfiguration.getChildren();
+
+		if (checkConfigurations == null) {
+			return configuration;
+		}
+
+		JSONObject excludesJSONObject =
+			SourceFormatterCheckUtil.getExcludesJSONObject(propertiesMap);
+
+		List<String> checkNames = new ArrayList<>();
+
+		String filterCheckName = sourceFormatterArgs.getCheckName();
+
+		for (Configuration checkConfiguration : checkConfigurations) {
+			if (!(checkConfiguration instanceof DefaultConfiguration)) {
+				continue;
+			}
+
+			String checkName = checkConfiguration.getName();
+
+			String checkSimpleName = SourceFormatterUtil.getSimpleName(
+				checkName);
+
+			if ((filterCheckName != null) &&
+				!filterCheckName.equals(checkSimpleName)) {
+
+				treeWalkerConfiguration.removeChild(checkConfiguration);
+
+				continue;
+			}
+
+			if (!checkName.startsWith("com.liferay.")) {
+				continue;
+			}
+
+			checkNames.add(checkSimpleName);
+
+			DefaultConfiguration defaultConfiguration =
+				new DefaultConfiguration(checkName);
+
+			Map<String, String> messages = checkConfiguration.getMessages();
+
+			for (Map.Entry<String, String> entry : messages.entrySet()) {
+				defaultConfiguration.addMessage(
+					entry.getKey(), entry.getValue());
+			}
+
+			if (excludesJSONObject.length() != 0) {
+				defaultConfiguration.addAttribute(
+					_EXCLUDES_KEY, excludesJSONObject.toString());
+			}
+
+			JSONObject attributesJSONObject = _getAttributesJSONObject(
+				propertiesMap, checkSimpleName, checkConfiguration,
+				sourceFormatterArgs);
+
+			defaultConfiguration.addAttribute(
+				_ATTRIBUTES_KEY, attributesJSONObject.toString());
+
+			treeWalkerConfiguration.removeChild(checkConfiguration);
+
+			treeWalkerConfiguration.addChild(defaultConfiguration);
+		}
+
+		if (sourceFormatterArgs.isShowDebugInformation()) {
+			DebugUtil.addCheckNames(CheckType.CHECKSTYLE, checkNames);
+		}
+
+		return configuration;
+	}
+
+	private static JSONObject _addCustomAttributes(
+		JSONObject jsonObject, String[][] attributesArray) {
+
+		for (String[] values : attributesArray) {
+			JSONArray jsonArray = new JSONArrayImpl();
+
+			jsonArray.put(values[1]);
+
+			jsonObject.put(values[0], jsonArray);
+		}
+
+		return jsonObject;
+	}
+
+	private static JSONObject _getAttributesJSONObject(
+			Map<String, Properties> propertiesMap, String checkName,
+			Configuration configuration,
+			SourceFormatterArgs sourceFormatterArgs)
+		throws CheckstyleException {
+
+		JSONObject attributesJSONObject = new JSONObjectImpl();
+
+		JSONObject configurationAttributesJSONObject =
+			_getConfigurationAttributesJSONObject(configuration);
+
+		configurationAttributesJSONObject = _addCustomAttributes(
+			configurationAttributesJSONObject,
+			new String[][] {
+				{BASE_DIR_NAME_KEY, sourceFormatterArgs.getBaseDirName()},
+				{
+					MAX_LINE_LENGTH_KEY,
+					String.valueOf(sourceFormatterArgs.getMaxLineLength())
+				},
+				{
+					SHOW_DEBUG_INFORMATION_KEY,
+					String.valueOf(sourceFormatterArgs.isShowDebugInformation())
+				}
+			});
+
+		attributesJSONObject.put(
+			SourceFormatterCheckUtil.CONFIGURATION_FILE_LOCATION,
+			configurationAttributesJSONObject);
+
+		attributesJSONObject = SourceFormatterCheckUtil.addPropertiesAttributes(
+			attributesJSONObject, propertiesMap,
+			SourceFormatterUtil.GIT_LIFERAY_PORTAL_BRANCH);
+
+		attributesJSONObject = SourceFormatterCheckUtil.addPropertiesAttributes(
+			attributesJSONObject, propertiesMap, CheckType.CHECKSTYLE,
+			checkName);
+
+		return attributesJSONObject;
+	}
+
+	private static DefaultConfiguration _getChildConfiguration(
+		Configuration configuration, String name) {
 
 		if (!(configuration instanceof DefaultConfiguration)) {
-			return configuration;
+			return null;
 		}
 
 		DefaultConfiguration defaultConfiguration =
 			(DefaultConfiguration)configuration;
 
-		DefaultConfiguration treeWalkerModule = null;
-
 		for (Configuration childConfiguration :
 				defaultConfiguration.getChildren()) {
 
-			String name = childConfiguration.getName();
+			String configurationName = childConfiguration.getName();
 
-			if (name.equals("TreeWalker") &&
+			if (configurationName.equals(name) &&
 				(childConfiguration instanceof DefaultConfiguration)) {
 
-				treeWalkerModule = (DefaultConfiguration)childConfiguration;
-
-				break;
+				return (DefaultConfiguration)childConfiguration;
 			}
 		}
 
-		if (treeWalkerModule == null) {
-			return configuration;
-		}
+		return null;
+	}
 
-		for (Configuration childConfiguration :
-				treeWalkerModule.getChildren()) {
+	private static JSONObject _getConfigurationAttributesJSONObject(
+			Configuration configuration)
+		throws CheckstyleException {
 
-			if (!(childConfiguration instanceof DefaultConfiguration)) {
-				continue;
+		JSONObject configurationAttributesJSONObject = new JSONObjectImpl();
+
+		for (String attributeName : configuration.getAttributeNames()) {
+			JSONArray jsonArray = new JSONArrayImpl();
+
+			String[] values = StringUtil.split(
+				configuration.getAttribute(attributeName), StringPool.COMMA);
+
+			for (String value : values) {
+				jsonArray.put(value);
 			}
 
-			String name = childConfiguration.getName();
-
-			for (String regexCheck : regexChecks) {
-				if (name.matches(regexCheck)) {
-					DefaultConfiguration defaultChildConfiguration =
-						(DefaultConfiguration)childConfiguration;
-
-					defaultChildConfiguration.addAttribute(key, value);
-				}
-			}
+			configurationAttributesJSONObject.put(attributeName, jsonArray);
 		}
 
-		return defaultConfiguration;
+		return configurationAttributesJSONObject;
 	}
 
-	public static Checker getChecker(
-			Configuration configuration, List<File> suppressionsFiles,
-			SourceFormatterArgs sourceFormatterArgs)
-		throws Exception {
+	private static final String _ATTRIBUTES_KEY = "attributes";
 
-		Checker checker = new Checker();
-
-		ClassLoader classLoader = CheckstyleUtil.class.getClassLoader();
-
-		checker.setModuleClassLoader(classLoader);
-
-		for (File suppressionsFile : suppressionsFiles) {
-			checker.addFilter(
-				SuppressionsLoader.loadSuppressions(
-					suppressionsFile.getAbsolutePath()));
-		}
-
-		checker.configure(configuration);
-
-		CheckstyleLogger checkstyleLogger = new CheckstyleLogger(
-			new UnsyncByteArrayOutputStream(), true,
-			sourceFormatterArgs.getBaseDirName());
-
-		checker.addListener(checkstyleLogger);
-		checker.setCheckstyleLogger(checkstyleLogger);
-
-		return checker;
-	}
-
-	public static List<String> getCheckNames(Configuration configuration) {
-		List<String> checkNames = new ArrayList<>();
-
-		String name = configuration.getName();
-
-		if (name.startsWith("com.liferay.")) {
-			int pos = name.lastIndexOf(CharPool.PERIOD);
-
-			if (!name.endsWith("Check")) {
-				name = name.concat("Check");
-			}
-
-			checkNames.add(name.substring(pos + 1));
-		}
-
-		for (Configuration childConfiguration : configuration.getChildren()) {
-			checkNames.addAll(getCheckNames(childConfiguration));
-		}
-
-		return checkNames;
-	}
-
-	public static Configuration getConfiguration(String configurationFileName)
-		throws Exception {
-
-		ClassLoader classLoader = CheckstyleUtil.class.getClassLoader();
-
-		return ConfigurationLoader.loadConfiguration(
-			new InputSource(
-				classLoader.getResourceAsStream(configurationFileName)),
-			new PropertiesExpander(System.getProperties()), false);
-	}
+	private static final String _EXCLUDES_KEY = "excludes";
 
 }

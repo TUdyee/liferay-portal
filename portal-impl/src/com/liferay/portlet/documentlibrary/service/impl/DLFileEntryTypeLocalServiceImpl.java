@@ -15,6 +15,7 @@
 package com.liferay.portlet.documentlibrary.service.impl;
 
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryTypeException;
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryTypeException;
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.exception.NoSuchMetadataSetException;
 import com.liferay.document.library.kernel.exception.RequiredFileEntryTypeException;
@@ -25,6 +26,7 @@ import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.service.persistence.DLFolderPersistence;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMForm;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormField;
@@ -35,11 +37,14 @@ import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
 import com.liferay.dynamic.data.mapping.kernel.StorageEngineManager;
 import com.liferay.dynamic.data.mapping.kernel.StructureDefinitionException;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
@@ -55,6 +60,11 @@ import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileVersion;
 import com.liferay.portlet.documentlibrary.service.base.DLFileEntryTypeLocalServiceBaseImpl;
+import com.liferay.registry.Filter;
+import com.liferay.registry.Registry;
+import com.liferay.registry.RegistryUtil;
+import com.liferay.registry.dependency.ServiceDependencyListener;
+import com.liferay.registry.dependency.ServiceDependencyManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -170,6 +180,42 @@ public class DLFileEntryTypeLocalServiceImpl
 	}
 
 	@Override
+	public void afterPropertiesSet() {
+		super.afterPropertiesSet();
+
+		ServiceDependencyManager serviceDependencyManager =
+			new ServiceDependencyManager();
+
+		serviceDependencyManager.addServiceDependencyListener(
+			new ServiceDependencyListener() {
+
+				@Override
+				public void dependenciesFulfilled() {
+					try {
+						dlFileEntryTypeLocalService.
+							getBasicDocumentDLFileEntryType();
+					}
+					catch (NoSuchFileEntryTypeException nsfete) {
+						ReflectionUtil.throwException(nsfete);
+					}
+				}
+
+				@Override
+				public void destroy() {
+				}
+
+			});
+
+		Registry registry = RegistryUtil.getRegistry();
+
+		serviceDependencyManager.registerDependencies(
+			new Class<?>[] {ModuleServiceLifecycle.class},
+			new Filter[] {
+				registry.getFilter(ModuleServiceLifecycle.DATABASE_INITIALIZED)
+			});
+	}
+
+	@Override
 	public void cascadeFileEntryTypes(long userId, DLFolder dlFolder)
 		throws PortalException {
 
@@ -196,6 +242,24 @@ public class DLFileEntryTypeLocalServiceImpl
 	}
 
 	@Override
+	public DLFileEntryType createBasicDocumentDLFileEntryType()
+		throws NoSuchFileEntryTypeException {
+
+		DLFileEntryType dlFileEntryType = dlFileEntryTypePersistence.create(
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT);
+
+		dlFileEntryType.setCompanyId(CompanyConstants.SYSTEM);
+		dlFileEntryType.setFileEntryTypeKey(
+			StringUtil.toUpperCase(
+				DLFileEntryTypeConstants.NAME_BASIC_DOCUMENT));
+		dlFileEntryType.setName(
+			DLFileEntryTypeConstants.NAME_BASIC_DOCUMENT,
+			LocaleUtil.getDefault());
+
+		return dlFileEntryTypePersistence.update(dlFileEntryType);
+	}
+
+	@Override
 	@SystemEvent(
 		action = SystemEventConstants.ACTION_SKIP,
 		type = SystemEventConstants.TYPE_DELETE
@@ -203,9 +267,10 @@ public class DLFileEntryTypeLocalServiceImpl
 	public void deleteFileEntryType(DLFileEntryType dlFileEntryType)
 		throws PortalException {
 
-		if (dlFileEntryPersistence.countByFileEntryTypeId(
-				dlFileEntryType.getFileEntryTypeId()) > 0) {
+		int count = dlFileEntryPersistence.countByFileEntryTypeId(
+			dlFileEntryType.getFileEntryTypeId());
 
+		if (count > 0) {
 			throw new RequiredFileEntryTypeException(
 				"There are file entries of file entry type " +
 					dlFileEntryType.getFileEntryTypeId());
@@ -274,19 +339,34 @@ public class DLFileEntryTypeLocalServiceImpl
 	}
 
 	@Override
+	public DLFileEntryType getBasicDocumentDLFileEntryType()
+		throws NoSuchFileEntryTypeException {
+
+		DLFileEntryType dlFileEntryType =
+			dlFileEntryTypePersistence.fetchByPrimaryKey(
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT);
+
+		if (dlFileEntryType != null) {
+			return dlFileEntryType;
+		}
+
+		return dlFileEntryTypeLocalService.createBasicDocumentDLFileEntryType();
+	}
+
+	@Override
 	public long getDefaultFileEntryTypeId(long folderId)
 		throws PortalException {
 
-		folderId = getFileEntryTypesPrimaryFolderId(folderId);
+		folderId = getFileEntryTypesPrimaryFolderId(
+			dlFolderPersistence, folderId);
 
 		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			DLFolder dlFolder = dlFolderPersistence.findByPrimaryKey(folderId);
 
 			return dlFolder.getDefaultFileEntryTypeId();
 		}
-		else {
-			return 0;
-		}
+
+		return 0;
 	}
 
 	@Override
@@ -349,7 +429,8 @@ public class DLFileEntryTypeLocalServiceImpl
 
 		List<DLFileEntryType> dlFileEntryTypes = null;
 
-		folderId = getFileEntryTypesPrimaryFolderId(folderId);
+		folderId = getFileEntryTypesPrimaryFolderId(
+			dlFolderPersistence, folderId);
 
 		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			dlFileEntryTypes = dlFolderPersistence.getDLFileEntryTypes(
@@ -359,8 +440,7 @@ public class DLFileEntryTypeLocalServiceImpl
 			dlFileEntryTypes = new ArrayList<>(getFileEntryTypes(groupIds));
 
 			DLFileEntryType dlFileEntryType =
-				dlFileEntryTypePersistence.findByPrimaryKey(
-					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT);
+				dlFileEntryTypeLocalService.getBasicDocumentDLFileEntryType();
 
 			dlFileEntryTypes.add(0, dlFileEntryType);
 		}
@@ -541,6 +621,42 @@ public class DLFileEntryTypeLocalServiceImpl
 		}
 	}
 
+	protected static long getDefaultFileEntryTypeId(
+			DLFolderPersistence dlFolderPersistence, long folderId)
+		throws PortalException {
+
+		folderId = getFileEntryTypesPrimaryFolderId(
+			dlFolderPersistence, folderId);
+
+		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+			DLFolder dlFolder = dlFolderPersistence.findByPrimaryKey(folderId);
+
+			return dlFolder.getDefaultFileEntryTypeId();
+		}
+
+		return 0;
+	}
+
+	protected static long getFileEntryTypesPrimaryFolderId(
+			DLFolderPersistence dlFolderPersistence, long folderId)
+		throws NoSuchFolderException {
+
+		while (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+			DLFolder dlFolder = dlFolderPersistence.findByPrimaryKey(folderId);
+
+			if (dlFolder.getRestrictionType() ==
+					DLFolderConstants.
+						RESTRICTION_TYPE_FILE_ENTRY_TYPES_AND_WORKFLOW) {
+
+				break;
+			}
+
+			folderId = dlFolder.getParentFolderId();
+		}
+
+		return folderId;
+	}
+
 	protected void addFileEntryTypeResources(
 			DLFileEntryType dlFileEntryType, boolean addGroupPermissions,
 			boolean addGuestPermissions)
@@ -573,9 +689,7 @@ public class DLFileEntryTypeLocalServiceImpl
 			groupId, folderId);
 
 		for (DLFileEntry dlFileEntry : dlFileEntries) {
-			Long fileEntryTypeId = dlFileEntry.getFileEntryTypeId();
-
-			if (fileEntryTypeIds.contains(fileEntryTypeId)) {
+			if (fileEntryTypeIds.contains(dlFileEntry.getFileEntryTypeId())) {
 				continue;
 			}
 
@@ -606,8 +720,6 @@ public class DLFileEntryTypeLocalServiceImpl
 			groupId, false, folderId, false);
 
 		for (DLFolder subfolder : subfolders) {
-			long subfolderId = subfolder.getFolderId();
-
 			if (subfolder.getRestrictionType() ==
 					DLFolderConstants.RESTRICTION_TYPE_INHERIT) {
 
@@ -615,8 +727,8 @@ public class DLFileEntryTypeLocalServiceImpl
 			}
 
 			cascadeFileEntryTypes(
-				userId, groupId, subfolderId, defaultFileEntryTypeId,
-				fileEntryTypeIds, serviceContext);
+				userId, groupId, subfolder.getFolderId(),
+				defaultFileEntryTypeId, fileEntryTypeIds, serviceContext);
 		}
 	}
 
@@ -681,25 +793,6 @@ public class DLFileEntryTypeLocalServiceImpl
 		return fileEntryTypeIds;
 	}
 
-	protected long getFileEntryTypesPrimaryFolderId(long folderId)
-		throws NoSuchFolderException {
-
-		while (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			DLFolder dlFolder = dlFolderPersistence.findByPrimaryKey(folderId);
-
-			if (dlFolder.getRestrictionType() ==
-					DLFolderConstants.
-						RESTRICTION_TYPE_FILE_ENTRY_TYPES_AND_WORKFLOW) {
-
-				break;
-			}
-
-			folderId = dlFolder.getParentFolderId();
-		}
-
-		return folderId;
-	}
-
 	protected Set<Long> getMissingDDMStructureLinkStructureIds(
 		Set<Long> ddmStructureIds, Set<Long> existingDDMStructureIds) {
 
@@ -723,8 +816,9 @@ public class DLFileEntryTypeLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #_updateDDMStructure(long,
-	 *             String, long, long, Map, Map, long[], ServiceContext)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #_updateDDMStructure(long, String, long, long, Map, Map,
+	 *             long[], ServiceContext)}
 	 */
 	@Deprecated
 	protected long updateDDMStructure(
@@ -802,11 +896,14 @@ public class DLFileEntryTypeLocalServiceImpl
 		if ((dlFileEntryType != null) &&
 			(dlFileEntryType.getFileEntryTypeId() != fileEntryTypeId)) {
 
-			throw new DuplicateFileEntryTypeException(fileEntryTypeKey);
+			throw new DuplicateFileEntryTypeException(
+				"A file entry type already exists for key " + fileEntryTypeKey);
 		}
 
 		if (ddmStructureIds.length == 0) {
-			throw new NoSuchMetadataSetException("DDM structure IDs is empty");
+			throw new NoSuchMetadataSetException(
+				"DDM structure IDs is empty for file entry type " +
+					fileEntryTypeKey);
 		}
 
 		for (long ddmStructureId : ddmStructureIds) {

@@ -14,8 +14,6 @@
 
 package com.liferay.opensocial.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,11 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.opensocial.service.http.GadgetServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.opensocial.service.http.GadgetServiceSoap
  * @generated
  */
-@ProviderType
 public class GadgetSoap implements Serializable {
+
 	public static GadgetSoap toSoapModel(Gadget model) {
 		GadgetSoap soapModel = new GadgetSoap();
 
@@ -176,4 +173,5 @@ public class GadgetSoap implements Serializable {
 	private String _url;
 	private String _portletCategoryNames;
 	private Date _lastPublishDate;
+
 }

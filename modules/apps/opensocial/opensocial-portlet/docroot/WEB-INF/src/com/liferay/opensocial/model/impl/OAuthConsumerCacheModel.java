@@ -14,14 +14,10 @@
 
 package com.liferay.opensocial.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.opensocial.model.OAuthConsumer;
-
+import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing OAuthConsumer in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see OAuthConsumer
  * @generated
  */
-@ProviderType
-public class OAuthConsumerCacheModel implements CacheModel<OAuthConsumer>,
-	Externalizable {
+public class OAuthConsumerCacheModel
+	implements CacheModel<OAuthConsumer>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,7 +45,8 @@ public class OAuthConsumerCacheModel implements CacheModel<OAuthConsumer>,
 			return false;
 		}
 
-		OAuthConsumerCacheModel oAuthConsumerCacheModel = (OAuthConsumerCacheModel)obj;
+		OAuthConsumerCacheModel oAuthConsumerCacheModel =
+			(OAuthConsumerCacheModel)obj;
 
 		if (oAuthConsumerId == oAuthConsumerCacheModel.oAuthConsumerId) {
 			return true;
@@ -113,35 +109,35 @@ public class OAuthConsumerCacheModel implements CacheModel<OAuthConsumer>,
 		}
 
 		if (gadgetKey == null) {
-			oAuthConsumerImpl.setGadgetKey(StringPool.BLANK);
+			oAuthConsumerImpl.setGadgetKey("");
 		}
 		else {
 			oAuthConsumerImpl.setGadgetKey(gadgetKey);
 		}
 
 		if (serviceName == null) {
-			oAuthConsumerImpl.setServiceName(StringPool.BLANK);
+			oAuthConsumerImpl.setServiceName("");
 		}
 		else {
 			oAuthConsumerImpl.setServiceName(serviceName);
 		}
 
 		if (consumerKey == null) {
-			oAuthConsumerImpl.setConsumerKey(StringPool.BLANK);
+			oAuthConsumerImpl.setConsumerKey("");
 		}
 		else {
 			oAuthConsumerImpl.setConsumerKey(consumerKey);
 		}
 
 		if (consumerSecret == null) {
-			oAuthConsumerImpl.setConsumerSecret(StringPool.BLANK);
+			oAuthConsumerImpl.setConsumerSecret("");
 		}
 		else {
 			oAuthConsumerImpl.setConsumerSecret(consumerSecret);
 		}
 
 		if (keyType == null) {
-			oAuthConsumerImpl.setKeyType(StringPool.BLANK);
+			oAuthConsumerImpl.setKeyType("");
 		}
 		else {
 			oAuthConsumerImpl.setKeyType(keyType);
@@ -167,8 +163,7 @@ public class OAuthConsumerCacheModel implements CacheModel<OAuthConsumer>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(oAuthConsumerId);
 
 		objectOutput.writeLong(companyId);
@@ -176,35 +171,35 @@ public class OAuthConsumerCacheModel implements CacheModel<OAuthConsumer>,
 		objectOutput.writeLong(modifiedDate);
 
 		if (gadgetKey == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(gadgetKey);
 		}
 
 		if (serviceName == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(serviceName);
 		}
 
 		if (consumerKey == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(consumerKey);
 		}
 
 		if (consumerSecret == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(consumerSecret);
 		}
 
 		if (keyType == null) {
-			objectOutput.writeUTF(StringPool.BLANK);
+			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(keyType);
@@ -220,4 +215,5 @@ public class OAuthConsumerCacheModel implements CacheModel<OAuthConsumer>,
 	public String consumerKey;
 	public String consumerSecret;
 	public String keyType;
+
 }

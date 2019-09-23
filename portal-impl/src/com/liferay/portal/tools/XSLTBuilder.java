@@ -14,11 +14,13 @@
 
 package com.liferay.portal.tools;
 
-import com.liferay.portal.kernel.util.CharPool;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
+import com.liferay.petra.xml.Dom4jUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.xml.SAXReaderFactory;
-import com.liferay.util.xml.Dom4jUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -106,7 +108,7 @@ public class XSLTBuilder {
 				new StreamResult(new FileOutputStream(html)));
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error(e, e);
 		}
 	}
 
@@ -152,5 +154,7 @@ public class XSLTBuilder {
 
 		return document;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(XSLTBuilder.class);
 
 }

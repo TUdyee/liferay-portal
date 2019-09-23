@@ -50,8 +50,10 @@ public class RestrictPortletServletRequest
 		return false;
 	}
 
-	public RestrictPortletServletRequest(HttpServletRequest request) {
-		super(request);
+	public RestrictPortletServletRequest(
+		HttpServletRequest httpServletRequest) {
+
+		super(httpServletRequest);
 	}
 
 	@Override
@@ -153,9 +155,8 @@ public class RestrictPortletServletRequest
 	protected void doMergeSharedAttributes(ServletRequest servletRequest) {
 		for (Map.Entry<String, Object> entry : _attributes.entrySet()) {
 			String name = entry.getKey();
-			Object value = entry.getValue();
 
-			doMergeSharedAttributes(servletRequest, name, value);
+			doMergeSharedAttributes(servletRequest, name, entry.getValue());
 		}
 	}
 

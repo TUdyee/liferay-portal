@@ -18,11 +18,10 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.security.auth.BaseAuthTokenWhitelist;
-import com.liferay.portal.kernel.security.pacl.DoPrivileged;
+import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.util.Encryptor;
 
 import java.util.Collections;
 import java.util.Set;
@@ -34,7 +33,6 @@ import javax.servlet.http.HttpServletRequest;
  * @author Raymond Augé
  * @author Tomas Polesovsky
  */
-@DoPrivileged
 public class AuthTokenWhitelistImpl extends BaseAuthTokenWhitelist {
 
 	public AuthTokenWhitelistImpl() {
@@ -56,33 +54,6 @@ public class AuthTokenWhitelistImpl extends BaseAuthTokenWhitelist {
 			PropsKeys.PORTLET_ADD_DEFAULT_RESOURCE_CHECK_WHITELIST);
 	}
 
-	/**
-	 * @deprecated As of 7.0.0
-	 */
-	@Deprecated
-	@Override
-	public Set<String> getOriginCSRFWhitelist() {
-		return _originCSRFWhitelist;
-	}
-
-	/**
-	 * @deprecated As of 7.0.0
-	 */
-	@Deprecated
-	@Override
-	public Set<String> getPortletCSRFWhitelist() {
-		return _portletCSRFWhitelist;
-	}
-
-	/**
-	 * @deprecated As of 7.0.0
-	 */
-	@Deprecated
-	@Override
-	public Set<String> getPortletInvocationWhitelist() {
-		return _portletInvocationWhitelist;
-	}
-
 	@Override
 	public boolean isOriginCSRFWhitelisted(long companyId, String origin) {
 		for (String whitelistedOrigin : _originCSRFWhitelist) {
@@ -96,14 +67,14 @@ public class AuthTokenWhitelistImpl extends BaseAuthTokenWhitelist {
 
 	@Override
 	public boolean isPortletCSRFWhitelisted(
-		HttpServletRequest request, Portlet portlet) {
+		HttpServletRequest httpServletRequest, Portlet portlet) {
 
 		return _portletCSRFWhitelist.contains(portlet.getRootPortletId());
 	}
 
 	@Override
 	public boolean isPortletInvocationWhitelisted(
-		HttpServletRequest request, Portlet portlet) {
+		HttpServletRequest httpServletRequest, Portlet portlet) {
 
 		return _portletInvocationWhitelist.contains(portlet.getPortletId());
 	}
@@ -137,7 +108,7 @@ public class AuthTokenWhitelistImpl extends BaseAuthTokenWhitelist {
 		}
 
 		return sharedSecret.equals(
-			Encryptor.digest(PropsValues.AUTH_TOKEN_SHARED_SECRET));
+			DigesterUtil.digest(PropsValues.AUTH_TOKEN_SHARED_SECRET));
 	}
 
 	private final Set<String> _originCSRFWhitelist = Collections.newSetFromMap(

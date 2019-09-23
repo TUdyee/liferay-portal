@@ -14,7 +14,11 @@
 
 package com.liferay.portal.dao.sql.transformer;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.internal.dao.sql.transformer.SQLFunctionTransformer;
 import com.liferay.portal.kernel.dao.db.DB;
+import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -28,16 +32,48 @@ public class DB2SQLTransformerLogic extends BaseSQLTransformerLogic {
 	public DB2SQLTransformerLogic(DB db) {
 		super(db);
 
-		setFunctions(
+		Function[] functions = {
 			getBooleanFunction(), getCastClobTextFunction(),
-			getCastLongFunction(), getCastTextFunction(),
-			getIntegerDivisionFunction(), getNullDateFunction(),
-			_getAlterColumnTypeFunction(), _getLikeFunction());
+			getCastLongFunction(), getCastTextFunction(), getConcatFunction(),
+			getDropTableIfExistsTextFunction(), getIntegerDivisionFunction(),
+			getNullDateFunction(), _getAlterColumnTypeFunction(),
+			_getLikeFunction()
+		};
+
+		if (!db.isSupportsStringCaseSensitiveQuery()) {
+			functions = ArrayUtil.append(functions, getLowerFunction());
+		}
+
+		setFunctions(functions);
+	}
+
+	@Override
+	protected Function<String, String> getConcatFunction() {
+		SQLFunctionTransformer sqlFunctionTransformer =
+			new SQLFunctionTransformer(
+				"CONCAT(", StringPool.BLANK, " CONCAT ", StringPool.BLANK);
+
+		return sqlFunctionTransformer::transform;
 	}
 
 	@Override
 	protected String replaceCastText(Matcher matcher) {
 		return matcher.replaceAll("CAST($1 AS VARCHAR(254))");
+	}
+
+	@Override
+	protected String replaceDropTableIfExistsText(Matcher matcher) {
+		StringBundler sb = new StringBundler(5);
+
+		sb.append("BEGIN\n");
+		sb.append("DECLARE CONTINUE HANDLER FOR SQLSTATE '42704'\n");
+		sb.append("BEGIN END;\n");
+		sb.append("EXECUTE IMMEDIATE 'DROP TABLE $1';\n");
+		sb.append("END");
+
+		String dropTableIfExists = sb.toString();
+
+		return matcher.replaceAll(dropTableIfExists);
 	}
 
 	private Function<String, String> _getAlterColumnTypeFunction() {

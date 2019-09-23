@@ -120,6 +120,9 @@ public class CSSBuilderPlugin implements Plugin<Project> {
 		GradleUtil.addDependency(
 			project, PORTAL_COMMON_CSS_CONFIGURATION_NAME, "com.liferay",
 			"com.liferay.frontend.css.common", "latest.release", false);
+		GradleUtil.addDependency(
+			project, PORTAL_COMMON_CSS_CONFIGURATION_NAME, "org.webjars",
+			"font-awesome", "latest.release", false);
 	}
 
 	private BuildCSSTask _addTaskBuildCSS(Project project) {
@@ -165,7 +168,7 @@ public class CSSBuilderPlugin implements Plugin<Project> {
 	private void _configureTaskBuildCSSForJavaPlugin(
 		final BuildCSSTask buildCSSTask) {
 
-		buildCSSTask.setDocrootDir(
+		buildCSSTask.setBaseDir(
 			new Callable<File>() {
 
 				@Override
@@ -184,7 +187,7 @@ public class CSSBuilderPlugin implements Plugin<Project> {
 	private void _configureTaskBuildCSSForWarPlugin(
 		final BuildCSSTask buildCSSTask) {
 
-		buildCSSTask.setDocrootDir(
+		buildCSSTask.setBaseDir(
 			new Callable<File>() {
 
 				@Override
@@ -195,16 +198,16 @@ public class CSSBuilderPlugin implements Plugin<Project> {
 			});
 	}
 
-	private void _configureTaskBuildCSSPortalCommonFile(
+	private void _configureTaskBuildCSSImportFile(
 		BuildCSSTask buildCSSTask,
 		final Configuration portalCommonCSSConfiguration) {
 
-		buildCSSTask.setPortalCommonFile(
-			new Callable<File>() {
+		buildCSSTask.setImports(
+			new Callable<FileCollection>() {
 
 				@Override
-				public File call() throws Exception {
-					return portalCommonCSSConfiguration.getSingleFile();
+				public FileCollection call() throws Exception {
+					return portalCommonCSSConfiguration;
 				}
 
 			});
@@ -224,7 +227,7 @@ public class CSSBuilderPlugin implements Plugin<Project> {
 				public void execute(BuildCSSTask buildCSSTask) {
 					_configureTaskBuildCSSClasspath(
 						buildCSSTask, cssBuilderConfiguration);
-					_configureTaskBuildCSSPortalCommonFile(
+					_configureTaskBuildCSSImportFile(
 						buildCSSTask, portalCommonCSSConfiguration);
 				}
 

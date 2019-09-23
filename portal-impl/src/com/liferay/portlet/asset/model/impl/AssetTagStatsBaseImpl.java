@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.asset.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.model.AssetTagStats;
 import com.liferay.asset.kernel.service.AssetTagStatsLocalServiceUtil;
 
@@ -29,15 +27,18 @@ import com.liferay.asset.kernel.service.AssetTagStatsLocalServiceUtil;
  * @author Brian Wing Shun Chan
  * @see AssetTagStatsImpl
  * @see AssetTagStats
+ * @deprecated As of Judson (7.1.x), replaced by {@link
+ com.liferay.asset.tag.stats.model.impl.AssetTagStatsImpl}
  * @generated
  */
-@ProviderType
-public abstract class AssetTagStatsBaseImpl extends AssetTagStatsModelImpl
-	implements AssetTagStats {
-	/*
+@Deprecated
+public abstract class AssetTagStatsBaseImpl
+	extends AssetTagStatsModelImpl implements AssetTagStats {
+
+	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a asset tag stats model instance should use the {@link AssetTagStats} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a asset tag stats model instance should use the <code>AssetTagStats</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +49,5 @@ public abstract class AssetTagStatsBaseImpl extends AssetTagStatsModelImpl
 			AssetTagStatsLocalServiceUtil.updateAssetTagStats(this);
 		}
 	}
+
 }

@@ -14,10 +14,11 @@
 
 package com.liferay.portal.webdav.methods;
 
+import com.liferay.petra.string.StringPool;
+import com.liferay.petra.xml.Dom4jUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webdav.WebDAVException;
 import com.liferay.portal.kernel.webdav.WebDAVRequest;
@@ -29,7 +30,6 @@ import com.liferay.portal.kernel.xml.Namespace;
 import com.liferay.portal.kernel.xml.QName;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.webdav.InvalidRequestException;
-import com.liferay.util.xml.Dom4jUtil;
 
 import java.util.HashSet;
 import java.util.List;
@@ -47,9 +47,7 @@ public class PropfindMethodImpl extends BasePropMethodImpl implements Method {
 	@Override
 	public int process(WebDAVRequest webDAVRequest) throws WebDAVException {
 		try {
-			Set<QName> props = getProps(webDAVRequest);
-
-			return writeResponseXML(webDAVRequest, props);
+			return writeResponseXML(webDAVRequest, getProps(webDAVRequest));
 		}
 		catch (InvalidRequestException ire) {
 
@@ -89,10 +87,11 @@ public class PropfindMethodImpl extends BasePropMethodImpl implements Method {
 		try {
 			Set<QName> props = new HashSet<>();
 
-			HttpServletRequest request = webDAVRequest.getHttpServletRequest();
+			HttpServletRequest httpServletRequest =
+				webDAVRequest.getHttpServletRequest();
 
 			String xml = new String(
-				FileUtil.getBytes(request.getInputStream()));
+				FileUtil.getBytes(httpServletRequest.getInputStream()));
 
 			if (Validator.isNull(xml)) {
 

@@ -111,6 +111,34 @@ public class FileUtil extends com.liferay.gradle.util.FileUtil {
 			});
 	}
 
+	public static File[] getFiles(
+		File dir, final String prefix, final String suffix) {
+
+		return dir.listFiles(
+			new FileFilter() {
+
+				@Override
+				public boolean accept(File file) {
+					if (file.isDirectory()) {
+						return false;
+					}
+
+					String name = file.getName();
+
+					if (!name.startsWith(prefix)) {
+						return false;
+					}
+
+					if (!name.endsWith(suffix)) {
+						return false;
+					}
+
+					return true;
+				}
+
+			});
+	}
+
 	public static FileTree getJarsFileTree(
 		Project project, File dir, String... excludes) {
 
@@ -133,10 +161,8 @@ public class FileUtil extends com.liferay.gradle.util.FileUtil {
 		return relativePath.replace('\\', '/');
 	}
 
-	public static boolean hasSourceFiles(Task task, Spec<File> spec) {
-		TaskInputs taskInputs = task.getInputs();
-
-		FileCollection fileCollection = taskInputs.getSourceFiles();
+	public static boolean hasFiles(
+		FileCollection fileCollection, Spec<File> spec) {
 
 		fileCollection = fileCollection.filter(spec);
 
@@ -145,6 +171,12 @@ public class FileUtil extends com.liferay.gradle.util.FileUtil {
 		}
 
 		return true;
+	}
+
+	public static boolean hasSourceFiles(Task task, Spec<File> spec) {
+		TaskInputs taskInputs = task.getInputs();
+
+		return hasFiles(taskInputs.getSourceFiles(), spec);
 	}
 
 	public static FileCollection join(FileCollection... fileCollections) {

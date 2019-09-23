@@ -17,7 +17,6 @@ package com.liferay.portal.dao.orm.common;
 import com.liferay.portal.dao.sql.transformer.HQLToJPQLTransformerLogic;
 import com.liferay.portal.dao.sql.transformer.JPQLToHQLTransformerLogic;
 import com.liferay.portal.dao.sql.transformer.SQLTransformerFactory;
-import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 
 import java.util.Map;
@@ -43,7 +42,7 @@ public class SQLTransformer {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #transformFromHQLToJQPL(String)}
 	 */
 	@Deprecated
@@ -56,7 +55,7 @@ public class SQLTransformer {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #transformFromJPQLToHQL(String)}
 	 */
 	@Deprecated
@@ -86,9 +85,8 @@ public class SQLTransformer {
 			_transformedSqls.clear();
 		}
 
-		DB db = DBManagerUtil.getDB();
-
-		_sqlTransformer = SQLTransformerFactory.getSQLTransformer(db);
+		_sqlTransformer = SQLTransformerFactory.getSQLTransformer(
+			DBManagerUtil.getDB());
 	}
 
 	private String _transformFromHQLToJPQL(String sql) {

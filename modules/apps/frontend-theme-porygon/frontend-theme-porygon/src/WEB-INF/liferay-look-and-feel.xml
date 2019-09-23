@@ -3,11 +3,14 @@
 
 <look-and-feel>
 	<compatibility>
-		<version>7.0.0+</version>
+		<version>7.2.0+</version>
 	</compatibility>
 	<theme id="porygon" name="Porygon">
 		<template-extension>ftl</template-extension>
 		<settings>
+			<setting configurable="false" key="color-palette" value="primary,success,danger,warning,info,dark,gray-dark,secondary,light,lighter,white" />
+			<setting configurable="true" key="show-footer" type="checkbox" value="true" />
+			<setting configurable="true" key="show-header" type="checkbox" value="true" />
 			<setting configurable="true" key="show-header-main-search" type="checkbox" value="true" />
 			<setting configurable="true" key="show-maximize-minimize-application-links" type="checkbox" value="false" />
 			<setting configurable="false" key="show-site-name-default" value="false" />
@@ -16,11 +19,11 @@
 		<layout-templates>
 			<custom>
 				<layout-template id="porygon_70_30_width_limited" name="Porygon 2 Columns (70/30) width limited">
-					<template-path>/layoutttpl/custom/porygon_70_30_width_limited.tpl</template-path>
+					<template-path>/layoutttpl/custom/porygon_70_30_width_limited.ftl</template-path>
 					<thumbnail-path>/layoutttpl/custom/porygon_70_30_width_limited.png</thumbnail-path>
 				</layout-template>
 				<layout-template id="porygon_50_50_width_limited" name="Porygon 2 Columns (50/50) width limited">
-					<template-path>/layoutttpl/custom/porygon_50_50_width_limited.tpl</template-path>
+					<template-path>/layoutttpl/custom/porygon_50_50_width_limited.ftl</template-path>
 					<thumbnail-path>/layoutttpl/custom/porygon_50_50_width_limited.png</thumbnail-path>
 				</layout-template>
 			</custom>

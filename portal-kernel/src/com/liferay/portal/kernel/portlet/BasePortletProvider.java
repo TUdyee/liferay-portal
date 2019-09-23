@@ -30,23 +30,24 @@ import javax.servlet.http.HttpServletRequest;
 public abstract class BasePortletProvider implements PortletProvider {
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request)
+	public PortletURL getPortletURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		return getPortletURL(request, null);
+		return getPortletURL(httpServletRequest, null);
 	}
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request, Group group)
+	public PortletURL getPortletURL(
+			HttpServletRequest httpServletRequest, Group group)
 		throws PortalException {
 
 		return PortalUtil.getControlPanelPortletURL(
-			request, group, getPortletName(), 0, 0,
+			httpServletRequest, group, getPortletName(), 0, 0,
 			PortletRequest.RENDER_PHASE);
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected long getPlid(ThemeDisplay themeDisplay) throws PortalException {

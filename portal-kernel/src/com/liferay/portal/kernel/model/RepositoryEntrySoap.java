@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,8 +26,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class RepositoryEntrySoap implements Serializable {
+
 	public static RepositoryEntrySoap toSoapModel(RepositoryEntry model) {
 		RepositoryEntrySoap soapModel = new RepositoryEntrySoap();
 
@@ -44,14 +42,15 @@ public class RepositoryEntrySoap implements Serializable {
 		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setRepositoryId(model.getRepositoryId());
 		soapModel.setMappedId(model.getMappedId());
-		soapModel.setManualCheckInRequired(model.getManualCheckInRequired());
+		soapModel.setManualCheckInRequired(model.isManualCheckInRequired());
 		soapModel.setLastPublishDate(model.getLastPublishDate());
 
 		return soapModel;
 	}
 
 	public static RepositoryEntrySoap[] toSoapModels(RepositoryEntry[] models) {
-		RepositoryEntrySoap[] soapModels = new RepositoryEntrySoap[models.length];
+		RepositoryEntrySoap[] soapModels =
+			new RepositoryEntrySoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -62,10 +61,12 @@ public class RepositoryEntrySoap implements Serializable {
 
 	public static RepositoryEntrySoap[][] toSoapModels(
 		RepositoryEntry[][] models) {
+
 		RepositoryEntrySoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new RepositoryEntrySoap[models.length][models[0].length];
+			soapModels =
+				new RepositoryEntrySoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new RepositoryEntrySoap[0][0];
@@ -80,7 +81,9 @@ public class RepositoryEntrySoap implements Serializable {
 
 	public static RepositoryEntrySoap[] toSoapModels(
 		List<RepositoryEntry> models) {
-		List<RepositoryEntrySoap> soapModels = new ArrayList<RepositoryEntrySoap>(models.size());
+
+		List<RepositoryEntrySoap> soapModels =
+			new ArrayList<RepositoryEntrySoap>(models.size());
 
 		for (RepositoryEntry model : models) {
 			soapModels.add(toSoapModel(model));
@@ -221,4 +224,5 @@ public class RepositoryEntrySoap implements Serializable {
 	private String _mappedId;
 	private boolean _manualCheckInRequired;
 	private Date _lastPublishDate;
+
 }

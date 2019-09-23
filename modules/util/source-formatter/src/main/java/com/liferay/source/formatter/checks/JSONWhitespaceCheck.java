@@ -14,12 +14,14 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
+
+import java.io.IOException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,7 +34,7 @@ public class JSONWhitespaceCheck extends WhitespaceCheck {
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws Exception {
+		throws IOException {
 
 		StringBundler sb = new StringBundler();
 
@@ -55,13 +57,19 @@ public class JSONWhitespaceCheck extends WhitespaceCheck {
 				line = StringUtil.replace(
 					line, StringPool.DOUBLE_SPACE, StringPool.SPACE);
 
+				if (line.startsWith(" \t")) {
+					line = line.replaceFirst(" \t", "\t");
+				}
+
 				sb.append(line);
 
 				sb.append("\n");
 			}
 		}
 
-		if (isAllowTrailingEmptyLines(fileName) && content.endsWith("\n")) {
+		if (isAllowTrailingEmptyLines(fileName, absolutePath) &&
+			content.endsWith("\n")) {
+
 			content = sb.toString();
 		}
 		else {
@@ -85,7 +93,9 @@ public class JSONWhitespaceCheck extends WhitespaceCheck {
 	}
 
 	@Override
-	protected boolean isAllowTrailingEmptyLines(String fileName) {
+	protected boolean isAllowTrailingEmptyLines(
+		String fileName, String absolutePath) {
+
 		if (fileName.endsWith("/package.json")) {
 			return true;
 		}
@@ -93,8 +103,9 @@ public class JSONWhitespaceCheck extends WhitespaceCheck {
 		return false;
 	}
 
-	private final Pattern _leadingSpacesPattern = Pattern.compile(
+	private static final Pattern _leadingSpacesPattern = Pattern.compile(
 		"(^[\t ]*)(  )([^ ])");
-	private final Pattern _missingWhitespacePattern = Pattern.compile(":\\S");
+	private static final Pattern _missingWhitespacePattern = Pattern.compile(
+		":\\S");
 
 }

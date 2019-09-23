@@ -16,8 +16,8 @@ package com.liferay.portlet.ratings.service.impl;
 
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -44,10 +44,8 @@ public class RatingsEntryLocalServiceImpl
 	public void deleteEntry(long userId, String className, long classPK)
 		throws PortalException {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		RatingsEntry entry = ratingsEntryPersistence.fetchByU_C_C(
-			userId, classNameId, classPK);
+			userId, classNameLocalService.getClassNameId(className), classPK);
 
 		ratingsEntryLocalService.deleteEntry(entry, userId, className, classPK);
 	}
@@ -64,11 +62,8 @@ public class RatingsEntryLocalServiceImpl
 			return;
 		}
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		double oldScore = entry.getScore();
-
-		ratingsEntryPersistence.removeByU_C_C(userId, classNameId, classPK);
+		ratingsEntryPersistence.removeByU_C_C(
+			userId, classNameLocalService.getClassNameId(className), classPK);
 
 		// Stats
 
@@ -81,6 +76,8 @@ public class RatingsEntryLocalServiceImpl
 			ratingsStatsPersistence.remove(stats);
 		}
 		else {
+			double oldScore = entry.getScore();
+
 			double totalScore = stats.getTotalScore() - oldScore;
 
 			double averageScore = 0;
@@ -95,29 +92,40 @@ public class RatingsEntryLocalServiceImpl
 
 			ratingsStatsPersistence.update(stats);
 		}
+
+		// Social
+
+		AssetEntry assetEntry = assetEntryLocalService.fetchEntry(
+			className, classPK);
+
+		if (assetEntry != null) {
+			JSONObject extraDataJSONObject = JSONUtil.put(
+				"title", assetEntry.getTitle());
+
+			SocialActivityManagerUtil.addActivity(
+				userId, assetEntry, SocialActivityConstants.TYPE_REVOKE_VOTE,
+				extraDataJSONObject.toString(), 0);
+		}
 	}
 
 	@Override
 	public RatingsEntry fetchEntry(
 		long userId, String className, long classPK) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		return ratingsEntryPersistence.fetchByU_C_C(
-			userId, classNameId, classPK);
+			userId, classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
 	public List<RatingsEntry> getEntries(
 		long userId, String className, List<Long> classPKs) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		return ratingsEntryFinder.findByU_C_C(userId, classNameId, classPKs);
+		return ratingsEntryFinder.findByU_C_C(
+			userId, classNameLocalService.getClassNameId(className), classPKs);
 	}
 
 	@Override
@@ -128,8 +136,9 @@ public class RatingsEntryLocalServiceImpl
 
 		Map<Long, RatingsEntry> ratingsEntries = new HashMap<>();
 
-		for (RatingsEntry entry : ratingsEntryPersistence.findByU_C_C(
-				userId, classNameId, classPKs)) {
+		for (RatingsEntry entry :
+				ratingsEntryPersistence.findByU_C_C(
+					userId, classNameId, classPKs)) {
 
 			ratingsEntries.put(entry.getClassPK(), entry);
 		}
@@ -139,36 +148,30 @@ public class RatingsEntryLocalServiceImpl
 
 	@Override
 	public List<RatingsEntry> getEntries(String className, long classPK) {
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		return ratingsEntryPersistence.findByC_C(classNameId, classPK);
+		return ratingsEntryPersistence.findByC_C(
+			classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
 	public List<RatingsEntry> getEntries(
 		String className, long classPK, double score) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		return ratingsEntryPersistence.findByC_C_S(classNameId, classPK, score);
+		return ratingsEntryPersistence.findByC_C_S(
+			classNameLocalService.getClassNameId(className), classPK, score);
 	}
 
 	@Override
 	public int getEntriesCount(String className, long classPK, double score) {
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		return ratingsEntryPersistence.countByC_C_S(
-			classNameId, classPK, score);
+			classNameLocalService.getClassNameId(className), classPK, score);
 	}
 
 	@Override
 	public RatingsEntry getEntry(long userId, String className, long classPK)
 		throws PortalException {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		return ratingsEntryPersistence.findByU_C_C(
-			userId, classNameId, classPK);
+			userId, classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
@@ -180,7 +183,6 @@ public class RatingsEntryLocalServiceImpl
 		// Entry
 
 		long classNameId = classNameLocalService.getClassNameId(className);
-		double oldScore = 0;
 
 		validate(score);
 
@@ -188,7 +190,7 @@ public class RatingsEntryLocalServiceImpl
 			userId, classNameId, classPK);
 
 		if (entry != null) {
-			oldScore = entry.getScore();
+			double oldScore = entry.getScore();
 
 			entry.setScore(score);
 
@@ -248,9 +250,8 @@ public class RatingsEntryLocalServiceImpl
 			className, classPK);
 
 		if (assetEntry != null) {
-			JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-			extraDataJSONObject.put("title", assetEntry.getTitle());
+			JSONObject extraDataJSONObject = JSONUtil.put(
+				"title", assetEntry.getTitle());
 
 			SocialActivityManagerUtil.addActivity(
 				userId, assetEntry, SocialActivityConstants.TYPE_ADD_VOTE,

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -42,7 +43,7 @@ public class DefaultLayoutPrototypesUtil {
 
 	public static Layout addLayout(
 			LayoutSet layoutSet, String nameKey, String friendlyURL,
-			String layouteTemplateId)
+			String layoutTemplateId)
 		throws Exception {
 
 		Group group = layoutSet.getGroup();
@@ -69,14 +70,19 @@ public class DefaultLayoutPrototypesUtil {
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
 
-		layoutTypePortlet.setLayoutTemplateId(0, layouteTemplateId, false);
+		layoutTypePortlet.setLayoutTemplateId(0, layoutTemplateId, false);
 
 		return layout;
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             LayoutPrototypeHelper#addLayoutPrototype}
+	 */
+	@Deprecated
 	public static Layout addLayoutPrototype(
 			long companyId, long defaultUserId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, String layouteTemplateId,
+			Map<Locale, String> descriptionMap, String layoutTemplateId,
 			List<LayoutPrototype> layoutPrototypes)
 		throws Exception {
 
@@ -100,7 +106,7 @@ public class DefaultLayoutPrototypesUtil {
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
 
-		layoutTypePortlet.setLayoutTemplateId(0, layouteTemplateId, false);
+		layoutTypePortlet.setLayoutTemplateId(0, layoutTemplateId, false);
 
 		return layout;
 	}
@@ -131,10 +137,7 @@ public class DefaultLayoutPrototypesUtil {
 				layout, portletId);
 
 		for (Map.Entry<String, String> entry : preferences.entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue();
-
-			portletSetup.setValue(key, value);
+			portletSetup.setValue(entry.getKey(), entry.getValue());
 		}
 
 		portletSetup.store();

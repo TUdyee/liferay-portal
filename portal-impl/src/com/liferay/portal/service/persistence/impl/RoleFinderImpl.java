@@ -14,6 +14,8 @@
 
 package com.liferay.portal.service.persistence.impl;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
@@ -30,8 +32,6 @@ import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.RoleFinder;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.RoleImpl;
@@ -102,9 +102,6 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 
 	public static final String FIND_BY_U_G =
 		RoleFinder.class.getName() + ".findByU_G";
-
-	public static final String FIND_BY_R_N_A =
-		RoleFinder.class.getName() + ".findByR_N_A";
 
 	public static final String FIND_BY_C_N_D_T =
 		RoleFinder.class.getName() + ".findByC_N_D_T";
@@ -212,7 +209,9 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 				qPos.add(userId);
 			}
 
-			return q.list().size();
+			List<Role> roles = q.list();
+
+			return roles.size();
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -654,42 +653,6 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 	}
 
 	@Override
-	public List<Role> findByR_N_A(
-		long resourceBlockId, String className, String actionId) {
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = CustomSQLUtil.get(FIND_BY_R_N_A);
-
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
-
-			q.addEntity("Role_", RoleImpl.class);
-
-			QueryPos qPos = QueryPos.getInstance(q);
-
-			qPos.add(resourceBlockId);
-			qPos.add(className);
-
-			ResourceAction resourceAction =
-				ResourceActionLocalServiceUtil.getResourceAction(
-					className, actionId);
-
-			qPos.add(resourceAction.getBitwiseValue());
-
-			return q.list(true);
-		}
-		catch (Exception e) {
-			throw new SystemException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	@Override
 	public List<Role> findByC_N_D_T(
 		long companyId, String name, String description, Integer[] types,
 		LinkedHashMap<String, Object> params, boolean andOperator, int start,
@@ -796,6 +759,7 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 					name, actionId);
 
 			qPos.add(resourceAction.getBitwiseValue());
+			qPos.add(resourceAction.getBitwiseValue());
 
 			return q.list(true);
 		}
@@ -832,15 +796,15 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 			String sql = CustomSQLUtil.get(COUNT_BY_GROUP_ROLE_AND_TEAM_ROLE);
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Role_.name)", StringPool.LIKE, false,
+				sql, "LOWER(Role_.name)", StringPool.LIKE, false,
 				keywordsArray);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Role_.description)", StringPool.LIKE, true,
+				sql, "LOWER(Role_.description)", StringPool.LIKE, true,
 				keywordsArray);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Team.name)", StringPool.LIKE, false, keywordsArray);
+				sql, "LOWER(Team.name)", StringPool.LIKE, false, keywordsArray);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Team.description)", StringPool.LIKE, true,
+				sql, "LOWER(Team.description)", StringPool.LIKE, true,
 				keywordsArray);
 			sql = StringUtil.replace(
 				sql, "[$EXCLUDED_NAMES$]", getExcludedNames(excludedNames));
@@ -914,9 +878,9 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 			String sql = CustomSQLUtil.get(COUNT_BY_C_N_D_T);
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Role_.name)", StringPool.LIKE, false, names);
+				sql, "LOWER(Role_.name)", StringPool.LIKE, false, names);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Role_.description)", StringPool.LIKE, true,
+				sql, "LOWER(Role_.description)", StringPool.LIKE, true,
 				descriptions);
 			sql = StringUtil.replace(sql, "[$TYPE$]", getTypes(types.length));
 			sql = StringUtil.replace(sql, "[$JOIN$]", getJoin(params));
@@ -989,15 +953,15 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 			String sql = CustomSQLUtil.get(FIND_BY_GROUP_ROLE_AND_TEAM_ROLE);
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Role_.name)", StringPool.LIKE, false,
+				sql, "LOWER(Role_.name)", StringPool.LIKE, false,
 				keywordsArray);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Role_.description)", StringPool.LIKE, true,
+				sql, "LOWER(Role_.description)", StringPool.LIKE, true,
 				keywordsArray);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Team.name)", StringPool.LIKE, false, keywordsArray);
+				sql, "LOWER(Team.name)", StringPool.LIKE, false, keywordsArray);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Team.description)", StringPool.LIKE, true,
+				sql, "LOWER(Team.description)", StringPool.LIKE, true,
 				keywordsArray);
 			sql = StringUtil.replace(
 				sql, "[$EXCLUDED_NAMES$]", getExcludedNames(excludedNames));
@@ -1061,9 +1025,9 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 			String sql = CustomSQLUtil.get(FIND_BY_C_N_D_T);
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Role_.name)", StringPool.LIKE, false, names);
+				sql, "LOWER(Role_.name)", StringPool.LIKE, false, names);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(Role_.description)", StringPool.LIKE, true,
+				sql, "LOWER(Role_.description)", StringPool.LIKE, true,
 				descriptions);
 			sql = StringUtil.replace(sql, "[$TYPE$]", getTypes(types.length));
 			sql = StringUtil.replace(sql, "[$JOIN$]", getJoin(params));
@@ -1135,7 +1099,7 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 
 		sb.append(" AND (");
 
-		for (int i = 0; i < excludedNames.size() - 1; i++) {
+		for (int i = 0; i < (excludedNames.size() - 1); i++) {
 			sb.append("Role_.name != ? AND ");
 		}
 
@@ -1171,11 +1135,8 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 		StringBundler sb = new StringBundler(params.size());
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-
-			if (Validator.isNotNull(value)) {
-				sb.append(getJoin(key));
+			if (Validator.isNotNull(entry.getValue())) {
+				sb.append(getJoin(entry.getKey()));
 			}
 		}
 
@@ -1209,7 +1170,7 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 
 		sb.append(" AND (");
 
-		for (int i = 0; i < size - 1; i++) {
+		for (int i = 0; i < (size - 1); i++) {
 			sb.append("Role_.type_ = ? OR ");
 		}
 
@@ -1226,11 +1187,8 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 		StringBundler sb = new StringBundler(params.size());
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-
-			if (Validator.isNotNull(value)) {
-				sb.append(getWhere(key));
+			if (Validator.isNotNull(entry.getValue())) {
+				sb.append(getWhere(entry.getKey()));
 			}
 		}
 
@@ -1248,7 +1206,9 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 			int pos = join.indexOf("WHERE");
 
 			if (pos != -1) {
-				join = join.substring(pos + 5, join.length()).concat(" AND ");
+				join = join.substring(pos + 5);
+
+				join = join.concat(" AND ");
 			}
 			else {
 				join = StringPool.BLANK;

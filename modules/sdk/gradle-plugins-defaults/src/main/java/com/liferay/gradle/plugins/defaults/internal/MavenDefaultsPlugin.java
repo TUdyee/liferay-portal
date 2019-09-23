@@ -17,6 +17,7 @@ package com.liferay.gradle.plugins.defaults.internal;
 import com.liferay.gradle.plugins.BaseDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.LiferayOSGiDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.util.FileUtil;
+import com.liferay.gradle.plugins.defaults.internal.util.GradlePluginsDefaultsUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
 
 import java.io.File;
@@ -53,9 +54,10 @@ public class MavenDefaultsPlugin extends BaseDefaultsPlugin<MavenPlugin> {
 			public void execute(Task task) {
 				Project project = task.getProject();
 
-				if (FileUtil.exists(
-						project, LiferayRelengPlugin.RELENG_IGNORE_FILE_NAME)) {
+				File relengIgnoreDir = GradleUtil.getRootDir(
+					project, LiferayRelengPlugin.RELENG_IGNORE_FILE_NAME);
 
+				if (relengIgnoreDir != null) {
 					return;
 				}
 
@@ -66,13 +68,13 @@ public class MavenDefaultsPlugin extends BaseDefaultsPlugin<MavenPlugin> {
 					return;
 				}
 
-				if (GradleUtil.isSnapshot(project)) {
+				if (GradlePluginsDefaultsUtil.isSnapshot(project)) {
 					File relengDir = new File(portalRootDir, "modules/.releng");
 
 					if (relengDir.exists()) {
 						throw new GradleException(
 							"Please run this task from a master branch " +
-								"instead.");
+								"instead");
 					}
 
 					return;
@@ -105,7 +107,9 @@ public class MavenDefaultsPlugin extends BaseDefaultsPlugin<MavenPlugin> {
 				File releaseRelengDir = LiferayRelengPlugin.getRelengDir(
 					releaseProjectDir);
 
-				if ((relengDir == null) && releaseRelengDir.isDirectory()) {
+				if ((relengDir == null) && (releaseRelengDir != null) &&
+					releaseRelengDir.isDirectory()) {
+
 					throw new GradleException(
 						"Please run this task from " + releaseProjectDir +
 							" instead");
